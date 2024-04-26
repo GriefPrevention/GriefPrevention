@@ -111,6 +111,7 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_claims_protectHorses;                        //whether horses on a claim should be protected by that claim's rules
     public boolean config_claims_protectDonkeys;                    //whether donkeys on a claim should be protected by that claim's rules
     public boolean config_claims_protectLlamas;                        //whether llamas on a claim should be protected by that claim's rules
+    public boolean config_claims_protectVehicles;                      //whether vehicles on a claim should be protected by that claim's rules
     public boolean config_claims_preventButtonsSwitches;            //whether buttons and switches are protectable
     public boolean config_claims_lockWoodenDoors;                    //whether wooden doors should be locked by default (require /accesstrust)
     public boolean config_claims_lockTrapDoors;                        //whether trap doors should be locked by default (require /accesstrust)
@@ -559,6 +560,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_protectHorses = config.getBoolean("GriefPrevention.Claims.ProtectHorses", true);
         this.config_claims_protectDonkeys = config.getBoolean("GriefPrevention.Claims.ProtectDonkeys", true);
         this.config_claims_protectLlamas = config.getBoolean("GriefPrevention.Claims.ProtectLlamas", true);
+        this.config_claims_protectVehicles = config.getBoolean("GriefPrevention.Claims.ProtectVehicles", true);
         this.config_claims_preventButtonsSwitches = config.getBoolean("GriefPrevention.Claims.PreventButtonsSwitches", true);
         this.config_claims_lockWoodenDoors = config.getBoolean("GriefPrevention.Claims.LockWoodenDoors", false);
         this.config_claims_lockTrapDoors = config.getBoolean("GriefPrevention.Claims.LockTrapDoors", false);
@@ -830,6 +832,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Claims.ProtectHorses", this.config_claims_protectHorses);
         outConfig.set("GriefPrevention.Claims.ProtectDonkeys", this.config_claims_protectDonkeys);
         outConfig.set("GriefPrevention.Claims.ProtectLlamas", this.config_claims_protectLlamas);
+        outConfig.set("GriefPrevention.Claims.ProtectVehicles", this.config_claims_protectVehicles);
         outConfig.set("GriefPrevention.Claims.InitialBlocks", this.config_claims_initialBlocks);
         outConfig.set("GriefPrevention.Claims.Claim Blocks Accrued Per Hour.Default", this.config_claims_blocksAccruedPerHour_default);
         outConfig.set("GriefPrevention.Claims.Max Accrued Claim Blocks.Default", this.config_claims_maxAccruedBlocks_default);

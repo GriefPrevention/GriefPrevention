@@ -1105,8 +1105,8 @@ public class EntityDamageHandler implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onVehicleDamage(@NotNull VehicleDamageEvent event)
     {
-        //all of this is anti theft code
-        if (!instance.config_claims_preventTheft) return;
+        //all of this is vehicle anti theft code
+        if (!instance.config_claims_preventTheft || !instance.config_claims_protectVehicles) return;
 
         //don't track in worlds where claims are not enabled
         if (!instance.claimsEnabledForWorld(event.getVehicle().getWorld())) return;
