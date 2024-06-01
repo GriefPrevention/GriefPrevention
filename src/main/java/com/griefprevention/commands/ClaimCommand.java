@@ -10,6 +10,8 @@ import me.ryanhamshire.GriefPrevention.Messages;
 import me.ryanhamshire.GriefPrevention.PlayerData;
 import me.ryanhamshire.GriefPrevention.ShovelMode;
 import me.ryanhamshire.GriefPrevention.TextMode;
+import me.ryanhamshire.GriefPrevention.events.ClaimStartEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -21,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Objects;
 
 public class ClaimCommand extends CommandHandler
 {
@@ -39,18 +42,31 @@ public class ClaimCommand extends CommandHandler
         if (!(sender instanceof Player player))
             return false;
 
-        if (!plugin.claimsEnabledForWorld(player.getWorld()))
+        PlayerData playerData = plugin.dataStore.getPlayerData(player.getUniqueId());
+
+        boolean claimsEnabledForWorld = plugin.claimsEnabledForWorld(player.getWorld());
+        int maxClaims = plugin.config_claims_maxClaimsPerPlayer;
+
+        ClaimStartEvent claimStart = new ClaimStartEvent(claimsEnabledForWorld, maxClaims, player);
+
+        Bukkit.getPluginManager().callEvent(claimStart);
+        if (claimStart.isCancelled()) return true;
+
+        claimsEnabledForWorld = claimStart.isEnabledForWorld();
+        maxClaims = claimStart.getMaxClaims();
+
+        //if claims are not enabled in this world and it's not an administrative claim, display an error message and stop
+        if (!claimsEnabledForWorld &&
+                !player.hasPermission("griefprevention.overrideworldrestriction"))
         {
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimsDisabledWorld);
             return true;
         }
 
-        PlayerData playerData = plugin.dataStore.getPlayerData(player.getUniqueId());
-
         //if he's at the claim count per player limit already and doesn't have permission to bypass, display an error message
-        if (plugin.config_claims_maxClaimsPerPlayer > 0 &&
+        if (maxClaims > 0 &&
                 !player.hasPermission("griefprevention.overrideclaimcountlimit") &&
-                playerData.getClaims().size() >= plugin.config_claims_maxClaimsPerPlayer)
+                playerData.getClaims().size() >= maxClaims)
         {
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimCreationFailedOverClaimCountLimit);
             return true;
