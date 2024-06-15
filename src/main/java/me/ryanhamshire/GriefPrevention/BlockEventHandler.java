@@ -643,7 +643,7 @@ public class BlockEventHandler implements Listener
             @NotNull BiPredicate<@NotNull Claim, @NotNull BoundingBox> precisePredicate)
     {
         // Check potentially intersecting claims from chunks interacted with.
-        Set<Claim> chunkClaims = dataStore.getChunkClaims(world, boundingBox);
+        Set<Claim> chunkClaims = dataStore.getClaims(world, boundingBox);
         if (initiatingClaim != null)
         {
             chunkClaims.remove(initiatingClaim);

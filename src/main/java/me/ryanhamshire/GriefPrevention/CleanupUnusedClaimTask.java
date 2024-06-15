@@ -62,7 +62,7 @@ class CleanupUnusedClaimTask implements Runnable
                 if (expireEventCanceled())
                     return;
                 claim.removeSurfaceFluids(null);
-                GriefPrevention.instance.dataStore.deleteClaim(claim, true, true);
+                GriefPrevention.instance.dataStore.deleteClaim(claim);
 
                 //if configured to do so, restore the land to natural
                 if (GriefPrevention.instance.creativeRulesApply(claim.getLesserBoundaryCorner()) || GriefPrevention.instance.config_claims_survivalAutoNatureRestoration)
@@ -88,7 +88,7 @@ class CleanupUnusedClaimTask implements Runnable
                 Vector<Claim> claims = new Vector<>(ownerData.getClaims());
 
                 //delete them
-                GriefPrevention.instance.dataStore.deleteClaimsForPlayer(claim.ownerID, true);
+                GriefPrevention.instance.dataStore.deleteClaimsForPlayer(claim.ownerID);
                 GriefPrevention.AddLogEntry(" All of " + claim.getOwnerName() + "'s claims have expired.", CustomLogEntryTypes.AdminActivity);
                 GriefPrevention.AddLogEntry("earliestPermissibleLastLogin#getTime: " + earliestPermissibleLastLogin.getTime(), CustomLogEntryTypes.Debug, true);
                 GriefPrevention.AddLogEntry("ownerInfo#getLastPlayed: " + ownerInfo.getLastPlayed(), CustomLogEntryTypes.Debug, true);
@@ -123,7 +123,7 @@ class CleanupUnusedClaimTask implements Runnable
                 {
                     if (expireEventCanceled())
                         return;
-                    GriefPrevention.instance.dataStore.deleteClaim(claim, true, true);
+                    GriefPrevention.instance.dataStore.deleteClaim(claim);
                     GriefPrevention.AddLogEntry("Removed " + claim.getOwnerName() + "'s unused claim @ " + GriefPrevention.getfriendlyLocationString(claim.getLesserBoundaryCorner()), CustomLogEntryTypes.AdminActivity);
 
                     //restore the claim area to natural state

@@ -355,7 +355,7 @@ public class DatabaseDataStore extends DataStore
                 else if (parentId == -1)
                 {
                     //top level claim
-                    this.addClaim(claim, false);
+                    this.addClaim(claim, false, false);
                 }
                 else
                 {

@@ -153,6 +153,11 @@
             <!-- Annotations are not required at runtime, only during compilation. -->
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.intellectualsites.prtree</groupId>
+            <artifactId>PRTree</artifactId>
+            <version>2.0.1</version>
+        </dependency>
         <!-- Tests -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

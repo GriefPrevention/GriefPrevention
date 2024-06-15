@@ -645,7 +645,7 @@ class PlayerEventHandler implements Listener
             instance.checkPvpProtectionNeeded(player);
 
             //if in survival claims mode, send a message about the claim basics video (except for admins - assumed experts)
-            if (instance.config_claims_worldModes.get(player.getWorld()) == ClaimsMode.Survival && !player.hasPermission("griefprevention.adminclaims") && this.dataStore.claims.size() > 10)
+            if (instance.config_claims_worldModes.get(player.getWorld()) == ClaimsMode.Survival && !player.hasPermission("griefprevention.adminclaims") && this.dataStore.getClaimCount() > 10)
             {
                 WelcomeTask task = new WelcomeTask(player);
                 Bukkit.getScheduler().scheduleSyncDelayedTask(instance, task, instance.config_claims_manualDeliveryDelaySeconds * 20L);
@@ -1797,7 +1797,13 @@ class PlayerEventHandler implements Listener
                 if (player.isSneaking() && player.hasPermission("griefprevention.visualizenearbyclaims"))
                 {
                     //find nearby claims
-                    Set<Claim> claims = this.dataStore.getNearbyClaims(player.getLocation());
+                    Location nearbyMin = player.getLocation().subtract(150, 0, 150);
+                    nearbyMin.setX(((int) (nearbyMin.getX() / 16)) * 16);
+                    nearbyMin.setZ(((int) (nearbyMin.getZ() / 16)) * 16);
+                    Location nearbyMax = player.getLocation().add(150, 0, 150);
+                    nearbyMax.setX(Math.ceil(nearbyMax.getX() / 16) * 16);
+                    nearbyMax.setZ(Math.ceil(nearbyMax.getZ() / 16) * 16);
+                    Set<Claim> claims = this.dataStore.getClaims(player.getWorld(), new BoundingBox(nearbyMin, nearbyMax));
 
                     // alert plugins of a claim inspection, return if cancelled
                     ClaimInspectionEvent inspectionEvent = new ClaimInspectionEvent(player, null, claims, true);

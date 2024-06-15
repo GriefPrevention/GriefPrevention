@@ -256,15 +256,19 @@ public class PlayerData
             //find all the claims belonging to this player and note them for future reference
             DataStore dataStore = GriefPrevention.instance.dataStore;
             int totalClaimsArea = 0;
-            for (int i = 0; i < dataStore.claims.size(); i++)
+            for (Claim claim : dataStore.getClaims())
             {
-                Claim claim = dataStore.claims.get(i);
                 if (!claim.inDataStore)
                 {
-                    dataStore.claims.remove(i--);
+                    // This is safe; we're iterating over a copy of the claim list.
+                    dataStore.deleteClaim(claim);
                     continue;
                 }
-                if (playerID.equals(claim.ownerID))
+
+                // Ignore subclaims.
+                if (claim.parent != null) continue;
+
+                if (playerID.equals(claim.getOwnerID()))
                 {
                     this.claims.add(claim);
                     totalClaimsArea += claim.getArea();

@@ -344,7 +344,7 @@ public class FlatFileDataStore extends DataStore
                             topLevelClaim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builderNames, containerNames, accessorNames, managerNames, claimID);
 
                             topLevelClaim.modifiedDate = new Date(files[i].lastModified());
-                            this.addClaim(topLevelClaim, false);
+                            this.addClaim(topLevelClaim, false, false);
                         }
 
                         //otherwise there's already a top level claim, so this must be a subdivision of that top level claim
@@ -434,7 +434,7 @@ public class FlatFileDataStore extends DataStore
                     Claim claim = this.loadClaim(files[i], out_parentID, claimID);
                     if (out_parentID.size() == 0 || out_parentID.get(0) == -1)
                     {
-                        this.addClaim(claim, false);
+                        this.addClaim(claim, false, false);
                     }
                     else
                     {
@@ -466,7 +466,7 @@ public class FlatFileDataStore extends DataStore
             if (parent != null)
             {
                 child.parent = parent;
-                this.addClaim(child, false);
+                this.addClaim(child, false, false);
             }
         }
     }
@@ -801,14 +801,11 @@ public class FlatFileDataStore extends DataStore
     synchronized void migrateData(DatabaseDataStore databaseStore)
     {
         //migrate claims
-        for (Claim claim : this.claims)
+        for (Claim claim : this.getClaims())
         {
-            databaseStore.addClaim(claim, true);
-            for (Claim child : claim.children)
-            {
-                databaseStore.addClaim(child, true);
-            }
+            databaseStore.addClaim(claim, true, false);
         }
+        databaseStore.rebuildIndex();
 
         //migrate groups
         for (Map.Entry<String, Integer> groupEntry : this.permissionToBonusBlocksMap.entrySet())

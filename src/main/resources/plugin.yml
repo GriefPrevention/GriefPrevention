@@ -4,6 +4,8 @@ softdepend: [Multiverse-Core, My_Worlds, MystCraft, Transporter, RoyalCommands, 
 dev-url: https://dev.bukkit.org/projects/grief-prevention
 version: '${git.commit.id.describe}'
 api-version: '1.20'
+libraries:
+  - com.intellectualsites.prtree:prtree:2.0.1
 commands:
     abandonclaim:
       description: Deletes a claim.

@@ -84,7 +84,7 @@ public class Claim
 
     //parent claim
     //only used for claim subdivisions.  top level claims have null here
-    public Claim parent = null;
+    public @Nullable Claim parent = null;
 
     // intended for subclaims - they inherit no permissions
     private boolean inheritNothing = false;
@@ -840,24 +840,6 @@ public class Claim
         return null;
     }
 
-    //implements a strict ordering of claims, used to keep the claims collection sorted for faster searching
-    boolean greaterThan(Claim otherClaim)
-    {
-        Location thisCorner = this.getLesserBoundaryCorner();
-        Location otherCorner = otherClaim.getLesserBoundaryCorner();
-
-        if (thisCorner.getBlockX() > otherCorner.getBlockX()) return true;
-
-        if (thisCorner.getBlockX() < otherCorner.getBlockX()) return false;
-
-        if (thisCorner.getBlockZ() > otherCorner.getBlockZ()) return true;
-
-        if (thisCorner.getBlockZ() < otherCorner.getBlockZ()) return false;
-
-        return thisCorner.getWorld().getName().compareTo(otherCorner.getWorld().getName()) < 0;
-    }
-
-
     long getPlayerInvestmentScore()
     {
         //decide which blocks will be considered player placed
@@ -934,8 +916,4 @@ public class Claim
         return chunks;
     }
 
-    ArrayList<Long> getChunkHashes()
-    {
-        return DataStore.getChunkHashes(this);
-    }
 }
