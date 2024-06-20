@@ -22,8 +22,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.griefprevention.commands.ClaimCommand;
 import com.griefprevention.metrics.MetricsHandler;
+import com.griefprevention.protection.ProtectionHelper;
 import me.ryanhamshire.GriefPrevention.DataStore.NoTransferException;
-import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
 import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
 import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
 import org.bukkit.BanList;
@@ -53,6 +53,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -2947,125 +2948,72 @@ public class GriefPrevention extends JavaPlugin
         return this.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.Creative;
     }
 
-    public String allowBuild(Player player, Location location)
+    /**
+     * @deprecated use {@link ProtectionHelper#checkPermission(Player, Location, ClaimPermission, org.bukkit.event.Event)}
+     */
+    @Deprecated(forRemoval = true, since = "17.0.0")
+    public @Nullable String allowBuild(Player player, Location location)
     {
-        // TODO check all derivatives and rework API
         return this.allowBuild(player, location, location.getBlock().getType());
     }
 
-    public String allowBuild(Player player, Location location, Material material)
+    /**
+     * @deprecated use {@link ProtectionHelper#checkPermission(Player, Location, ClaimPermission, org.bukkit.event.Event)}
+     */
+    @Deprecated(forRemoval = true, since = "17.0.0")
+    public @Nullable String allowBuild(Player player, Location location, Material material)
     {
         if (!GriefPrevention.instance.claimsEnabledForWorld(location.getWorld())) return null;
 
-        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-        Claim claim = this.dataStore.getClaimAt(location, false, playerData.lastClaim);
-
-        //exception: administrators in ignore claims mode
-        if (playerData.ignoreClaims) return null;
-
-        //wilderness rules
-        if (claim == null)
+        ItemStack placed;
+        if (material.isItem())
         {
-            //no building in the wilderness in creative mode
-            if (this.creativeRulesApply(location) || this.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.SurvivalRequiringClaims)
-            {
-                //exception: when chest claims are enabled, players who have zero land claims and are placing a chest
-                if (material != Material.CHEST || playerData.getClaims().size() > 0 || GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius == -1)
-                {
-                    String reason = this.dataStore.getMessage(Messages.NoBuildOutsideClaims);
-                    if (player.hasPermission("griefprevention.ignoreclaims"))
-                        reason += "  " + this.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-                    reason += "  " + this.dataStore.getMessage(Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
-                    return reason;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            //but it's fine in survival mode
-            else
-            {
-                return null;
-            }
+            placed = new ItemStack(material);
         }
-
-        //if not in the wilderness, then apply claim rules (permissions, etc)
         else
         {
-            //cache the claim for later reference
-            playerData.lastClaim = claim;
-            Block block = location.getBlock();
-
-            Supplier<String> supplier = claim.checkPermission(player, ClaimPermission.Build, new BlockPlaceEvent(block, block.getState(), block, new ItemStack(material), player, true, EquipmentSlot.HAND));
-
-            if (supplier == null) return null;
-
-            return supplier.get();
+            var blockType = material.asBlockType();
+            if (blockType != null && blockType.hasItemType())
+            {
+                placed = blockType.getItemType().createItemStack();
+            }
+            else
+            {
+                placed = new ItemStack(Material.DIRT);
+            }
         }
+
+        Block block = location.getBlock();
+        Supplier<String> result = ProtectionHelper.checkPermission(player, location, ClaimPermission.Build, new BlockPlaceEvent(block, block.getState(), block, placed, player, true, EquipmentSlot.HAND));
+        return result == null ? null : result.get();
     }
 
-    public String allowBreak(Player player, Block block, Location location)
+    /**
+     * @deprecated use {@link ProtectionHelper#checkPermission(Player, Location, ClaimPermission, org.bukkit.event.Event)}
+     */
+    @Deprecated(forRemoval = true, since = "17.0.0")
+    public @Nullable String allowBreak(Player player, Block block, Location location)
     {
         return this.allowBreak(player, block, location, new BlockBreakEvent(block, player));
     }
 
-    public String allowBreak(Player player, Material material, Location location, BlockBreakEvent breakEvent)
+    /**
+     * @deprecated use {@link ProtectionHelper#checkPermission(Player, Location, ClaimPermission, org.bukkit.event.Event)}
+     */
+    @Deprecated(forRemoval = true, since = "17.0.0")
+    public @Nullable String allowBreak(Player player, Material material, Location location, BlockBreakEvent breakEvent)
     {
         return this.allowBreak(player, location.getBlock(), location, breakEvent);
     }
 
-    public String allowBreak(Player player, Block block, Location location, BlockBreakEvent breakEvent)
+    /**
+     * @deprecated use {@link ProtectionHelper#checkPermission(Player, Location, ClaimPermission, org.bukkit.event.Event)}
+     */
+    @Deprecated(forRemoval = true, since = "17.0.0")
+    public @Nullable String allowBreak(Player player, Block block, Location location, BlockBreakEvent breakEvent)
     {
-        if (!GriefPrevention.instance.claimsEnabledForWorld(location.getWorld())) return null;
-
-        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-        Claim claim = this.dataStore.getClaimAt(location, false, playerData.lastClaim);
-
-        //exception: administrators in ignore claims mode
-        if (playerData.ignoreClaims) return null;
-
-        //wilderness rules
-        if (claim == null)
-        {
-            //no building in the wilderness in creative mode
-            if (this.creativeRulesApply(location) || this.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.SurvivalRequiringClaims)
-            {
-                String reason = this.dataStore.getMessage(Messages.NoBuildOutsideClaims);
-                if (player.hasPermission("griefprevention.ignoreclaims"))
-                    reason += "  " + this.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-                reason += "  " + this.dataStore.getMessage(Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
-                return reason;
-            }
-
-            //but it's fine in survival mode
-            else
-            {
-                return null;
-            }
-        }
-        else
-        {
-            //cache the claim for later reference
-            playerData.lastClaim = claim;
-
-            //if not in the wilderness, then apply claim rules (permissions, etc)
-            Supplier<String> cancel = claim.checkPermission(player, ClaimPermission.Build, breakEvent);
-            if (cancel != null && breakEvent != null)
-            {
-                PreventBlockBreakEvent preventionEvent = new PreventBlockBreakEvent(breakEvent);
-                Bukkit.getPluginManager().callEvent(preventionEvent);
-                if (preventionEvent.isCancelled())
-                {
-                    cancel = null;
-                }
-            }
-
-            if (cancel == null) return null;
-
-            return cancel.get();
-        }
+        Supplier<String> result = ProtectionHelper.checkPermission(player, location, ClaimPermission.Build, breakEvent);
+        return result == null ? null : result.get();
     }
 
     //restores nature in multiple chunks, as described by a claim instance
@@ -3219,8 +3167,8 @@ public class GriefPrevention extends JavaPlugin
         }
         else
         {
-            BanList bans = Bukkit.getServer().getBanList(Type.NAME);
-            bans.addBan(player.getName(), reason, (Date) null, source);
+            BanList<PlayerProfile> bans = Bukkit.getServer().getBanList(Type.PROFILE);
+            bans.addBan(player.getPlayerProfile(), reason, (Date) null, source);
 
             //kick
             if (player.isOnline())

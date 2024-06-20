@@ -19,6 +19,7 @@
 package me.ryanhamshire.GriefPrevention;
 
 import me.ryanhamshire.GriefPrevention.events.ProtectDeathDropsEvent;
+import com.griefprevention.protection.ProtectionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -89,14 +90,10 @@ public class EntityEventHandler implements Listener
     public void onEntityFormBlock(EntityBlockFormEvent event)
     {
         Entity entity = event.getEntity();
-        if (entity.getType() == EntityType.PLAYER)
+        if (entity instanceof Player player
+                && ProtectionHelper.checkPermission(player, event.getBlock().getLocation(), ClaimPermission.Build, event) != null)
         {
-            Player player = (Player) event.getEntity();
-            String noBuildReason = GriefPrevention.instance.allowBuild(player, event.getBlock().getLocation(), event.getNewState().getType());
-            if (noBuildReason != null)
-            {
-                event.setCancelled(true);
-            }
+            event.setCancelled(true);
         }
     }
 
@@ -148,15 +145,14 @@ public class EntityEventHandler implements Listener
         //don't allow crops to be trampled, except by a player with build permission
         else if (event.getTo() == Material.DIRT && event.getBlock().getType() == Material.FARMLAND)
         {
-            if (event.getEntityType() != EntityType.PLAYER)
+            if (!(event.getEntity() instanceof Player player))
             {
                 event.setCancelled(true);
             }
             else
             {
-                Player player = (Player) event.getEntity();
                 Block block = event.getBlock();
-                if (GriefPrevention.instance.allowBreak(player, block, block.getLocation()) != null)
+                if (ProtectionHelper.checkPermission(player, block.getLocation(), ClaimPermission.Build, event) != null)
                 {
                     event.setCancelled(true);
                 }
@@ -173,10 +169,10 @@ public class EntityEventHandler implements Listener
         else if (event.getEntity() instanceof Vehicle && !event.getEntity().getPassengers().isEmpty())
         {
             Entity driver = event.getEntity().getPassengers().get(0);
-            if (driver instanceof Player)
+            if (driver instanceof Player player)
             {
                 Block block = event.getBlock();
-                if (GriefPrevention.instance.allowBreak((Player) driver, block, block.getLocation()) != null)
+                if (ProtectionHelper.checkPermission(player, block.getLocation(), ClaimPermission.Build, event) != null)
                 {
                     event.setCancelled(true);
                 }
@@ -327,7 +323,7 @@ public class EntityEventHandler implements Listener
         if (player != null)
         {
             Block block = event.getBlock();
-            if (GriefPrevention.instance.allowBreak(player, block, block.getLocation()) != null)
+            if (ProtectionHelper.checkPermission(player, block.getLocation(), ClaimPermission.Build, event) != null)
             {
                 event.setCancelled(true);
             }
@@ -652,19 +648,18 @@ public class EntityEventHandler implements Listener
         Entity remover = entityEvent.getRemover();
 
         //again, making sure the breaker is a player
-        if (remover.getType() != EntityType.PLAYER)
+        if (!(remover instanceof Player playerRemover))
         {
             event.setCancelled(true);
             return;
         }
 
         //if the player doesn't have build permission, don't allow the breakage
-        Player playerRemover = (Player) entityEvent.getRemover();
-        String noBuildReason = GriefPrevention.instance.allowBuild(playerRemover, event.getEntity().getLocation(), Material.AIR);
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(playerRemover, event.getEntity().getLocation(), ClaimPermission.Build, event);
         if (noBuildReason != null)
         {
             event.setCancelled(true);
-            GriefPrevention.sendMessage(playerRemover, TextMode.Err, noBuildReason);
+            GriefPrevention.sendMessage(playerRemover, TextMode.Err, noBuildReason.get());
         }
     }
 
@@ -674,15 +669,16 @@ public class EntityEventHandler implements Listener
     {
         //don't track in worlds where claims are not enabled
         if (!GriefPrevention.instance.claimsEnabledForWorld(event.getBlock().getWorld())) return;
+        if (event.getPlayer() == null) return;
 
         //FEATURE: similar to above, placing a painting requires build permission in the claim
 
         //if the player doesn't have permission, don't allow the placement
-        String noBuildReason = GriefPrevention.instance.allowBuild(event.getPlayer(), event.getEntity().getLocation(), Material.PAINTING);
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(event.getPlayer(), event.getEntity().getLocation(), ClaimPermission.Build, event);
         if (noBuildReason != null)
         {
             event.setCancelled(true);
-            GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason);
+            GriefPrevention.sendMessage(event.getPlayer(), TextMode.Err, noBuildReason.get());
             return;
         }
     }

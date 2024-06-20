@@ -24,6 +24,7 @@ import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.events.ClaimInspectionEvent;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+import com.griefprevention.protection.ProtectionHelper;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -87,6 +88,7 @@ import org.bukkit.event.raid.RaidTriggerEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockIterator;
 import org.jetbrains.annotations.NotNull;
@@ -686,7 +688,8 @@ class PlayerEventHandler implements Listener
                             if (info2.address.toString().equals(address))
                             {
                                 OfflinePlayer bannedAccount = instance.getServer().getOfflinePlayer(info2.bannedAccountName);
-                                instance.getServer().getBanList(BanList.Type.NAME).pardon(bannedAccount.getName());
+                                BanList<PlayerProfile> banList = instance.getServer().getBanList(BanList.Type.PROFILE);
+                                banList.pardon(bannedAccount.getPlayerProfile());
                                 this.tempBannedIps.remove(j--);
                             }
                         }
@@ -1136,10 +1139,10 @@ class PlayerEventHandler implements Listener
         //don't allow interaction with item frames or armor stands in claimed areas without build permission
         if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging)
         {
-            String noBuildReason = instance.allowBuild(player, entity.getLocation(), Material.ITEM_FRAME);
+            Supplier<String> noBuildReason = ProtectionHelper.checkPermission(player, entity.getLocation(), ClaimPermission.Build, event);
             if (noBuildReason != null)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+                GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
                 event.setCancelled(true);
                 return;
             }
@@ -1358,10 +1361,10 @@ class PlayerEventHandler implements Listener
         }
 
         //make sure the player is allowed to build at the location
-        String noBuildReason = instance.allowBuild(player, block.getLocation(), Material.WATER);
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(player, block.getLocation(), ClaimPermission.Build, bucketEvent);
         if (noBuildReason != null)
         {
-            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
             bucketEvent.setCancelled(true);
             return;
         }
@@ -1457,22 +1460,22 @@ class PlayerEventHandler implements Listener
 
         if (!instance.claimsEnabledForWorld(block.getWorld())) return;
 
+        //exemption for cow milking (permissions will be handled by player interact with entity event instead)
+        Material blockType = block.getType();
+        if (blockType == Material.AIR)
+            return;
+        if (blockType.isSolid())
+        {
+            BlockData blockData = block.getBlockData();
+            if (!(blockData instanceof Waterlogged) || !((Waterlogged) blockData).isWaterlogged())
+                return;
+        }
+
         //make sure the player is allowed to build at the location
-        String noBuildReason = instance.allowBuild(player, block.getLocation(), Material.AIR);
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(player, block.getLocation(), ClaimPermission.Build, bucketEvent);
         if (noBuildReason != null)
         {
-            //exemption for cow milking (permissions will be handled by player interact with entity event instead)
-            Material blockType = block.getType();
-            if (blockType == Material.AIR)
-                return;
-            if (blockType.isSolid())
-            {
-                BlockData blockData = block.getBlockData();
-                if (!(blockData instanceof Waterlogged) || !((Waterlogged) blockData).isWaterlogged())
-                    return;
-            }
-
-            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
             bucketEvent.setCancelled(true);
             return;
         }
@@ -1489,14 +1492,14 @@ class PlayerEventHandler implements Listener
         }
 
         Player player = event.getPlayer();
-        String denial = instance.allowBuild(player, event.getSign().getLocation(), event.getSign().getType());
+        Supplier<String> denial = ProtectionHelper.checkPermission(player, event.getSign().getLocation(), ClaimPermission.Build, event);
 
         // If user is allowed to build, do nothing.
         if (denial == null)
             return;
 
         // If user is not allowed to build, prevent sign UI opening and send message.
-        GriefPrevention.sendMessage(player, TextMode.Err, denial);
+        GriefPrevention.sendMessage(player, TextMode.Err, denial.get());
         event.setCancelled(true);
     }
 
@@ -1729,13 +1732,10 @@ class PlayerEventHandler implements Listener
                     || materialInHand == Material.HONEYCOMB
                     || dyes.contains(materialInHand)))
             {
-                String noBuildReason = instance
-                        .allowBuild(player, clickedBlock
-                                        .getLocation(),
-                                clickedBlockType);
+                Supplier<String> noBuildReason = ProtectionHelper.checkPermission(player, event.getClickedBlock().getLocation(), ClaimPermission.Build, event);
                 if (noBuildReason != null)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+                    GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
                     event.setCancelled(true);
                 }
 
@@ -2437,10 +2437,7 @@ class PlayerEventHandler implements Listener
         {
             result = iterator.next();
             Material type = result.getType();
-            if (type != Material.AIR &&
-                    (!passThroughWater || type != Material.WATER) &&
-                    type != Material.SHORT_GRASS &&
-                    type != Material.SNOW) return result;
+            if (!Tag.REPLACEABLE.isTagged(type) || (!passThroughWater && type == Material.WATER)) return result;
         }
 
         return result;
