@@ -20,6 +20,7 @@ package me.ryanhamshire.GriefPrevention;
 
 import me.ryanhamshire.GriefPrevention.events.ProtectDeathDropsEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -36,6 +37,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -371,23 +373,99 @@ public class EntityEventHandler implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onEntityExplode(EntityExplodeEvent explodeEvent)
     {
-        this.handleExplosion(explodeEvent.getLocation(), explodeEvent.getEntity(), explodeEvent.blockList());
+        // If there aren't any affected blocks, there's nothing to do. Vanilla mob griefing rule causes this.
+        if (explodeEvent.blockList().isEmpty()) return;
+
+        // Explosion causes interactable blocks (levers, buttons, etc.) to change state.
+        if (explodeEvent.getExplosionResult() == ExplosionResult.TRIGGER_BLOCK)
+        {
+            handleExplodeInteract(explodeEvent.getLocation(), explodeEvent.getEntity(), explodeEvent.blockList(), explodeEvent);
+        }
+        // Explosion damages world.
+        else
+        {
+            handleExplosion(explodeEvent.getLocation(), explodeEvent.getEntity(), explodeEvent.blockList());
+        }
     }
 
     //when a block explodes...
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockExplode(BlockExplodeEvent explodeEvent)
     {
-        this.handleExplosion(explodeEvent.getBlock().getLocation(), null, explodeEvent.blockList());
+        // If there aren't any affected blocks, there's nothing to do. Vanilla mob griefing rule causes this.
+        if (explodeEvent.blockList().isEmpty()) return;
+
+        // Explosion causes interactable blocks (levers, buttons, etc.) to change state.
+        if (explodeEvent.getExplosionResult() == ExplosionResult.TRIGGER_BLOCK)
+        {
+            handleExplodeInteract(explodeEvent.getBlock().getLocation(), null, explodeEvent.blockList(), explodeEvent);
+        }
+        // Explosion damages world.
+        else
+        {
+            handleExplosion(explodeEvent.getBlock().getLocation(), null, explodeEvent.blockList());
+        }
     }
 
+    void handleExplodeInteract(@NotNull Location location, @Nullable Entity entity, @NotNull List<Block> blocks, @NotNull Event event)
+    {
+        World world = location.getWorld();
 
-    void handleExplosion(Location location, Entity entity, List<Block> blocks)
+        if (world == null || !GriefPrevention.instance.claimsEnabledForWorld(world)) return;
+
+        Player player = null;
+        PlayerData playerData = null;
+        ProjectileSource source = null;
+        if (entity instanceof Projectile projectile)
+        {
+            source = projectile.getShooter();
+            if (source instanceof Player)
+            {
+                player = (Player) source;
+                playerData = dataStore.getPlayerData(player.getUniqueId());
+            }
+        }
+
+        List<Block> removed = new ArrayList<>();
+        Claim cachedClaim = playerData != null ? playerData.lastClaim : null;
+
+        for (Block block : blocks)
+        {
+            // Always ignore air blocks.
+            if (block.getType().isAir()) continue;
+
+            Claim claim = this.dataStore.getClaimAt(block.getLocation(), false, cachedClaim);
+
+            // Is it in a land claim?
+            if (claim == null) continue;
+
+            cachedClaim = claim;
+
+            if (player == null)
+            {
+                // If the source is not part of the claim, prevent interaction.
+                if (!isBlockSourceInClaim(source, claim))
+                    removed.add(block);
+                continue;
+            }
+
+            // If the player is not allowed to interact with blocks, prevent interaction.
+            if (claim.checkPermission(player, ClaimPermission.Access, event) != null)
+                removed.add(block);
+        }
+
+        if (playerData != null && cachedClaim != null)
+            playerData.lastClaim = cachedClaim;
+
+        blocks.removeAll(removed);
+    }
+
+    void handleExplosion(@NotNull Location location, @Nullable Entity entity, @NotNull List<Block> blocks)
     {
         //only applies to claims-enabled worlds
         World world = location.getWorld();
 
-        if (!GriefPrevention.instance.claimsEnabledForWorld(world)) return;
+        if (world == null || !GriefPrevention.instance.claimsEnabledForWorld(world)) return;
 
         //FEATURE: explosions don't destroy surface blocks by default
         boolean isCreeper = (entity != null && entity.getType() == EntityType.CREEPER);
@@ -399,8 +477,6 @@ public class EntityEventHandler implements Listener
         {
             for (int i = 0; i < blocks.size(); i++)
             {
-                Block block = blocks.get(i);
-
                 blocks.remove(i--);
             }
 
@@ -413,7 +489,7 @@ public class EntityEventHandler implements Listener
         for (Block block : blocks)
         {
             //always ignore air blocks
-            if (block.getType() == Material.AIR) continue;
+            if (block.getType().isAir()) continue;
 
             //is it in a land claim?
             Claim claim = this.dataStore.getClaimAt(block.getLocation(), false, cachedClaim);
