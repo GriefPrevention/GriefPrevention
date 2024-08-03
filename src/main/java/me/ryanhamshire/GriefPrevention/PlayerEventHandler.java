@@ -24,6 +24,7 @@ import com.griefprevention.util.command.MonitoredCommands;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.events.ClaimInspectionEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimStartEvent;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
@@ -2063,17 +2064,29 @@ class PlayerEventHandler implements Listener
             Location lastShovelLocation = playerData.lastShovelLocation;
             if (lastShovelLocation == null)
             {
+                boolean claimsEnabledForWorld = instance.claimsEnabledForWorld(player.getWorld());
+                int maxClaims = instance.config_claims_maxClaimsPerPlayer;
+
+                ClaimStartEvent claimStart = new ClaimStartEvent(claimsEnabledForWorld, maxClaims, event.getPlayer());
+
+                Bukkit.getPluginManager().callEvent(claimStart);
+                if (claimStart.isCancelled()) return;
+
+                claimsEnabledForWorld = claimStart.isEnabledForWorld();
+                maxClaims = claimStart.getMaxClaims();
+
                 //if claims are not enabled in this world and it's not an administrative claim, display an error message and stop
-                if (!instance.claimsEnabledForWorld(player.getWorld()))
+                if (!claimsEnabledForWorld &&
+                        !player.hasPermission("griefprevention.overrideworldrestriction"))
                 {
                     GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimsDisabledWorld);
                     return;
                 }
 
                 //if he's at the claim count per player limit already and doesn't have permission to bypass, display an error message
-                if (instance.config_claims_maxClaimsPerPlayer > 0 &&
+                if (maxClaims > 0 &&
                         !player.hasPermission("griefprevention.overrideclaimcountlimit") &&
-                        playerData.getClaims().size() >= instance.config_claims_maxClaimsPerPlayer)
+                        playerData.getClaims().size() >= maxClaims)
                 {
                     GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimCreationFailedOverClaimCountLimit);
                     return;
