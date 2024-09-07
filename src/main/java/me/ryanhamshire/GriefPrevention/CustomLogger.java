@@ -18,11 +18,12 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -99,7 +100,7 @@ class CustomLogger
         try
         {
             //if nothing to write, stop here
-            if (this.queuedEntries.length() == 0) return;
+            if (this.queuedEntries.isEmpty()) return;
 
             //determine filename based on date
             String filename = this.filenameFormat.format(new Date()) + ".log";
@@ -107,7 +108,7 @@ class CustomLogger
             File logFile = new File(filepath);
 
             //dump content
-            Files.append(this.queuedEntries.toString(), logFile, Charset.forName("UTF-8"));
+            Files.asCharSink(logFile, StandardCharsets.UTF_8, FileWriteMode. APPEND).write(this.queuedEntries.toString());
 
             //in case of a failure to write the above due to exception,
             //the unwritten entries will remain the buffer for the next write to retry
