@@ -211,6 +211,9 @@ permissions:
             griefprevention.deleteclaimsinworld: true
             griefprevention.unlockothersdrops: true
             griefprevention.seeclaimsize: true
+    griefprevention.extendclaim.toolbypass:
+        description: Allows a player to extend a claim without a golden shovel.
+        default: op
     griefprevention.unlockdrops:
         description: Grants permission to use /unlockdrops.
         default: true
