@@ -1564,7 +1564,7 @@ class PlayerEventHandler implements Listener
                                 clickedBlockType == Material.LOOM ||
                                 clickedBlockType == Material.PUMPKIN ||
                                 clickedBlockType == Material.RESPAWN_ANCHOR ||
-                                (clickedBlockType == Material.ROOTED_DIRT && player.getInventory().getItemInMainHand().getType().toString().toLowerCase().endsWith("_hoe")) ||
+                                (clickedBlockType == Material.ROOTED_DIRT && (Tag.ITEMS_HOES.isTagged(player.getInventory().getItemInMainHand().getType()) || Tag.ITEMS_HOES.isTagged(player.getInventory().getItemInOffHand().getType()))) ||
                                 clickedBlockType == Material.STONECUTTER ||
                                 clickedBlockType == Material.SWEET_BERRY_BUSH ||
                                 clickedBlockType == Material.DECORATED_POT
