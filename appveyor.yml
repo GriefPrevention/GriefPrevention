@@ -22,7 +22,7 @@ install:
 build_script:
   - mvn clean package -DskipTests --batch-mode
 test_script:
-  - mvn surefire:test --batch-mode
+  - mvn dependency:properties surefire:test --batch-mode
 cache:
   - C:\Users\appveyor\.m2
 artifacts:
