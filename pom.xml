@@ -96,6 +96,22 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Add Mockito agent and retain existing JVM args, if any. -->
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <!-- GitHub Actions offers 2 cores for Linux. -->
+                    <forkCount>2</forkCount>
+                    <!--
+                        This is somewhat required for testing Bukkit code due to Bukkit's design.
+                        There are so many static fields so deeply intertwined with each other
+                        that correctly initializing everything is a huge hassle.
+                     -->
+                    <reuseForks>false</reuseForks>
+                </configuration>
+            </plugin>
         </plugins>
 
         <pluginManagement>
@@ -119,18 +135,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.2</version>
-                    <configuration>
-                        <!-- Add Mockito agent and retain existing JVM args, if any. -->
-                        <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
-                        <!-- GitHub Actions offers 2 cores for Linux. -->
-                        <forkCount>2</forkCount>
-                        <!--
-                            This is somewhat required for testing Bukkit code due to Bukkit's design.
-                            There are so many static fields so deeply intertwined with each other
-                            that correctly initializing everything is a huge hassle.
-                         -->
-                        <reuseForks>false</reuseForks>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
