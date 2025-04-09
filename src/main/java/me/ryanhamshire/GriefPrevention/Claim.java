@@ -449,6 +449,16 @@ public class Claim
             @NotNull ClaimPermission permission,
             @Nullable Event event)
     {
+        // If owner is online, allow all access (except for admin claims)
+        if (!this.isAdminClaim() && isOwnerOnline()) {
+            return null;
+        }
+
+        // Special case: The player IS the owner - always allow access even if checking while they're offline
+        if (uuid.equals(this.getOwnerID())) {
+            return null;
+        }
+        
         if (player != null)
         {
             // Admin claims need adminclaims permission only.
@@ -462,9 +472,8 @@ public class Claim
                 return null;
         }
 
-        // Claim owner and admins in ignoreclaims mode have access.
-        if (uuid.equals(this.getOwnerID())
-                || GriefPrevention.instance.dataStore.getPlayerData(uuid).ignoreClaims
+        // Admins in ignoreclaims mode have access.
+        if (GriefPrevention.instance.dataStore.getPlayerData(uuid).ignoreClaims
                 && hasBypassPermission(player, permission))
             return null;
 
@@ -805,5 +814,14 @@ public class Claim
     ArrayList<Long> getChunkHashes()
     {
         return DataStore.getChunkHashes(this);
+    }
+
+    /**
+     * Check if the claim owner is currently online
+     * @return true if the owner is online, false otherwise
+     */
+    private boolean isOwnerOnline() {
+        if (this.ownerID == null) return false; // Admin claims
+        return Bukkit.getPlayer(this.ownerID) != null;
     }
 }
