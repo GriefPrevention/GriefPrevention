@@ -24,6 +24,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -817,11 +818,31 @@ public class Claim
     }
 
     /**
-     * Check if the claim owner is currently online
-     * @return true if the owner is online, false otherwise
+     * Check if the claim owner has been offline for at least 10 minutes.
+     * @return true if the owner has been offline for 10 minutes or more, false otherwise.
+     */
+    private boolean isOwnerOfflineForTenMinutes() {
+        if (this.ownerID == null) return false; // Admin claims
+
+        Player owner = Bukkit.getPlayer(this.ownerID);
+        if (owner != null) return false; // Owner is online
+
+        OfflinePlayer offlineOwner = Bukkit.getOfflinePlayer(this.ownerID);
+        long lastPlayed = offlineOwner.getLastPlayed();
+        long currentTime = System.currentTimeMillis();
+
+        // Check if the owner has been offline for at least 10 minutes (600,000 milliseconds)
+        return (currentTime - lastPlayed) >= 600_000;
+    }
+
+    /**
+     * Check if the claim owner is currently online or has been offline for less than 10 minutes.
+     * @return true if the owner is online or has been offline for less than 10 minutes, false otherwise.
      */
     private boolean isOwnerOnline() {
         if (this.ownerID == null) return false; // Admin claims
-        return Bukkit.getPlayer(this.ownerID) != null;
+
+        // Check if the owner is online or has been offline for less than 10 minutes
+        return Bukkit.getPlayer(this.ownerID) != null || !isOwnerOfflineForTenMinutes();
     }
 }
