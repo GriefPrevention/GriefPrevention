@@ -92,7 +92,7 @@ class UUIDFetcher
             UUID uuid = lookupCache.get(name);
             if (uuid != null)
             {
-                GriefPrevention.AddLogEntry(name + " --> " + uuid.toString());
+                GriefPrevention.AddLogEntry(name + " --> " + uuid);
                 names.remove(i--);
             }
         }
@@ -167,7 +167,7 @@ class UUIDFetcher
                     String id = jsonProfile.get("id").getAsString();
                     String name = jsonProfile.get("name").getAsString();
                     UUID uuid = UUIDFetcher.getUUID(id);
-                    GriefPrevention.AddLogEntry(name + " --> " + uuid.toString());
+                    GriefPrevention.AddLogEntry(name + " --> " + uuid);
                     lookupCache.put(name, uuid);
                     lookupCache.put(name.toLowerCase(), uuid);
                 }
@@ -186,7 +186,7 @@ class UUIDFetcher
             for (String name : names)
             {
                 UUID uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(Charsets.UTF_8));
-                GriefPrevention.AddLogEntry(name + " --> " + uuid.toString());
+                GriefPrevention.AddLogEntry(name + " --> " + uuid);
                 lookupCache.put(name, uuid);
                 lookupCache.put(name.toLowerCase(), uuid);
             }

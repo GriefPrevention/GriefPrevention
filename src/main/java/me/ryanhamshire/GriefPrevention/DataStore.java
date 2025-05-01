@@ -18,6 +18,7 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
@@ -44,7 +45,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -230,7 +231,7 @@ public abstract class DataStore
             }
             catch (Exception e)
             {
-                GriefPrevention.AddLogEntry("Failed to read from the soft mute data file: " + e.toString());
+                GriefPrevention.AddLogEntry("Failed to read from the soft mute data file: " + e);
                 e.printStackTrace();
             }
 
@@ -254,14 +255,14 @@ public abstract class DataStore
                         "nigger\nniggers\nniger\nnigga\nnigers\nniggas\n" +
                                 "fag\nfags\nfaggot\nfaggots\nfeggit\nfeggits\nfaggit\nfaggits\n" +
                                 "cunt\ncunts\nwhore\nwhores\nslut\nsluts\n";
-                Files.append(defaultWords, bannedWordsFile, Charset.forName("UTF-8"));
+                Files.asCharSink(bannedWordsFile, StandardCharsets.UTF_8, FileWriteMode. APPEND).write(defaultWords);
             }
 
-            return Files.readLines(bannedWordsFile, Charset.forName("UTF-8"));
+            return Files.readLines(bannedWordsFile, StandardCharsets.UTF_8);
         }
         catch (Exception e)
         {
-            GriefPrevention.AddLogEntry("Failed to read from the banned words data file: " + e.toString());
+            GriefPrevention.AddLogEntry("Failed to read from the banned words data file: " + e);
             e.printStackTrace();
             return new ArrayList<>();
         }
@@ -302,7 +303,7 @@ public abstract class DataStore
 
             for (Map.Entry<UUID, Boolean> entry : softMuteMap.entrySet())
             {
-                if (entry.getValue().booleanValue())
+                if (entry.getValue() == Boolean.TRUE)
                 {
                     outStream.write(entry.getKey().toString());
                     outStream.newLine();
@@ -480,11 +481,7 @@ public abstract class DataStore
         ArrayList<Long> chunkHashes = claim.getChunkHashes();
         for (Long chunkHash : chunkHashes)
         {
-            ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkHash);
-            if (claimsInChunk == null)
-            {
-                this.chunksToClaimsMap.put(chunkHash, claimsInChunk = new ArrayList<>());
-            }
+            ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.computeIfAbsent(chunkHash, hash -> new ArrayList<>());
 
             claimsInChunk.add(claim);
         }
@@ -767,14 +764,7 @@ public abstract class DataStore
     public Collection<Claim> getClaims(int chunkx, int chunkz)
     {
         ArrayList<Claim> chunkClaims = this.chunksToClaimsMap.get(getChunkHash(chunkx, chunkz));
-        if (chunkClaims != null)
-        {
-            return Collections.unmodifiableCollection(chunkClaims);
-        }
-        else
-        {
-            return Collections.unmodifiableCollection(new ArrayList<>());
-        }
+        return Collections.unmodifiableCollection(Objects.requireNonNullElseGet(chunkClaims, ArrayList::new));
     }
 
     public @NotNull Set<Claim> getChunkClaims(@NotNull World world, @NotNull BoundingBox boundingBox)
@@ -1033,7 +1023,7 @@ public abstract class DataStore
 
                 //write data to file
                 File playerDataFile = new File(playerDataFolderPath + File.separator + playerID + ".ignore");
-                Files.write(fileContent.toString().trim().getBytes("UTF-8"), playerDataFile);
+                Files.write(fileContent.toString().trim().getBytes(StandardCharsets.UTF_8), playerDataFile);
             }
 
             //if any problem, log it
@@ -1116,7 +1106,7 @@ public abstract class DataStore
         ArrayList<Claim> claimsToDelete = new ArrayList<>();
         for (Claim claim : this.claims)
         {
-            if ((playerID == claim.ownerID || (playerID != null && playerID.equals(claim.ownerID))))
+            if (Objects.equals(playerID, claim.ownerID))
                 claimsToDelete.add(claim);
         }
 
@@ -1283,7 +1273,7 @@ public abstract class DataStore
             }
 
             //if increased to a sufficiently large size and no subdivisions yet, send subdivision instructions
-            if (oldClaim.getArea() < 1000 && result.claim.getArea() >= 1000 && result.claim.children.size() == 0 && !player.hasPermission("griefprevention.adminclaims"))
+            if (oldClaim.getArea() < 1000 && result.claim.getArea() >= 1000 && result.claim.children.isEmpty() && !player.hasPermission("griefprevention.adminclaims"))
             {
                 GriefPrevention.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);

@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.InetAddress;
 import java.util.Calendar;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -249,14 +250,7 @@ public class PlayerData
 
         if (this.bonusClaimBlocks == null)
         {
-            if (storageData.bonusClaimBlocks != null)
-            {
-                this.bonusClaimBlocks = storageData.bonusClaimBlocks;
-            }
-            else
-            {
-                this.bonusClaimBlocks = 0;
-            }
+            this.bonusClaimBlocks = Objects.requireNonNullElse(storageData.bonusClaimBlocks, 0);
         }
     }
 
