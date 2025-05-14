@@ -26,6 +26,7 @@ import com.griefprevention.protection.ProtectionHelper;
 import me.ryanhamshire.GriefPrevention.DataStore.NoTransferException;
 import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
 import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 import org.bukkit.BanList;
 import org.bukkit.BanList.Type;
 import org.bukkit.Bukkit;
@@ -2442,6 +2443,13 @@ public class GriefPrevention extends JavaPlugin
                 return;
             }
 
+            //if the area is spawn protected, warn the player about it
+            BoundingBox claimBox = new BoundingBox(claim);
+            BoundingBox spawnProtection = getSpawnProtection(claim.getGreaterBoundaryCorner().getWorld());
+            if (spawnProtection != null && claimBox.intersects(spawnProtection) && player.isOp()) {
+                GriefPrevention.sendMessage(player, TextMode.Warn, Messages.ClaimOverlapsSpawnProtection);
+            }
+
             targetClaims.add(claim);
         }
 
@@ -3065,6 +3073,16 @@ public class GriefPrevention extends JavaPlugin
         return claim.isAdminClaim() && claim.parent == null && GriefPrevention.instance.config_pvp_noCombatInAdminLandClaims ||
                 claim.isAdminClaim() && claim.parent != null && GriefPrevention.instance.config_pvp_noCombatInAdminSubdivisions ||
                 !claim.isAdminClaim() && GriefPrevention.instance.config_pvp_noCombatInPlayerLandClaims;
+    }
+
+    public static @Nullable BoundingBox getSpawnProtection(@NotNull World world) {
+        Location spawn = world.getSpawnLocation();
+        int radius = Bukkit.getServer().getSpawnRadius();
+        if (radius == 0) return null;
+        org.bukkit.util.Vector vector = new org.bukkit.util.Vector(radius, 0, radius);
+        Location lower = spawn.subtract(vector);
+        Location greater = spawn.add(vector);
+        return new BoundingBox(lower, greater);
     }
 
     /*
