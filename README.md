@@ -29,6 +29,7 @@ Other server implementations of the Bukkit API _should_ work, but are untested.
 ### [Addons](https://r.griefprevention.com/addons) provide additional features to GriefPrevention. Some of these addons are listed in [GitHub Discussions](https://r.griefprevention.com/addons)
 
 ## Support
+- [📖 Documentation](https://r.griefprevention.com/docs) - Learn how GriefPrevention works. Contains answers to most questions.
 - [Issue Tracker](https://github.com/GriefPrevention/GriefPrevention/issues) - Report problems or bugs on the issue tracker. Check if someone else reported your issue before posting.
 - [GitHub Discussions](https://github.com/GriefPrevention/GriefPrevention/discussions) - New ideas, feature requests, or other general discussions.
 - [IRC Chat](https://griefprevention.com/chat/) or [Discord](https://r.griefprevention.com/dumcord/)
