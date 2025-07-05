@@ -279,25 +279,24 @@ public class MonitoredCommands
     {
         Object aliases = commandEntry.getValue().get("aliases");
 
-        // No aliases.
-        if (aliases == null)
-            return Set.of(commandEntry.getKey().toLowerCase());
-
-        // One alias in String form.
-        if (aliases instanceof String alias)
-            return Set.of(commandEntry.getKey().toLowerCase(), alias.toLowerCase());
-
-        // Zero or more aliases in List form.
-        if (aliases instanceof List<?> list)
+        return switch (aliases)
         {
-            return Stream.concat(
+            // No aliases.
+            case null -> Set.of(commandEntry.getKey().toLowerCase());
+
+            // One alias in String form.
+            case String alias -> Set.of(commandEntry.getKey().toLowerCase(), alias.toLowerCase());
+
+            // Zero or more aliases in List form.
+            case List<?> list -> Stream.concat(
                             Stream.of(commandEntry.getKey().toLowerCase()),
                             list.stream().map(Object::toString).map(String::toLowerCase))
                     .collect(Collectors.toSet());
-        }
 
-        // Invalid alias declaration.
-        return Set.of(commandEntry.getKey().toLowerCase());
+            // Invalid alias declaration.
+            default -> Set.of(commandEntry.getKey().toLowerCase());
+        };
+
     }
 
 }
