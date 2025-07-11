@@ -213,7 +213,8 @@ public enum Messages
     StandInSubclaim("You need to be standing in a subclaim to restrict it"),
     SubclaimRestricted("This subclaim's permissions will no longer inherit from the parent claim"),
     SubclaimUnrestricted("This subclaim's permissions will now inherit from the parent claim"),
-    NetherPortalTrapDetectionMessage("It seems you might be stuck inside a nether portal. We will rescue you in a few seconds if that is the case!", "Sent to player on join, if they left while inside a nether portal.");
+    NetherPortalTrapDetectionMessage("It seems you might be stuck inside a nether portal. We will rescue you in a few seconds if that is the case!", "Sent to player on join, if they left while inside a nether portal."),
+    ClaimOverlapsSpawnProtection("This claim overlaps vanilla Minecraft's spawn protection, so non-opped players won't be able to interact here—-even if they're trusted. To disable spawn protection, set spawn-protection=0 in your server.properties file.");
 
     final @NotNull String defaultValue;
     final @Nullable String notes;
