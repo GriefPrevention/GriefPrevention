@@ -22,3 +22,8 @@ jobs:
           cache: maven
       - name: "Test"
         run: mvn --batch-mode verify
+      - name: "Upload artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: GriefPrevention
+          path: target/GriefPrevention.jar

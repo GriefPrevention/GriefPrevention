@@ -150,6 +150,7 @@ public enum Messages
     ExplosivesEnabled("This claim is now vulnerable to explosions.  Use /claimexplosions again to re-enable protections."),
     ClaimExplosivesAdvertisement("To allow explosives to destroy blocks in this land claim, use /claimexplosions."),
     PlayerInPvPSafeZone("That player is in a PvP safe zone."),
+    GriefPreventionOnline("You can only grief this claim when the owner is online."),
     NoPistonsOutsideClaims("Warning: Pistons won't move blocks outside land claims."),
     SoftMuted("Soft-muted {0}.", "0: The changed player's name."),
     UnSoftMuted("Un-soft-muted {0}.", "0: The changed player's name."),

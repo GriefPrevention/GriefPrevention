@@ -449,6 +449,22 @@ public class Claim
             @NotNull ClaimPermission permission,
             @Nullable Event event)
     {
+        // if the new feature is enabled
+        if (GriefPrevention.instance.config_claims_allowGriefWhenOwnerOnline) {
+            // if the player is the owner, allow
+            if (uuid.equals(this.getOwnerID())) {
+                return null;
+            }
+            // if the owner is online, allow griefing
+            if (isOwnerOnline()) {
+                return null;
+            }
+            // otherwise, deny
+            else {
+                return () -> GriefPrevention.instance.dataStore.getMessage(Messages.GriefPreventionOnline);
+            }
+        }
+
         // If owner is online, allow all access (except for admin claims)
         if (!this.isAdminClaim() && isOwnerOnline()) {
             return null;
