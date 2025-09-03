@@ -36,7 +36,7 @@ public class BoundingBox implements Cloneable
      */
     public static @NotNull BoundingBox ofBlocks(@NotNull Collection<Block> blocks)
     {
-        if (blocks.size() == 0) throw new IllegalArgumentException("Cannot create bounding box with no blocks!");
+        if (blocks.isEmpty()) throw new IllegalArgumentException("Cannot create bounding box with no blocks!");
 
         Iterator<Block> iterator = blocks.iterator();
         // Initialize bounding box with first block
@@ -60,7 +60,7 @@ public class BoundingBox implements Cloneable
      */
     public static @NotNull BoundingBox ofStates(@NotNull Collection<BlockState> blocks)
     {
-        if (blocks.size() == 0) throw new IllegalArgumentException("Cannot create bounding box with no blocks!");
+        if (blocks.isEmpty()) throw new IllegalArgumentException("Cannot create bounding box with no blocks!");
 
         Iterator<BlockState> iterator = blocks.iterator();
         // Initialize bounding box with first block
