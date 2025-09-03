@@ -60,7 +60,6 @@ public enum Messages
     DeleteTopLevelClaim("To delete a subdivision, stand inside it.  Otherwise, use /abandontoplevelclaim to delete this claim and all subdivisions."),
     AbandonSuccess("Claim abandoned.  You now have {0} available claim blocks.", "0: remaining claim blocks"),
     ConfirmAbandonAllClaims("Are you sure you want to abandon ALL of your claims?  Please confirm with /abandonallclaims confirm"),
-    CantGrantThatPermission("You can't grant a permission you don't have yourself."),
     GrantPermissionNoClaim("Stand inside the claim where you want to grant permission."),
     GrantPermissionConfirmation("Granted {0} permission to {1} {2}.", "0: target player; 1: permission description; 2: scope (changed claims)"),
     ManageUniversalPermissionsInstruction("To manage permissions for ALL your claims, stand outside them."),

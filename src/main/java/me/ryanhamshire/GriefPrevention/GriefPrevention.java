@@ -1524,7 +1524,7 @@ public class GriefPrevention extends JavaPlugin
             //requires exactly one parameter, the other player's name
             if (args.length != 1) return false;
 
-            this.handleTrustCommand(player, null, args[0]);  //null indicates permissiontrust to the helper method
+            this.handleTrustCommand(player, ClaimPermission.Manage, args[0]);
 
             return true;
         }
@@ -2413,32 +2413,6 @@ public class GriefPrevention extends JavaPlugin
             if (claim.checkPermission(player, ClaimPermission.Manage, null) != null)
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
-                return;
-            }
-
-            //see if the player has the level of permission he's trying to grant
-            Supplier<String> errorMessage;
-
-            //permission level null indicates granting permission trust
-            if (permissionLevel == null)
-            {
-                errorMessage = claim.checkPermission(player, ClaimPermission.Edit, null);
-                if (errorMessage != null)
-                {
-                    errorMessage = () -> "Only " + claim.getOwnerName() + " can grant /PermissionTrust here.";
-                }
-            }
-
-            //otherwise just use the ClaimPermission enum values
-            else
-            {
-                errorMessage = claim.checkPermission(player, permissionLevel, null);
-            }
-
-            //error message for trying to grant a permission the player doesn't have
-            if (errorMessage != null)
-            {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.CantGrantThatPermission);
                 return;
             }
 
