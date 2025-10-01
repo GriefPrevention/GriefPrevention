@@ -74,3 +74,4 @@ target/
 *.name
 .idea
 *.iml
+.vscode/settings.json
