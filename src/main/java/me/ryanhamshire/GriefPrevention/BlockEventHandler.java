@@ -784,7 +784,7 @@ public class BlockEventHandler implements Listener
             return;
         }
 
-        if (!GriefPrevention.instance.config_fireSpreads && igniteEvent.getCause() != IgniteCause.FLINT_AND_STEEL && igniteEvent.getCause() != IgniteCause.LIGHTNING)
+        if (!GriefPrevention.instance.config_fireSpreads && igniteEvent.getCause() != IgniteCause.FLINT_AND_STEEL && igniteEvent.getCause() != IgniteCause.LIGHTNING && igniteEvent.getCause() != IgniteCause.FIREBALL)
         {
             igniteEvent.setCancelled(true);
         }
