@@ -18,45 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.griefprevention.commands.ClaimCommand;
-import com.griefprevention.metrics.MetricsHandler;
-import com.griefprevention.protection.ProtectionHelper;
-import me.ryanhamshire.GriefPrevention.DataStore.NoTransferException;
-import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
-import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
-import org.bukkit.BanList;
-import org.bukkit.BanList.Type;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Statistic;
-import org.bukkit.World;
-import org.bukkit.World.Environment;
-import org.bukkit.block.Block;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.AnimalTamer;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.profile.PlayerProfile;
-import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -81,6 +42,50 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.BanList;
+import org.bukkit.BanList.Type;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Statistic;
+import org.bukkit.World;
+import org.bukkit.World.Environment;
+import org.bukkit.block.Block;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.AnimalTamer;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.griefprevention.commands.ClaimCommand;
+import com.griefprevention.handlers.RideableHandler;
+import com.griefprevention.handlers.VehicleHandler;
+import com.griefprevention.metrics.MetricsHandler;
+import com.griefprevention.protection.ProtectionHelper;
+
+import me.ryanhamshire.GriefPrevention.DataStore.NoTransferException;
+import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
+import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
+
 public class GriefPrevention extends JavaPlugin
 {
     //for convenience, a reference to the instance of this plugin
@@ -95,6 +100,12 @@ public class GriefPrevention extends JavaPlugin
     // Event handlers with common functionality
     EntityEventHandler entityEventHandler;
     EntityDamageHandler entityDamageHandler;
+    VehicleHandler vehicleHandler;
+    RideableHandler rideableHandler;
+
+    // PDC Namespaced keys
+    public NamespacedKey VEHICLE_OWNER;
+    public NamespacedKey RIDEABLE_OWNER;
 
     //this tracks item stacks expected to drop which will need protection
     ArrayList<PendingItemProtection> pendingItemWatchList = new ArrayList<>();
@@ -279,6 +290,9 @@ public class GriefPrevention extends JavaPlugin
 
         AddLogEntry("Finished loading configuration.");
 
+        this.VEHICLE_OWNER = new NamespacedKey(this, "vehicle_owner");
+        this.RIDEABLE_OWNER = new NamespacedKey(this, "rideable_owner");
+
         //when datastore initializes, it loads player and claim data, and posts some stats to the log
         if (!this.databaseUrl.isEmpty())
         {
@@ -369,6 +383,12 @@ public class GriefPrevention extends JavaPlugin
         //combat/damage-specific entity events
         entityDamageHandler = new EntityDamageHandler(this.dataStore, this);
         pluginManager.registerEvents(entityDamageHandler, this);
+
+        vehicleHandler = new VehicleHandler(this);
+        pluginManager.registerEvents(vehicleHandler, this);
+
+        rideableHandler = new RideableHandler(this);
+        pluginManager.registerEvents(rideableHandler, this);
 
         //cache offline players
         OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();

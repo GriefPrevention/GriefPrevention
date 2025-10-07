@@ -18,13 +18,20 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.griefprevention.protection.ProtectionHelper;
-import com.griefprevention.util.command.MonitorableCommand;
-import com.griefprevention.util.command.MonitoredCommands;
-import com.griefprevention.visualization.BoundaryVisualization;
-import com.griefprevention.visualization.VisualizationType;
-import me.ryanhamshire.GriefPrevention.events.ClaimInspectionEvent;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -86,24 +93,21 @@ import org.bukkit.event.raid.RaidTriggerEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.BlockIterator;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
+import com.griefprevention.protection.ProtectionHelper;
+import com.griefprevention.util.command.MonitorableCommand;
+import com.griefprevention.util.command.MonitoredCommands;
+import com.griefprevention.visualization.BoundaryVisualization;
+import com.griefprevention.visualization.VisualizationType;
+
+import me.ryanhamshire.GriefPrevention.events.ClaimInspectionEvent;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 
 class PlayerEventHandler implements Listener
 {
@@ -1147,8 +1151,18 @@ class PlayerEventHandler implements Listener
         }
 
         //if the entity is a vehicle and we're preventing theft in claims
-        if (instance.config_claims_preventTheft && entity instanceof Vehicle)
+        if (instance.config_claims_preventTheft && entity instanceof Vehicle vehicle)
         {
+            
+            // lets player enter their own vehicles
+            // See {@link VehicleHandler} to see how vehicle owners are set
+            PersistentDataContainer pdc = vehicle.getPersistentDataContainer();
+            if(pdc.has(instance.VEHICLE_OWNER)) {
+                String playerId = pdc.get(instance.VEHICLE_OWNER, PersistentDataType.STRING);
+                if(player.getUniqueId().toString().equals(playerId)) return;
+            }
+            
+
             //if the entity is in a claim
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
             if (claim != null)
@@ -1170,6 +1184,15 @@ class PlayerEventHandler implements Listener
         //if the entity is an animal, apply container rules
         if ((instance.config_claims_preventTheft && (entity instanceof Animals || entity instanceof Fish)) || (entity.getType() == EntityType.VILLAGER && instance.config_claims_villagerTradingRequiresTrust))
         {
+
+            // lets player interact with their own animals
+            // See {@link RideableHandler} to see how animal owners are set (only on dismount)
+            PersistentDataContainer pdc = entity.getPersistentDataContainer();
+            if(pdc.has(instance.RIDEABLE_OWNER)) {
+                String playerId = pdc.get(instance.RIDEABLE_OWNER, PersistentDataType.STRING);
+                if(player.getUniqueId().toString().equals(playerId)) return;
+            }
+
             //if the entity is in a claim
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
             if (claim != null)
@@ -1197,6 +1220,16 @@ class PlayerEventHandler implements Listener
         //if preventing theft, prevent leashing claimed creatures
         if (instance.config_claims_preventTheft && entity instanceof Creature && itemInHand.getType() == Material.LEAD)
         {
+
+            // lets player leash their own rideables
+            // See {@link RideableHandler} to see how rideable owners are set
+            PersistentDataContainer pdc = entity.getPersistentDataContainer();
+            if(pdc.has(instance.RIDEABLE_OWNER)) {
+                // ignore checks if rideable's owner is the player interacting
+                String playerId = pdc.get(instance.RIDEABLE_OWNER, PersistentDataType.STRING);
+                if(player.getUniqueId().toString().equals(playerId)) return;
+            }
+
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
             if (claim != null)
             {
