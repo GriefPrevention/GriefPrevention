@@ -1,16 +1,18 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
+import java.util.Collection;
+import java.util.Collections;
+
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when a {@link Player} uses the claim inspection tool.
@@ -21,7 +23,9 @@ public class ClaimInspectionEvent extends PlayerEvent implements Cancellable
 {
 
     private final @NotNull Collection<Claim> claims;
+
     private final @Nullable Block inspectedBlock;
+
     private final boolean inspectingNearbyClaims;
 
     /**
@@ -55,11 +59,8 @@ public class ClaimInspectionEvent extends PlayerEvent implements Cancellable
      * @param claims a {@link Collection} of all claims inspected
      * @param inspectingNearbyClaims whether the user is inspecting nearby claims ("shift-clicking")
      */
-    public ClaimInspectionEvent(
-            @NotNull Player player,
-            @Nullable Block inspectedBlock,
-            @NotNull Collection<Claim> claims,
-            boolean inspectingNearbyClaims)
+    public ClaimInspectionEvent(@NotNull Player player, @Nullable Block inspectedBlock,
+            @NotNull Collection<Claim> claims, boolean inspectingNearbyClaims)
     {
         super(player);
         this.inspectedBlock = inspectedBlock;

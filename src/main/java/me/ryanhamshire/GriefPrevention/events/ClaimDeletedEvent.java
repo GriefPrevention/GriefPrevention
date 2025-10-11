@@ -1,8 +1,10 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
+
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when a {@link Claim} is deleted.

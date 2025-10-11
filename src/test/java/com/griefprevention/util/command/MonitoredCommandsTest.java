@@ -1,7 +1,21 @@
 package com.griefprevention.util.command;
 
-import com.griefprevention.test.ServerMocks;
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -11,6 +25,7 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
@@ -23,26 +38,15 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+import com.griefprevention.test.ServerMocks;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 
 class MonitoredCommandsTest
 {
 
     private static Server server;
+
     private CommandMap commandMap;
 
     @BeforeEach
@@ -90,8 +94,7 @@ class MonitoredCommandsTest
         return List.of(
                 Arguments.of(Command.class, null),
                 Arguments.of(BukkitCommand.class, "/bukkit:"),
-                Arguments.of(MinecraftCommand.class, "/minecraft:")
-        );
+                Arguments.of(MinecraftCommand.class, "/minecraft:"));
     }
 
     @Test
@@ -116,11 +119,7 @@ class MonitoredCommandsTest
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "test,/test one two",
-            "test one,/test one two",
-            "test one two,/test one two"
-    })
+    @CsvSource({"test,/test one two", "test one,/test one two", "test one two,/test one two"})
     void commandWithArgs(String monitored, String executed)
     {
         Command command = mock();
@@ -133,11 +132,7 @@ class MonitoredCommandsTest
     }
 
     @ParameterizedTest
-    @CsvSource({
-            "test one,/test",
-            "test one,/test oops",
-            "test one,/test oh no"
-    })
+    @CsvSource({"test one,/test", "test one,/test oops", "test one,/test oh no"})
     void commandWithoutArgs(String monitored, String executed)
     {
         Command command = mock();
@@ -177,11 +172,8 @@ class MonitoredCommandsTest
 
         MonitoredCommands monitor = new MonitoredCommands(List.of("/test"));
 
-        List<String> expectedAliases = List.of(
-                "/test", "/tset",
-                "/testplugin:test", "/testplugin:tset",
-                "/minecraft:test", "/bukkit:test"
-        );
+        List<String> expectedAliases = List
+                .of("/test", "/tset", "/testplugin:test", "/testplugin:tset", "/minecraft:test", "/bukkit:test");
         for (String alias : expectedAliases)
         {
             assertTrue(monitor.isMonitoredCommand(new MonitorableCommand(alias)));
@@ -265,10 +257,11 @@ class MonitoredCommandsTest
         MonitoredCommands monitor = new MonitoredCommands(List.of("/test"));
 
         List<String> expectedAliases = List.of(
-                "/test", "/testplugin:test",
+                "/test",
+                "/testplugin:test",
                 "/testplugin:tset", // Prefixed copies of conflicted aliases must be registered.
-                "/minecraft:test", "/bukkit:test"
-        );
+                "/minecraft:test",
+                "/bukkit:test");
         for (String alias : expectedAliases)
         {
             assertTrue(monitor.isMonitoredCommand(new MonitorableCommand(alias)));
@@ -327,6 +320,7 @@ class MonitoredCommandsTest
 
     private static abstract class MinecraftCommand extends BukkitCommand
     {
+
         // Mockito's mocks are constructed with a package matching that of the mocked object.
         // This means that direct BukkitCommand mocking will always result in the bukkit prefix.
         protected MinecraftCommand(@NotNull String name)

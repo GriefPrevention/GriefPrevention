@@ -18,9 +18,10 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.griefprevention.visualization.BlockElement;
 import org.bukkit.Location;
 import org.bukkit.block.data.BlockData;
+
+import com.griefprevention.visualization.BlockElement;
 
 /**
  * Represents a fake {@link org.bukkit.block.Block Block} sent to a
@@ -30,8 +31,11 @@ import org.bukkit.block.data.BlockData;
 @Deprecated(forRemoval = true, since = "16.18")
 public class VisualizationElement
 {
+
     public Location location;
+
     public BlockData visualizedBlock;
+
     public BlockData realBlock;
 
     public VisualizationElement(Location location, BlockData visualizedBlock, BlockData realBlock)

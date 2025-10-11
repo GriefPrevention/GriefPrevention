@@ -18,23 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import me.ryanhamshire.GriefPrevention.events.ClaimPermissionCheckEvent;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -46,14 +29,35 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import me.ryanhamshire.GriefPrevention.events.ClaimPermissionCheckEvent;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+
 //represents a player claim
 //creating an instance doesn't make an effective claim
 //only claims which have been added to the datastore have any effect
 public class Claim
 {
+
     //two locations, which together define the boundaries of the claim
     //note that the upper Y value is always ignored, because claims ALWAYS extend up to the sky
     Location lesserBoundaryCorner;
+
     Location greaterBoundaryCorner;
 
     //modification date.  this comes from the file timestamp during load, and is updated with runtime changes
@@ -115,7 +119,9 @@ public class Claim
     }
 
     //main constructor.  note that only creating a claim instance does nothing - a claim must be added to the data store to be effective
-    Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs, List<String> containerIDs, List<String> accessorIDs, List<String> managerIDs, boolean inheritNothing, Long id)
+    Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs,
+            List<String> containerIDs, List<String> accessorIDs, List<String> managerIDs, boolean inheritNothing,
+            Long id)
     {
         //modification date
         this.modifiedDate = Calendar.getInstance().getTime();
@@ -142,7 +148,8 @@ public class Claim
             this.greaterBoundaryCorner.setZ(z1);
             this.lesserBoundaryCorner.setZ(z2);
         }
-        this.lesserBoundaryCorner.setY(Math.min(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY()));
+        this.lesserBoundaryCorner
+                .setY(Math.min(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY()));
 
         //owner
         this.ownerID = ownerID;
@@ -174,13 +181,16 @@ public class Claim
         this.inheritNothing = inheritNothing;
     }
 
-    Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs, List<String> containerIDs, List<String> accessorIDs, List<String> managerIDs, Long id)
+    Claim(Location lesserBoundaryCorner, Location greaterBoundaryCorner, UUID ownerID, List<String> builderIDs,
+            List<String> containerIDs, List<String> accessorIDs, List<String> managerIDs, Long id)
     {
-        this(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builderIDs, containerIDs, accessorIDs, managerIDs, false, id);
+        this(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builderIDs, containerIDs, accessorIDs, managerIDs,
+                false, id);
     }
 
     //produces a copy of a claim.
-    public Claim(Claim claim) {
+    public Claim(Claim claim)
+    {
         this.modifiedDate = claim.modifiedDate;
         this.lesserBoundaryCorner = claim.greaterBoundaryCorner.clone();
         this.greaterBoundaryCorner = claim.greaterBoundaryCorner.clone();
@@ -201,8 +211,12 @@ public class Claim
     {
         try
         {
-            int dX = Math.addExact(Math.subtractExact(greaterBoundaryCorner.getBlockX(), lesserBoundaryCorner.getBlockX()), 1);
-            int dZ = Math.addExact(Math.subtractExact(greaterBoundaryCorner.getBlockZ(), lesserBoundaryCorner.getBlockZ()), 1);
+            int dX = Math.addExact(
+                    Math.subtractExact(greaterBoundaryCorner.getBlockX(), lesserBoundaryCorner.getBlockX()),
+                    1);
+            int dZ = Math.addExact(
+                    Math.subtractExact(greaterBoundaryCorner.getBlockZ(), lesserBoundaryCorner.getBlockZ()),
+                    1);
             return Math.multiplyExact(dX, dZ);
         }
         catch (ArithmeticException e)
@@ -235,10 +249,12 @@ public class Claim
     //distance check for claims, distance in this case is a band around the outside of the claim rather then euclidean distance
     public boolean isNear(Location location, int howNear)
     {
-        Claim claim = new Claim
-                (new Location(this.lesserBoundaryCorner.getWorld(), this.lesserBoundaryCorner.getBlockX() - howNear, this.lesserBoundaryCorner.getBlockY(), this.lesserBoundaryCorner.getBlockZ() - howNear),
-                        new Location(this.greaterBoundaryCorner.getWorld(), this.greaterBoundaryCorner.getBlockX() + howNear, this.greaterBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockZ() + howNear),
-                        null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null);
+        Claim claim = new Claim(
+                new Location(this.lesserBoundaryCorner.getWorld(), this.lesserBoundaryCorner.getBlockX() - howNear,
+                        this.lesserBoundaryCorner.getBlockY(), this.lesserBoundaryCorner.getBlockZ() - howNear),
+                new Location(this.greaterBoundaryCorner.getWorld(), this.greaterBoundaryCorner.getBlockX() + howNear,
+                        this.greaterBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockZ() + howNear),
+                null, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null);
 
         return claim.contains(location, false, true);
     }
@@ -282,13 +298,18 @@ public class Claim
     //build permission check
     public @Nullable String allowBuild(@NotNull Player player, @NotNull Material material)
     {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Build, new CompatBuildBreakEvent(material, false));
+        Supplier<String> supplier = checkPermission(
+                player,
+                ClaimPermission.Build,
+                new CompatBuildBreakEvent(material, false));
         return supplier != null ? supplier.get() : null;
     }
 
     public static class CompatBuildBreakEvent extends Event
     {
+
         private final Material material;
+
         private final boolean isBreak;
 
         private CompatBuildBreakEvent(Material material, boolean isBreak)
@@ -383,7 +404,8 @@ public class Claim
      * @param denialOverride a message overriding the default denial for clarity
      * @return the denial message or null if permission is granted
      */
-    @Nullable Supplier<String> checkPermission(
+    @Nullable
+    Supplier<String> checkPermission(
             @NotNull Player player,
             @NotNull ClaimPermission permission,
             @Nullable Event event,
@@ -420,10 +442,14 @@ public class Claim
             @Nullable Supplier<String> denialOverride)
     {
         // Set denial message (if any) using default behavior.
-        Supplier<String> defaultDenial = getDefaultDenial(event.getCheckedPlayer(), event.getCheckedUUID(),
-                event.getRequiredPermission(), event.getTriggeringEvent());
+        Supplier<String> defaultDenial = getDefaultDenial(
+                event.getCheckedPlayer(),
+                event.getCheckedUUID(),
+                event.getRequiredPermission(),
+                event.getTriggeringEvent());
         // If permission is denied and a clarifying override is provided, use override.
-        if (defaultDenial != null && denialOverride != null) {
+        if (defaultDenial != null && denialOverride != null)
+        {
             defaultDenial = denialOverride;
         }
 
@@ -463,8 +489,7 @@ public class Claim
         }
 
         // Claim owner and admins in ignoreclaims mode have access.
-        if (uuid.equals(this.getOwnerID())
-                || GriefPrevention.instance.dataStore.getPlayerData(uuid).ignoreClaims
+        if (uuid.equals(this.getOwnerID()) || GriefPrevention.instance.dataStore.getPlayerData(uuid).ignoreClaims
                 && hasBypassPermission(player, permission))
             return null;
 
@@ -487,9 +512,7 @@ public class Claim
             // No building while in PVP.
             PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(uuid);
             if (playerData.inPvpCombat())
-            {
-                return () -> GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildPvP);
-            }
+            { return () -> GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildPvP); }
 
             // Allow farming crops with container trust.
             Material material = null;
@@ -504,14 +527,13 @@ public class Claim
         // Permission inheritance for subdivisions.
         if (this.parent != null)
         {
-            if (!inheritNothing)
-                return this.parent.getDefaultDenial(player, uuid, permission, event);
+            if (!inheritNothing) return this.parent.getDefaultDenial(player, uuid, permission, event);
         }
 
         // Catch-all error message for all other cases.
-        return () ->
-        {
-            String reason = GriefPrevention.instance.dataStore.getMessage(permission.getDenialMessage(), this.getOwnerName());
+        return () -> {
+            String reason = GriefPrevention.instance.dataStore
+                    .getMessage(permission.getDenialMessage(), this.getOwnerName());
             if (hasBypassPermission(player, permission))
                 reason += "  " + GriefPrevention.instance.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
             return reason;
@@ -544,7 +566,10 @@ public class Claim
     @Deprecated
     public @Nullable String allowBreak(@NotNull Player player, @NotNull Material material)
     {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Build, new CompatBuildBreakEvent(material, true));
+        Supplier<String> supplier = checkPermission(
+                player,
+                ClaimPermission.Build,
+                new CompatBuildBreakEvent(material, true));
         return supplier != null ? supplier.get() : null;
     }
 
@@ -599,10 +624,8 @@ public class Claim
 
         if (playerID == null || playerID.isEmpty()) return;
 
-        if (permissionLevel == null)
-            dropPermission(playerID);
-        else if (permissionLevel == ClaimPermission.Manage)
-            this.managers.add(playerID.toLowerCase());
+        if (permissionLevel == null) dropPermission(playerID);
+        else if (permissionLevel == ClaimPermission.Manage) this.managers.add(playerID.toLowerCase());
         else
             this.playerIDToClaimPermissionMap.put(playerID.toLowerCase(), permissionLevel);
     }
@@ -634,7 +657,11 @@ public class Claim
 
     //gets ALL permissions
     //useful for  making copies of permissions during a claim resize and listing all permissions in a claim
-    public void getPermissions(ArrayList<String> builders, ArrayList<String> containers, ArrayList<String> accessors, ArrayList<String> managers)
+    public void getPermissions(
+            ArrayList<String> builders,
+            ArrayList<String> containers,
+            ArrayList<String> accessors,
+            ArrayList<String> managers)
     {
         //loop through all the entries in the hash map
         for (Map.Entry<String, ClaimPermission> entry : this.playerIDToClaimPermissionMap.entrySet())
@@ -674,8 +701,7 @@ public class Claim
     //returns a friendly owner name (for admin claims, returns "an administrator" as the owner)
     public String getOwnerName()
     {
-        if (this.parent != null)
-            return this.parent.getOwnerName();
+        if (this.parent != null) return this.parent.getOwnerName();
 
         if (this.ownerID == null)
             return GriefPrevention.instance.dataStore.getMessage(Messages.OwnerNameForAdminClaims);
@@ -686,9 +712,7 @@ public class Claim
     public UUID getOwnerID()
     {
         if (this.parent != null)
-        {
-            return this.parent.ownerID;
-        }
+        { return this.parent.ownerID; }
         return this.ownerID;
     }
 
@@ -711,9 +735,7 @@ public class Claim
         }
         // Otherwise use full containment check.
         else if (!ignoreHeight && !boundingBox.contains(x, location.getBlockY(), z))
-        {
-            return false;
-        }
+        { return false; }
 
         //additional check for subdivisions
         //you're only in a subdivision when you're also in its parent claim
@@ -732,9 +754,7 @@ public class Claim
             {
                 //if we find such a subdivision, return false
                 if (child.contains(location, ignoreHeight, true))
-                {
-                    return false;
-                }
+                { return false; }
             }
         }
 
@@ -746,7 +766,8 @@ public class Claim
     //used internally to prevent overlaps when creating claims
     boolean overlaps(Claim otherClaim)
     {
-        if (!Objects.equals(this.lesserBoundaryCorner.getWorld(), otherClaim.getLesserBoundaryCorner().getWorld())) return false;
+        if (!Objects.equals(this.lesserBoundaryCorner.getWorld(), otherClaim.getLesserBoundaryCorner().getWorld()))
+            return false;
 
         return new BoundingBox(this).intersects(new BoundingBox(otherClaim));
     }
@@ -781,7 +802,6 @@ public class Claim
 
         return thisCorner.getWorld().getName().compareTo(otherCorner.getWorld().getName()) < 0;
     }
-
 
     public ArrayList<Chunk> getChunks()
     {

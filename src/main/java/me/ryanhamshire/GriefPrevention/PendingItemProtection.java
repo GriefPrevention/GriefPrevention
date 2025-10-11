@@ -1,15 +1,19 @@
 package me.ryanhamshire.GriefPrevention;
 
+import java.util.UUID;
+
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.UUID;
-
 class PendingItemProtection
 {
+
     public Location location;
+
     public UUID owner;
+
     long expirationTimestamp;
+
     ItemStack itemStack;
 
     public PendingItemProtection(Location location, UUID owner, long expirationTimestamp, ItemStack itemStack)

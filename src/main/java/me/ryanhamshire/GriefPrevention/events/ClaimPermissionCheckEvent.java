@@ -1,17 +1,19 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.ClaimPermission;
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
-import java.util.function.Supplier;
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.ClaimPermission;
 
 /**
  * An {@link Event} called when a {@link Claim} requires a specific level of trust.
@@ -21,8 +23,11 @@ public class ClaimPermissionCheckEvent extends ClaimEvent implements Cancellable
 {
 
     private final @Nullable Player checkedPlayer;
+
     private final @NotNull UUID checkedUUID;
+
     private final @NotNull ClaimPermission requiredPermission;
+
     private final @Nullable Event triggeringEvent;
 
     /**
@@ -33,10 +38,7 @@ public class ClaimPermissionCheckEvent extends ClaimEvent implements Cancellable
      * @param required the {@link ClaimPermission} level required
      * @param triggeringEvent the {@link Event} triggering the permission check
      */
-    public ClaimPermissionCheckEvent(
-            @NotNull Player checked,
-            @NotNull Claim claim,
-            @NotNull ClaimPermission required,
+    public ClaimPermissionCheckEvent(@NotNull Player checked, @NotNull Claim claim, @NotNull ClaimPermission required,
             @Nullable Event triggeringEvent)
     {
         this(checked, checked.getUniqueId(), claim, required, triggeringEvent);
@@ -50,21 +52,14 @@ public class ClaimPermissionCheckEvent extends ClaimEvent implements Cancellable
      * @param required the {@link ClaimPermission} level required
      * @param triggeringEvent the {@link Event} triggering the permission check
      */
-    public ClaimPermissionCheckEvent(
-            @NotNull UUID checked,
-            @NotNull Claim claim,
-            @NotNull ClaimPermission required,
+    public ClaimPermissionCheckEvent(@NotNull UUID checked, @NotNull Claim claim, @NotNull ClaimPermission required,
             @Nullable Event triggeringEvent)
     {
         this(Bukkit.getPlayer(checked), checked, claim, required, triggeringEvent);
     }
 
-    private ClaimPermissionCheckEvent(
-            @Nullable Player checkedPlayer,
-            @NotNull UUID checkedUUID,
-            @NotNull Claim claim,
-            @NotNull ClaimPermission required,
-            @Nullable Event triggeringEvent)
+    private ClaimPermissionCheckEvent(@Nullable Player checkedPlayer, @NotNull UUID checkedUUID, @NotNull Claim claim,
+            @NotNull ClaimPermission required, @Nullable Event triggeringEvent)
     {
         super(claim);
         this.checkedPlayer = checkedPlayer;

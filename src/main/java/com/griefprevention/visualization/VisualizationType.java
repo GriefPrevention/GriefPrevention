@@ -3,8 +3,7 @@ package com.griefprevention.visualization;
 /**
  * Constants for types of boundaries.
  */
-public enum VisualizationType
-{
+public enum VisualizationType {
 
     /** Boundaries for a user claim. */
     CLAIM,

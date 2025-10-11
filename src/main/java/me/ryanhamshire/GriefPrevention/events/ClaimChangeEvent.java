@@ -1,10 +1,12 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
+
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link Event} called when a {@link Claim} is changed.
@@ -19,6 +21,7 @@ public class ClaimChangeEvent extends Event implements Cancellable
 {
 
     private final @NotNull Claim from;
+
     private final @NotNull Claim to;
 
     /**

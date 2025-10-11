@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -15,7 +16,9 @@ public class PlayerKickBanEvent extends PlayerEvent implements Cancellable
 {
 
     private final @NotNull String reason;
+
     private final @NotNull String source;
+
     private final boolean ban;
 
     /**

@@ -20,6 +20,7 @@ package me.ryanhamshire.GriefPrevention;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,8 +28,11 @@ import org.jetbrains.annotations.Nullable;
 //used to send delayed messages, for example help text triggered by a player's chat
 class SendPlayerMessageTask implements Runnable
 {
+
     private final Player player;
+
     private final ChatColor color;
+
     private final String message;
 
     public SendPlayerMessageTask(@Nullable Player player, @NotNull ChatColor color, @NotNull String message)

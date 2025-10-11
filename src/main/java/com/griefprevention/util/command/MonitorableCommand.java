@@ -1,15 +1,16 @@
 package com.griefprevention.util.command;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 public class MonitorableCommand
 {
 
     private final String command;
+
     private final List<Integer> spaces = new ArrayList<>();
 
     public MonitorableCommand(@NotNull String command)

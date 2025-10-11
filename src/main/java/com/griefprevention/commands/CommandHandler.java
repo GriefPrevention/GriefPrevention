@@ -1,14 +1,16 @@
 package com.griefprevention.commands;
 
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import java.util.List;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 
 public abstract class CommandHandler implements TabExecutor
 {
@@ -21,12 +23,10 @@ public abstract class CommandHandler implements TabExecutor
         setExecutor(command);
     }
 
-    CommandHandler(@NotNull GriefPrevention plugin, @NotNull String @NotNull ... commands)
+    CommandHandler(@NotNull GriefPrevention plugin, @NotNull String @NotNull... commands)
     {
         if (commands.length == 0)
-        {
-            throw new IllegalArgumentException("Must provide commands!");
-        }
+        { throw new IllegalArgumentException("Must provide commands!"); }
         this.plugin = plugin;
         for (String command : commands)
         {
@@ -34,12 +34,11 @@ public abstract class CommandHandler implements TabExecutor
         }
     }
 
-    private void setExecutor(@NotNull String commandName) {
+    private void setExecutor(@NotNull String commandName)
+    {
         PluginCommand command = plugin.getCommand(commandName);
         if (command == null)
-        {
-            throw new IllegalStateException("Command not registered: " + commandName);
-        }
+        { throw new IllegalStateException("Command not registered: " + commandName); }
         command.setExecutor(this);
     }
 

@@ -1,20 +1,5 @@
 package com.griefprevention.visualization;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import me.ryanhamshire.GriefPrevention.PlayerData;
-import com.griefprevention.events.BoundaryVisualizationEvent;
-import com.griefprevention.util.IntVector;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
@@ -22,6 +7,24 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.griefprevention.events.BoundaryVisualizationEvent;
+import com.griefprevention.util.IntVector;
+
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.CustomLogEntryTypes;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import me.ryanhamshire.GriefPrevention.PlayerData;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 
 /**
  * A representation of a system for displaying rectangular {@link Boundary Boundaries} to {@link Player Players}.
@@ -31,8 +34,11 @@ public abstract class BoundaryVisualization
 {
 
     private final Collection<Boundary> elements = new HashSet<>();
+
     protected final @NotNull World world;
+
     protected final @NotNull IntVector visualizeFrom;
+
     protected final int height;
 
     /**
@@ -56,7 +62,8 @@ public abstract class BoundaryVisualization
      * @return true if able to visualize
      */
     @Contract("null -> false")
-    protected boolean canVisualize(@Nullable Player player) {
+    protected boolean canVisualize(@Nullable Player player)
+    {
         return player != null && player.isOnline() && !elements.isEmpty() && Objects.equals(world, player.getWorld());
     }
 
@@ -97,13 +104,10 @@ public abstract class BoundaryVisualization
      */
     protected void scheduleRevert(@NotNull Player player, @NotNull PlayerData playerData)
     {
-        GriefPrevention.instance.getServer().getScheduler().scheduleSyncDelayedTask(
-                GriefPrevention.instance,
-                () -> {
-                    // Only revert if this is the active visualization.
-                    if (playerData.getVisibleBoundaries() == this) playerData.setVisibleBoundaries(null);
-                },
-                20L * 60);
+        GriefPrevention.instance.getServer().getScheduler().scheduleSyncDelayedTask(GriefPrevention.instance, () -> {
+            // Only revert if this is the active visualization.
+            if (playerData.getVisibleBoundaries() == this) playerData.setVisibleBoundaries(null);
+        }, 20L * 60);
     }
 
     /**
@@ -115,9 +119,7 @@ public abstract class BoundaryVisualization
     {
         // If the player cannot visualize the blocks, they should already be effectively reverted.
         if (!canVisualize(player))
-        {
-            return;
-        }
+        { return; }
 
         // Revert data as necessary for any sent elements.
         elements.forEach(element -> erase(player, element));
@@ -141,10 +143,10 @@ public abstract class BoundaryVisualization
     public static void visualizeArea(
             @NotNull Player player,
             @NotNull BoundingBox boundingBox,
-            @NotNull VisualizationType type) {
+            @NotNull VisualizationType type)
+    {
         BoundaryVisualizationEvent event = new BoundaryVisualizationEvent(player,
-                Set.of(new Boundary(boundingBox, type)),
-                player.getEyeLocation().getBlockY());
+                Set.of(new Boundary(boundingBox, type)), player.getEyeLocation().getBlockY());
         callAndVisualize(event);
     }
 
@@ -155,10 +157,7 @@ public abstract class BoundaryVisualization
      * @param claim the {@link Claim} being visualized
      * @param type the {@link VisualizationType type of visualization}
      */
-    public static void visualizeClaim(
-            @NotNull Player player,
-            @NotNull Claim claim,
-            @NotNull VisualizationType type)
+    public static void visualizeClaim(@NotNull Player player, @NotNull Claim claim, @NotNull VisualizationType type)
     {
         visualizeClaim(player, claim, type, player.getEyeLocation().getBlockY());
     }
@@ -194,7 +193,8 @@ public abstract class BoundaryVisualization
             @NotNull VisualizationType type,
             int height)
     {
-        BoundaryVisualizationEvent event = new BoundaryVisualizationEvent(player, defineBoundaries(claim, type), height);
+        BoundaryVisualizationEvent event = new BoundaryVisualizationEvent(player, defineBoundaries(claim, type),
+                height);
         callAndVisualize(event);
     }
 
@@ -217,9 +217,10 @@ public abstract class BoundaryVisualization
 
         // Gather all boundaries. It's important that children override parent so
         // that users can always find children, no matter how oddly sized or positioned.
-        return Stream.concat(
-                Stream.of(new Boundary(claim, type)),
-                claim.children.stream().map(child -> new Boundary(child, VisualizationType.SUBDIVISION)))
+        return Stream
+                .concat(
+                        Stream.of(new Boundary(claim, type)),
+                        claim.children.stream().map(child -> new Boundary(child, VisualizationType.SUBDIVISION)))
                 .collect(Collectors.toSet());
     }
 
@@ -230,16 +231,13 @@ public abstract class BoundaryVisualization
      * @param claims the {@link Claim Claims} being visualized
      * @param height the height at which the visualization was initiated
      */
-    public static void visualizeNearbyClaims(
-            @NotNull Player player,
-            @NotNull Collection<Claim> claims,
-            int height)
+    public static void visualizeNearbyClaims(@NotNull Player player, @NotNull Collection<Claim> claims, int height)
     {
-        BoundaryVisualizationEvent event = new BoundaryVisualizationEvent(
-                player,
-                claims.stream().map(claim -> new Boundary(
-                        claim,
-                        claim.isAdminClaim() ? VisualizationType.ADMIN_CLAIM :  VisualizationType.CLAIM))
+        BoundaryVisualizationEvent event = new BoundaryVisualizationEvent(player,
+                claims.stream()
+                        .map(
+                                claim -> new Boundary(claim,
+                                        claim.isAdminClaim() ? VisualizationType.ADMIN_CLAIM : VisualizationType.CLAIM))
                         .collect(Collectors.toSet()),
                 height);
         callAndVisualize(event);
@@ -250,7 +248,8 @@ public abstract class BoundaryVisualization
      *
      * @param event the {@code BoundaryVisualizationEvent}
      */
-    public static void callAndVisualize(@NotNull BoundaryVisualizationEvent event) {
+    public static void callAndVisualize(@NotNull BoundaryVisualizationEvent event)
+    {
         Bukkit.getPluginManager().callEvent(event);
 
         Player player = event.getPlayer();
@@ -260,15 +259,15 @@ public abstract class BoundaryVisualization
         Collection<Boundary> boundaries = event.getBoundaries();
         boundaries.removeIf(Objects::isNull);
 
-        if (currentVisualization != null
-                && currentVisualization.elements.equals(boundaries)
+        if (currentVisualization != null && currentVisualization.elements.equals(boundaries)
                 && currentVisualization.visualizeFrom.distanceSquared(event.getCenter()) < 165)
         {
             // Ignore visualizations with duplicate boundaries if the viewer has moved fewer than 15 blocks.
             return;
         }
 
-        BoundaryVisualization visualization = event.getProvider().create(player.getWorld(), event.getCenter(), event.getHeight());
+        BoundaryVisualization visualization = event.getProvider()
+                .create(player.getWorld(), event.getCenter(), event.getHeight());
         visualization.elements.addAll(boundaries);
 
         // If they have a visualization active, clear it first.
@@ -284,12 +283,8 @@ public abstract class BoundaryVisualization
         }
     }
 
-    private record DelayedVisualizationTask(
-            @NotNull BoundaryVisualization visualization,
-            @NotNull PlayerData playerData,
-            @NotNull BoundaryVisualizationEvent event)
-            implements Runnable
-    {
+    private record DelayedVisualizationTask(@NotNull BoundaryVisualization visualization,
+            @NotNull PlayerData playerData, @NotNull BoundaryVisualizationEvent event) implements Runnable {
 
         @Override
         public void run()
@@ -315,10 +310,8 @@ public abstract class BoundaryVisualization
                                 exception.getClass().getName(),
                                 exception.getCause()),
                         CustomLogEntryTypes.Exception);
-                GriefPrevention.instance.getLogger().log(
-                        Level.WARNING,
-                        "Exception visualizing claim using external provider",
-                        exception);
+                GriefPrevention.instance.getLogger()
+                        .log(Level.WARNING, "Exception visualizing claim using external provider", exception);
 
                 // Fall through to default provider.
                 BoundaryVisualization fallback = BoundaryVisualizationEvent.DEFAULT_PROVIDER

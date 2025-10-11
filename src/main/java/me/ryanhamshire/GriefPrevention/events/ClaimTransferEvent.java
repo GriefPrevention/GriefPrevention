@@ -1,12 +1,14 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
+import java.util.UUID;
+
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when a {@link Claim} is transferred.
@@ -26,7 +28,8 @@ public class ClaimTransferEvent extends ClaimEvent implements Cancellable
      * @param claim the {@link Claim} being transferred
      * @param newOwner the {@link UUID} of the new owner
      */
-    public ClaimTransferEvent(@NotNull Claim claim, @Nullable UUID newOwner) {
+    public ClaimTransferEvent(@NotNull Claim claim, @Nullable UUID newOwner)
+    {
         super(claim);
         this.newOwner = newOwner;
     }
