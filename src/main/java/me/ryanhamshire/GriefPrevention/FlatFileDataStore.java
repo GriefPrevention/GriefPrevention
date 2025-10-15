@@ -18,13 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.google.common.io.Files;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,11 +37,22 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import com.google.common.io.Files;
+
 //manages data stored in the file system
 public class FlatFileDataStore extends DataStore
 {
+
     private final static String claimDataFolderPath = dataLayerFolderPath + File.separator + "ClaimData";
+
     private final static String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
+
     private final static String schemaVersionFilePath = dataLayerFolderPath + File.separator + "_schemaVersion";
 
     static boolean hasData()
@@ -88,13 +92,13 @@ public class FlatFileDataStore extends DataStore
         File[] files = playerDataFolder.listFiles();
         for (File file : files)
         {
-            if (!file.isFile()) continue;  //avoids folders
+            if (!file.isFile()) continue; //avoids folders
 
             //all group data files start with a dollar sign.  ignoring the rest, which are player data files.
             if (!file.getName().startsWith("$")) continue;
 
             String groupName = file.getName().substring(1);
-            if (groupName == null || groupName.isEmpty()) continue;  //defensive coding, avoid unlikely cases
+            if (groupName == null || groupName.isEmpty()) continue; //defensive coding, avoid unlikely cases
 
             BufferedReader inStream = null;
             try
@@ -117,7 +121,7 @@ public class FlatFileDataStore extends DataStore
             {
                 if (inStream != null) inStream.close();
             }
-            catch (IOException exception) {}
+            catch (IOException exception) { }
         }
 
         //load next claim number from file
@@ -141,7 +145,7 @@ public class FlatFileDataStore extends DataStore
             {
                 if (inStream != null) inStream.close();
             }
-            catch (IOException exception) {}
+            catch (IOException exception) { }
         }
 
         //if converting up from schema version 0, rename player data files using UUIDs instead of player names
@@ -221,7 +225,7 @@ public class FlatFileDataStore extends DataStore
 
         for (int i = 0; i < files.length; i++)
         {
-            if (files[i].isFile())  //avoids folders
+            if (files[i].isFile()) //avoids folders
             {
                 //skip any file starting with an underscore, to avoid special files not representing land claims
                 if (files[i].getName().startsWith("_")) continue;
@@ -283,7 +287,7 @@ public class FlatFileDataStore extends DataStore
                         UUID ownerID = null;
                         if (ownerName.isEmpty() || ownerName.startsWith("--"))
                         {
-                            ownerID = null;  //administrative land claim or subdivision
+                            ownerID = null; //administrative land claim or subdivision
                         }
                         else if (this.getSchemaVersion() == 0)
                         {
@@ -294,7 +298,9 @@ public class FlatFileDataStore extends DataStore
                             catch (Exception ex)
                             {
                                 GriefPrevention.AddLogEntry("Couldn't resolve this name to a UUID: " + ownerName + ".");
-                                GriefPrevention.AddLogEntry("  Converted land claim to administrative @ " + lesserBoundaryCorner.toString());
+                                GriefPrevention.AddLogEntry(
+                                        "  Converted land claim to administrative @ "
+                                                + lesserBoundaryCorner.toString());
                             }
                         }
                         else
@@ -306,7 +312,9 @@ public class FlatFileDataStore extends DataStore
                             catch (Exception ex)
                             {
                                 GriefPrevention.AddLogEntry("Error - this is not a valid UUID: " + ownerName + ".");
-                                GriefPrevention.AddLogEntry("  Converted land claim to administrative @ " + lesserBoundaryCorner.toString());
+                                GriefPrevention.AddLogEntry(
+                                        "  Converted land claim to administrative @ "
+                                                + lesserBoundaryCorner.toString());
                             }
                         }
 
@@ -341,7 +349,8 @@ public class FlatFileDataStore extends DataStore
                         if (topLevelClaim == null)
                         {
                             //instantiate
-                            topLevelClaim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builderNames, containerNames, accessorNames, managerNames, claimID);
+                            topLevelClaim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID,
+                                    builderNames, containerNames, accessorNames, managerNames, claimID);
 
                             topLevelClaim.modifiedDate = new Date(files[i].lastModified());
                             this.addClaim(topLevelClaim, false);
@@ -350,7 +359,8 @@ public class FlatFileDataStore extends DataStore
                         //otherwise there's already a top level claim, so this must be a subdivision of that top level claim
                         else
                         {
-                            Claim subdivision = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, null, builderNames, containerNames, accessorNames, managerNames, null);
+                            Claim subdivision = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, null,
+                                    builderNames, containerNames, accessorNames, managerNames, null);
 
                             subdivision.modifiedDate = new Date(files[i].lastModified());
                             subdivision.parent = topLevelClaim;
@@ -370,7 +380,10 @@ public class FlatFileDataStore extends DataStore
                 {
                     if (e.getMessage() != null && e.getMessage().contains("World not found"))
                     {
-                        GriefPrevention.AddLogEntry("Failed to load a claim " + files[i].getName() + " because its world isn't loaded (yet?).  Please delete the claim file or contact the GriefPrevention developer with information about which plugin(s) you're using to load or create worlds.  " + lesserCornerString);
+                        GriefPrevention.AddLogEntry(
+                                "Failed to load a claim " + files[i].getName()
+                                        + " because its world isn't loaded (yet?).  Please delete the claim file or contact the GriefPrevention developer with information about which plugin(s) you're using to load or create worlds.  "
+                                        + lesserCornerString);
                         inStream.close();
 
                     }
@@ -378,7 +391,12 @@ public class FlatFileDataStore extends DataStore
                     {
                         StringWriter errors = new StringWriter();
                         e.printStackTrace(new PrintWriter(errors));
-                        GriefPrevention.AddLogEntry("Failed to load claim " + files[i].getName() + ". This usually occurs when your server runs out of storage space, causing any file saves to corrupt. Fix or delete the file found in GriefPreventionData/ClaimData/" + files[i].getName(), CustomLogEntryTypes.Debug, false);
+                        GriefPrevention.AddLogEntry(
+                                "Failed to load claim " + files[i].getName()
+                                        + ". This usually occurs when your server runs out of storage space, causing any file saves to corrupt. Fix or delete the file found in GriefPreventionData/ClaimData/"
+                                        + files[i].getName(),
+                                CustomLogEntryTypes.Debug,
+                                false);
                         GriefPrevention.AddLogEntry(files[i].getName() + " " + errors, CustomLogEntryTypes.Exception);
                     }
                 }
@@ -387,7 +405,7 @@ public class FlatFileDataStore extends DataStore
                 {
                     if (inStream != null) inStream.close();
                 }
-                catch (IOException exception) {}
+                catch (IOException exception) { }
             }
         }
     }
@@ -397,7 +415,7 @@ public class FlatFileDataStore extends DataStore
         ConcurrentHashMap<Claim, Long> orphans = new ConcurrentHashMap<>();
         for (int i = 0; i < files.length; i++)
         {
-            if (files[i].isFile())  //avoids folders
+            if (files[i].isFile()) //avoids folders
             {
                 //skip any file starting with an underscore, to avoid special files not representing land claims
                 if (files[i].getName().startsWith("_")) continue;
@@ -430,7 +448,7 @@ public class FlatFileDataStore extends DataStore
 
                 try
                 {
-                    ArrayList<Long> out_parentID = new ArrayList<>();  //hacky output parameter
+                    ArrayList<Long> out_parentID = new ArrayList<>(); //hacky output parameter
                     Claim claim = this.loadClaim(files[i], out_parentID, claimID);
                     if (out_parentID.isEmpty() || out_parentID.get(0) == -1)
                     {
@@ -447,7 +465,9 @@ public class FlatFileDataStore extends DataStore
                 {
                     if (e.getMessage() != null && e.getMessage().contains("World not found"))
                     {
-                        GriefPrevention.AddLogEntry("Failed to load a claim (ID:" + claimID + ") because its world isn't loaded (yet?).  If this is not expected, delete this claim.");
+                        GriefPrevention.AddLogEntry(
+                                "Failed to load a claim (ID:" + claimID
+                                        + ") because its world isn't loaded (yet?).  If this is not expected, delete this claim.");
                     }
                     else
                     {
@@ -471,7 +491,8 @@ public class FlatFileDataStore extends DataStore
         }
     }
 
-    Claim loadClaim(File file, ArrayList<Long> out_parentID, long claimID) throws IOException, InvalidConfigurationException, Exception
+    Claim loadClaim(File file, ArrayList<Long> out_parentID, long claimID)
+            throws IOException, InvalidConfigurationException, Exception
     {
         List<String> lines = Files.readLines(file, StandardCharsets.UTF_8);
         StringBuilder builder = new StringBuilder();
@@ -480,10 +501,20 @@ public class FlatFileDataStore extends DataStore
             builder.append(line).append('\n');
         }
 
-        return this.loadClaim(builder.toString(), out_parentID, file.lastModified(), claimID, Bukkit.getServer().getWorlds());
+        return this.loadClaim(
+                builder.toString(),
+                out_parentID,
+                file.lastModified(),
+                claimID,
+                Bukkit.getServer().getWorlds());
     }
 
-    Claim loadClaim(String input, ArrayList<Long> out_parentID, long lastModifiedDate, long claimID, List<World> validWorlds) throws InvalidConfigurationException, Exception
+    Claim loadClaim(
+            String input,
+            ArrayList<Long> out_parentID,
+            long lastModifiedDate,
+            long claimID,
+            List<World> validWorlds) throws InvalidConfigurationException, Exception
     {
         Claim claim = null;
         YamlConfiguration yaml = new YamlConfiguration();
@@ -491,7 +522,8 @@ public class FlatFileDataStore extends DataStore
 
         //boundaries
         Location lesserBoundaryCorner = this.locationFromString(yaml.getString("Lesser Boundary Corner"), validWorlds);
-        Location greaterBoundaryCorner = this.locationFromString(yaml.getString("Greater Boundary Corner"), validWorlds);
+        Location greaterBoundaryCorner = this
+                .locationFromString(yaml.getString("Greater Boundary Corner"), validWorlds);
 
         //owner
         String ownerIdentifier = yaml.getString("Owner");
@@ -505,7 +537,8 @@ public class FlatFileDataStore extends DataStore
             catch (Exception ex)
             {
                 GriefPrevention.AddLogEntry("Error - this is not a valid UUID: " + ownerIdentifier + ".");
-                GriefPrevention.AddLogEntry("  Converted land claim to administrative @ " + lesserBoundaryCorner.toString());
+                GriefPrevention
+                        .AddLogEntry("  Converted land claim to administrative @ " + lesserBoundaryCorner.toString());
             }
         }
 
@@ -522,7 +555,8 @@ public class FlatFileDataStore extends DataStore
         out_parentID.add(yaml.getLong("Parent Claim ID", -1L));
 
         //instantiate
-        claim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builders, containers, accessors, managers, inheritNothing, claimID);
+        claim = new Claim(lesserBoundaryCorner, greaterBoundaryCorner, ownerID, builders, containers, accessors,
+                managers, inheritNothing, claimID);
         claim.modifiedDate = new Date(lastModifiedDate);
         claim.id = claimID;
 
@@ -628,21 +662,20 @@ public class FlatFileDataStore extends DataStore
                     List<String> lines = Files.readLines(playerFile, StandardCharsets.UTF_8);
                     Iterator<String> iterator = lines.iterator();
 
-
                     iterator.next();
                     //first line is last login timestamp //RoboMWM - not using this anymore
-//
-//    				//convert that to a date and store it
-//    				DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
-//    				try
-//    				{
-//    					playerData.setLastLogin(dateFormat.parse(lastLoginTimestampString));
-//    				}
-//    				catch(ParseException parseException)
-//    				{
-//    					GriefPrevention.AddLogEntry("Unable to load last login for \"" + playerFile.getName() + "\".");
-//    					playerData.setLastLogin(null);
-//    				}
+                    //
+                    //    				//convert that to a date and store it
+                    //    				DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+                    //    				try
+                    //    				{
+                    //    					playerData.setLastLogin(dateFormat.parse(lastLoginTimestampString));
+                    //    				}
+                    //    				catch(ParseException parseException)
+                    //    				{
+                    //    					GriefPrevention.AddLogEntry("Unable to load last login for \"" + playerFile.getName() + "\".");
+                    //    					playerData.setLastLogin(null);
+                    //    				}
 
                     //second line is accrued claim blocks
                     String accruedBlocksString = iterator.next();
@@ -673,7 +706,7 @@ public class FlatFileDataStore extends DataStore
                 {
                     if (needRetry) Thread.sleep(5);
                 }
-                catch (InterruptedException exception) {}
+                catch (InterruptedException exception) { }
 
             } while (needRetry && retriesRemaining >= 0);
 
@@ -682,7 +715,12 @@ public class FlatFileDataStore extends DataStore
             {
                 StringWriter errors = new StringWriter();
                 latestException.printStackTrace(new PrintWriter(errors));
-                GriefPrevention.AddLogEntry("Failed to load PlayerData for " + playerID + ". This usually occurs when your server runs out of storage space, causing any file saves to corrupt. Fix or delete the file in GriefPrevetionData/PlayerData/" + playerID, CustomLogEntryTypes.Debug, false);
+                GriefPrevention.AddLogEntry(
+                        "Failed to load PlayerData for " + playerID
+                                + ". This usually occurs when your server runs out of storage space, causing any file saves to corrupt. Fix or delete the file in GriefPrevetionData/PlayerData/"
+                                + playerID,
+                        CustomLogEntryTypes.Debug,
+                        false);
                 GriefPrevention.AddLogEntry(playerID + " " + errors, CustomLogEntryTypes.Exception);
             }
         }
@@ -725,7 +763,9 @@ public class FlatFileDataStore extends DataStore
         //if any problem, log it
         catch (Exception e)
         {
-            GriefPrevention.AddLogEntry("GriefPrevention: Unexpected exception saving data for player \"" + playerID + "\": " + e.getMessage());
+            GriefPrevention.AddLogEntry(
+                    "GriefPrevention: Unexpected exception saving data for player \"" + playerID + "\": "
+                            + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -760,7 +800,7 @@ public class FlatFileDataStore extends DataStore
         {
             if (outStream != null) outStream.close();
         }
-        catch (IOException exception) {}
+        catch (IOException exception) { }
     }
 
     //grants a group (players with a specific permission) bonus claim blocks as long as they're still members of the group
@@ -784,7 +824,8 @@ public class FlatFileDataStore extends DataStore
         //if any problem, log it
         catch (Exception e)
         {
-            GriefPrevention.AddLogEntry("Unexpected exception saving data for group \"" + groupName + "\": " + e.getMessage());
+            GriefPrevention
+                    .AddLogEntry("Unexpected exception saving data for group \"" + groupName + "\": " + e.getMessage());
         }
 
         try
@@ -795,7 +836,7 @@ public class FlatFileDataStore extends DataStore
                 outStream.close();
             }
         }
-        catch (IOException exception) {}
+        catch (IOException exception) { }
     }
 
     synchronized void migrateData(DatabaseDataStore databaseStore)
@@ -821,7 +862,7 @@ public class FlatFileDataStore extends DataStore
         File[] files = playerDataFolder.listFiles();
         for (File file : files)
         {
-            if (!file.isFile()) continue;  //avoids folders
+            if (!file.isFile()) continue; //avoids folders
             if (file.isHidden()) continue; //avoid hidden files, which are likely not created by GriefPrevention
 
             //all group data files start with a dollar sign.  ignoring those, already handled above
@@ -864,9 +905,13 @@ public class FlatFileDataStore extends DataStore
         claimsFolder.renameTo(claimsBackupFolder);
         playersFolder.renameTo(playersBackupFolder);
 
-        GriefPrevention.AddLogEntry("Backed your file system data up to " + claimsBackupFolder.getName() + " and " + playersBackupFolder.getName() + ".");
-        GriefPrevention.AddLogEntry("If your migration encountered any problems, you can restore those data with a quick copy/paste.");
-        GriefPrevention.AddLogEntry("When you're satisfied that all your data have been safely migrated, consider deleting those folders.");
+        GriefPrevention.AddLogEntry(
+                "Backed your file system data up to " + claimsBackupFolder.getName() + " and "
+                        + playersBackupFolder.getName() + ".");
+        GriefPrevention.AddLogEntry(
+                "If your migration encountered any problems, you can restore those data with a quick copy/paste.");
+        GriefPrevention.AddLogEntry(
+                "When you're satisfied that all your data have been safely migrated, consider deleting those folders.");
     }
 
     @Override
@@ -896,7 +941,7 @@ public class FlatFileDataStore extends DataStore
             {
                 if (inStream != null) inStream.close();
             }
-            catch (IOException exception) {}
+            catch (IOException exception) { }
 
             return schemaVersion;
         }
@@ -933,7 +978,7 @@ public class FlatFileDataStore extends DataStore
         {
             if (outStream != null) outStream.close();
         }
-        catch (IOException exception) {}
+        catch (IOException exception) { }
 
     }
 }

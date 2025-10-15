@@ -1,19 +1,20 @@
 package me.ryanhamshire.GriefPrevention;
 
-import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+
 public class Tests
 {
+
     @Test
     public void testTrivial()
     {
@@ -90,6 +91,7 @@ public class Tests
     }
 
     private final UUID player1 = UUID.fromString("f13c5a98-3777-4659-a111-5617adb7d7fb");
+
     private final UUID player2 = UUID.fromString("8667ba71-b85a-4004-af54-457a9734eed7");
 
     @Test
@@ -144,8 +146,16 @@ public class Tests
     public void testSpamDetectorPadding()
     {
         SpamDetector detector = new SpamDetector();
-        assertNull(detector.AnalyzeMessage(player1, "Hacking is really fun guys!! :) 123123123456.12398127498762935", 1000).muteReason);
-        assertNotNull(detector.AnalyzeMessage(player1, "Hacking is really fun guys!! :) 112321523456.1239345498762935", 1000).muteReason);
+        assertNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "Hacking is really fun guys!! :) 123123123456.12398127498762935",
+                        1000).muteReason);
+        assertNotNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "Hacking is really fun guys!! :) 112321523456.1239345498762935",
+                        1000).muteReason);
     }
 
     @Test
@@ -177,7 +187,11 @@ public class Tests
     public void testSpamDetectorGibberish()
     {
         SpamDetector detector = new SpamDetector();
-        assertNotNull(detector.AnalyzeMessage(player1, "poiufpoiuasdfpoiuasdfuaufpoiasfopiuasdfpoiuasdufsdf", 1000).muteReason);
+        assertNotNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "poiufpoiuasdfpoiuasdfuaufpoiasfopiuasdfpoiuasdufsdf",
+                        1000).muteReason);
         assertNotNull(detector.AnalyzeMessage(player2, "&^%(& (&^%(%    (*%#@^ #$&(_||", 3000).muteReason);
     }
 
@@ -203,15 +217,35 @@ public class Tests
     public void testSpamDetectorTooMuchVolume()
     {
         SpamDetector detector = new SpamDetector();
-        assertNull(detector.AnalyzeMessage(player1, "Once upon a time there was this guy who wanted to be a hacker.  So he started logging into Minecraft servers and threatening to DDOS them.", 1000).muteReason);
-        assertNull(detector.AnalyzeMessage(player1, "Everybody knew that he couldn't be a real hacker, because no real hacker would consider hacking Minecraft to be worth their time, but he didn't understand that even after it was explained to him.", 3000).muteReason);
+        assertNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "Once upon a time there was this guy who wanted to be a hacker.  So he started logging into Minecraft servers and threatening to DDOS them.",
+                        1000).muteReason);
+        assertNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "Everybody knew that he couldn't be a real hacker, because no real hacker would consider hacking Minecraft to be worth their time, but he didn't understand that even after it was explained to him.",
+                        3000).muteReason);
 
         //start of mute
-        assertNotNull(detector.AnalyzeMessage(player1, "After I put him in jail and he wasted half an hour of his time trying to solve the (unsolvable) jail 'puzzle', he offered his services to me in exchange for being let out of jail.", 10000).muteReason);
+        assertNotNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "After I put him in jail and he wasted half an hour of his time trying to solve the (unsolvable) jail 'puzzle', he offered his services to me in exchange for being let out of jail.",
+                        10000).muteReason);
 
         //forgiven after taking a break
-        assertNull(detector.AnalyzeMessage(player1, "He promised to DDOS any of my 'rival servers'.  So I offered him an opportunity to prove he could do what he said, and I gave him his own IP address from our server logs.  Then he disappeared for a while.", 16000).muteReason);
-        assertNull(detector.AnalyzeMessage(player1, "When he finally came back, I /SoftMuted him and left him in the jail.", 28000).muteReason);
+        assertNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "He promised to DDOS any of my 'rival servers'.  So I offered him an opportunity to prove he could do what he said, and I gave him his own IP address from our server logs.  Then he disappeared for a while.",
+                        16000).muteReason);
+        assertNull(
+                detector.AnalyzeMessage(
+                        player1,
+                        "When he finally came back, I /SoftMuted him and left him in the jail.",
+                        28000).muteReason);
     }
 
     @Test

@@ -1,21 +1,24 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import com.griefprevention.events.BoundaryVisualizationEvent;
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.Visualization;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import com.griefprevention.events.BoundaryVisualizationEvent;
+
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.Visualization;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when a {@link Player} receives {@link Claim} visuals.
@@ -27,8 +30,11 @@ public class VisualizationEvent extends PlayerEvent
 {
 
     private final @Nullable Visualization visualization;
+
     private final @NotNull @Unmodifiable Collection<Claim> claims;
+
     private final boolean showSubdivides;
+
     private final boolean visualizingNearbyClaims;
 
     /**
@@ -54,7 +60,8 @@ public class VisualizationEvent extends PlayerEvent
      * @param visualization the {@link Visualization} to send
      * @param claims the {@code Claims} being visualized without subdivisions
      */
-    public VisualizationEvent(@NotNull Player player, @Nullable Visualization visualization, @NotNull Collection<Claim> claims)
+    public VisualizationEvent(@NotNull Player player, @Nullable Visualization visualization,
+            @NotNull Collection<Claim> claims)
     {
         this(player, visualization, claims, false);
     }
@@ -67,7 +74,8 @@ public class VisualizationEvent extends PlayerEvent
      * @param claims the {@code Claims} being visualized without subdivisions
      * @param visualizingNearbyClaims whether the visualization includes area claims or just the target location
      */
-    public VisualizationEvent(@NotNull Player player, @Nullable Visualization visualization, @NotNull Collection<Claim> claims, boolean visualizingNearbyClaims)
+    public VisualizationEvent(@NotNull Player player, @Nullable Visualization visualization,
+            @NotNull Collection<Claim> claims, boolean visualizingNearbyClaims)
     {
         super(player);
         this.visualization = visualization;
@@ -121,6 +129,7 @@ public class VisualizationEvent extends PlayerEvent
 
     // Listenable event requirements
     private static final HandlerList HANDLERS = new HandlerList() {
+
         private final Set<String> nags = new HashSet<>();
 
         @Override
@@ -129,8 +138,8 @@ public class VisualizationEvent extends PlayerEvent
             Plugin plugin = listener.getPlugin();
 
             if (nags.add(plugin.getName()))
-                plugin.getLogger().severe(() ->
-                        plugin.getName()
+                plugin.getLogger().severe(
+                        () -> plugin.getName()
                                 + " registered a listener for the now-defunct VisualizationEvent. Please ask "
                                 + plugin.getDescription().getAuthors()
                                 + " to update to the BoundaryVisualizationEvent.");

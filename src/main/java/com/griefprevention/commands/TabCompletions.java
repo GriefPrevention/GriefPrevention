@@ -1,17 +1,18 @@
 package com.griefprevention.commands;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.util.StringUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Range;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 /**
  * A container for tab completion helper methods.
@@ -46,9 +47,7 @@ final class TabCompletions
         {
             char prefixChar = prefixChars[index];
             if (prefixChar < '0' || prefixChar > '9')
-            {
-                return List.of();
-            }
+            { return List.of(); }
         }
 
         int digitsLength = prefixChars.length - startIndex;
@@ -62,9 +61,7 @@ final class TabCompletions
 
         // If the input already has the max number of digits, don't suggest more.
         if (digitsLength >= maxDigits)
-        {
-            return completions;
-        }
+        { return completions; }
 
         // Prefix is acceptable, offer all digits prefixed by existing content.
         for (int i = 0; i <= 9; ++i)
@@ -121,8 +118,7 @@ final class TabCompletions
 
             String string = asString.apply(element);
             // Require element string to be non-empty and start with user's existing text.
-            if (string != null
-                    && !string.isEmpty()
+            if (string != null && !string.isEmpty()
                     && (prefix.isEmpty() || StringUtil.startsWithIgnoreCase(string, prefix)))
             {
                 completions.add(string);
@@ -141,6 +137,6 @@ final class TabCompletions
         return args.length == 0 ? "" : args[args.length - 1];
     }
 
-    private TabCompletions() {}
+    private TabCompletions() { }
 
 }

@@ -22,8 +22,11 @@ import java.net.InetAddress;
 
 public class IpBanInfo
 {
+
     InetAddress address;
+
     long expirationTimestamp;
+
     String bannedAccountName;
 
     IpBanInfo(InetAddress address, long expirationTimestamp, String bannedAccountName)

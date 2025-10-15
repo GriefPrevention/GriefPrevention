@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class CreateClaimResult
 {
+
     //whether or not the creation succeeded (it would fail if the new claim overlapped another existing claim)
     public boolean succeeded;
 

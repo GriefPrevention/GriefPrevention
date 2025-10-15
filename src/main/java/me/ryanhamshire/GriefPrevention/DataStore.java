@@ -18,27 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.google.common.io.FileWriteMode;
-import com.google.common.io.Files;
-import com.griefprevention.visualization.BoundaryVisualization;
-import com.griefprevention.visualization.VisualizationType;
-import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimDeletedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimExtendEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimResizeEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimTransferEvent;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -60,6 +39,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+
+import org.jetbrains.annotations.NotNull;
+
+import com.griefprevention.visualization.BoundaryVisualization;
+import com.griefprevention.visualization.VisualizationType;
+
+import com.google.common.io.FileWriteMode;
+import com.google.common.io.Files;
+
+import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimDeletedEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimExtendEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimResizeEvent;
+import me.ryanhamshire.GriefPrevention.events.ClaimTransferEvent;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+
 //singleton class which manages all GriefPrevention data (except for config options)
 public abstract class DataStore
 {
@@ -72,25 +76,33 @@ public abstract class DataStore
 
     //in-memory cache for claim data
     ArrayList<Claim> claims = new ArrayList<>();
+
     // claim id to claim cache
     public final Map<Long, Claim> claimIDMap = new ConcurrentHashMap<>();
+
     ConcurrentHashMap<Long, ArrayList<Claim>> chunksToClaimsMap = new ConcurrentHashMap<>();
 
     //in-memory cache for messages
     private String[] messages;
 
     //pattern for unique user identifiers (UUIDs)
-    protected final static Pattern uuidpattern = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    protected final static Pattern uuidpattern = Pattern
+            .compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
 
     //next claim ID
     Long nextClaimID = (long) 0;
 
     //path information, for where stuff stored on disk is well...  stored
     protected final static String dataLayerFolderPath = "plugins" + File.separator + "GriefPreventionData";
+
     final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
+
     final static String configFilePath = dataLayerFolderPath + File.separator + "config.yml";
+
     final static String messagesFilePath = dataLayerFolderPath + File.separator + "messages.yml";
+
     final static String softMuteFilePath = dataLayerFolderPath + File.separator + "softMute.txt";
+
     final static String bannedWordsFilePath = dataLayerFolderPath + File.separator + "bannedWords.txt";
 
     //the latest version of the data schema implemented here
@@ -102,12 +114,17 @@ public abstract class DataStore
     abstract void updateSchemaVersionInStorage(int versionToSet);
 
     //current version of the schema of data in secondary storage
-    private int currentSchemaVersion = -1;  //-1 means not determined yet
+    private int currentSchemaVersion = -1; //-1 means not determined yet
 
     //video links
-    public static final String SURVIVAL_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpuser" + ChatColor.RESET;
-    public static final String CREATIVE_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpcrea" + ChatColor.RESET;
-    public static final String SUBDIVISION_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpsub" + ChatColor.RESET;
+    public static final String SURVIVAL_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpuser"
+            + ChatColor.RESET;
+
+    public static final String CREATIVE_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpcrea"
+            + ChatColor.RESET;
+
+    public static final String SUBDIVISION_VIDEO_URL = "" + ChatColor.DARK_AQUA + ChatColor.UNDERLINE + "bit.ly/mcgpsub"
+            + ChatColor.RESET;
 
     //list of UUIDs which are soft-muted
     ConcurrentHashMap<UUID, Boolean> softMuteMap = new ConcurrentHashMap<>();
@@ -141,9 +158,13 @@ public abstract class DataStore
         {
             if (claim.id >= nextClaimID)
             {
-                GriefPrevention.instance.getLogger().severe("nextClaimID was lesser or equal to an already-existing claim ID!\n" +
-                        "This usually happens if you ran out of storage space.");
-                GriefPrevention.AddLogEntry("Changing nextClaimID from " + nextClaimID + " to " + claim.id, CustomLogEntryTypes.Debug, false);
+                GriefPrevention.instance.getLogger().severe(
+                        "nextClaimID was lesser or equal to an already-existing claim ID!\n"
+                                + "This usually happens if you ran out of storage space.");
+                GriefPrevention.AddLogEntry(
+                        "Changing nextClaimID from " + nextClaimID + " to " + claim.id,
+                        CustomLogEntryTypes.Debug,
+                        false);
                 nextClaimID = claim.id + 1;
             }
         }
@@ -239,7 +260,7 @@ public abstract class DataStore
             {
                 if (inStream != null) inStream.close();
             }
-            catch (IOException exception) {}
+            catch (IOException exception) { }
         }
     }
 
@@ -251,11 +272,10 @@ public abstract class DataStore
             if (!bannedWordsFile.exists())
             {
                 Files.touch(bannedWordsFile);
-                String defaultWords =
-                        "nigger\nniggers\nniger\nnigga\nnigers\nniggas\n" +
-                                "fag\nfags\nfaggot\nfaggots\nfeggit\nfeggits\nfaggit\nfaggits\n" +
-                                "cunt\ncunts\nwhore\nwhores\nslut\nsluts\n";
-                Files.asCharSink(bannedWordsFile, StandardCharsets.UTF_8, FileWriteMode. APPEND).write(defaultWords);
+                String defaultWords = "nigger\nniggers\nniger\nnigga\nnigers\nniggas\n"
+                        + "fag\nfags\nfaggot\nfaggots\nfeggit\nfeggits\nfaggit\nfaggits\n"
+                        + "cunt\ncunts\nwhore\nwhores\nslut\nsluts\n";
+                Files.asCharSink(bannedWordsFile, StandardCharsets.UTF_8, FileWriteMode.APPEND).write(defaultWords);
             }
 
             return Files.readLines(bannedWordsFile, StandardCharsets.UTF_8);
@@ -283,9 +303,7 @@ public abstract class DataStore
     {
         Boolean mapEntry = this.softMuteMap.get(playerID);
         if (mapEntry == null || mapEntry == Boolean.FALSE)
-        {
-            return false;
-        }
+        { return false; }
 
         return true;
     }
@@ -324,7 +342,7 @@ public abstract class DataStore
         {
             if (outStream != null) outStream.close();
         }
-        catch (IOException exception) {}
+        catch (IOException exception) { }
     }
 
     //removes cached player data from memory
@@ -374,6 +392,7 @@ public abstract class DataStore
 
     public class NoTransferException extends RuntimeException
     {
+
         private static final long serialVersionUID = 1L;
 
         NoTransferException(String message)
@@ -387,7 +406,8 @@ public abstract class DataStore
         //if it's a subdivision, throw an exception
         if (claim.parent != null)
         {
-            throw new NoTransferException("Subdivisions can't be transferred.  Only top-level claims may change owners.");
+            throw new NoTransferException(
+                    "Subdivisions can't be transferred.  Only top-level claims may change owners.");
         }
 
         //otherwise update information
@@ -499,7 +519,7 @@ public abstract class DataStore
             ArrayList<Claim> claimsInChunk = this.chunksToClaimsMap.get(chunkHash);
             if (claimsInChunk != null)
             {
-                for (Iterator<Claim> it = claimsInChunk.iterator(); it.hasNext(); )
+                for (Iterator<Claim> it = claimsInChunk.iterator(); it.hasNext();)
                 {
                     Claim c = it.next();
                     if (c.id.equals(claim.id))
@@ -540,9 +560,7 @@ public abstract class DataStore
 
         //expect four elements - world name, X, Y, and Z, respectively
         if (elements.length < 4)
-        {
-            throw new Exception("Expected four distinct parts to the location string: \"" + string + "\"");
-        }
+        { throw new Exception("Expected four distinct parts to the location string: \"" + string + "\""); }
 
         String worldName = elements[0];
         String xString = elements[1];
@@ -561,9 +579,7 @@ public abstract class DataStore
         }
 
         if (world == null)
-        {
-            throw new Exception("World not found: \"" + worldName + "\"");
-        }
+        { throw new Exception("World not found: \"" + worldName + "\""); }
 
         //convert those numerical strings to integer values
         int x = Integer.parseInt(xString);
@@ -716,10 +732,15 @@ public abstract class DataStore
      * @param cachedClaim the cached claim, if any
      * @return the claim containing the location or null if no claim exists there
      */
-    synchronized public Claim getClaimAt(Location location, boolean ignoreHeight, boolean ignoreSubclaims, Claim cachedClaim)
+    synchronized public Claim getClaimAt(
+            Location location,
+            boolean ignoreHeight,
+            boolean ignoreSubclaims,
+            Claim cachedClaim)
     {
         //check cachedClaim guess first.  if it's in the datastore and the location is inside it, we're done
-        if (cachedClaim != null && cachedClaim.inDataStore && cachedClaim.contains(location, ignoreHeight, !ignoreSubclaims))
+        if (cachedClaim != null && cachedClaim.inDataStore
+                && cachedClaim.contains(location, ignoreHeight, !ignoreSubclaims))
             return cachedClaim;
 
         //find a top level claim
@@ -816,11 +837,13 @@ public abstract class DataStore
         return getChunkHash(location.getBlockX() >> 4, location.getBlockZ() >> 4);
     }
 
-    public static ArrayList<Long> getChunkHashes(Claim claim) {
+    public static ArrayList<Long> getChunkHashes(Claim claim)
+    {
         return getChunkHashes(claim.getLesserBoundaryCorner(), claim.getGreaterBoundaryCorner());
     }
 
-    public static ArrayList<Long> getChunkHashes(Location min, Location max) {
+    public static ArrayList<Long> getChunkHashes(Location min, Location max)
+    {
         ArrayList<Long> hashes = new ArrayList<>();
         int smallX = min.getBlockX() >> 4;
         int smallZ = min.getBlockZ() >> 4;
@@ -841,7 +864,18 @@ public abstract class DataStore
     /*
      * Creates a claim and flags it as being new....throwing a create claim event;
      */
-    synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer)
+    synchronized public CreateClaimResult createClaim(
+            World world,
+            int x1,
+            int x2,
+            int y1,
+            int y2,
+            int z1,
+            int z2,
+            UUID ownerID,
+            Claim parent,
+            Long id,
+            Player creatingPlayer)
     {
         return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, false);
     }
@@ -857,7 +891,19 @@ public abstract class DataStore
     //does NOT check a player has permission to create a claim, or enough claim blocks.
     //does NOT check minimum claim size constraints
     //does NOT visualize the new claim for any players
-    synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer, boolean dryRun)
+    synchronized public CreateClaimResult createClaim(
+            World world,
+            int x1,
+            int x2,
+            int y1,
+            int y2,
+            int z1,
+            int z2,
+            UUID ownerID,
+            Claim parent,
+            Long id,
+            Player creatingPlayer,
+            boolean dryRun)
     {
         CreateClaimResult result = new CreateClaimResult();
 
@@ -917,7 +963,9 @@ public abstract class DataStore
         //claims can't be made outside the world border
         final Location smallerBoundaryCorner = new Location(world, smallx, smally, smallz);
         final Location greaterBoundaryCorner = new Location(world, bigx, bigy, bigz);
-        if(!world.getWorldBorder().isInside(smallerBoundaryCorner) || !world.getWorldBorder().isInside(greaterBoundaryCorner)){
+        if (!world.getWorldBorder().isInside(smallerBoundaryCorner)
+                || !world.getWorldBorder().isInside(greaterBoundaryCorner))
+        {
             result.succeeded = false;
             return result;
         }
@@ -929,15 +977,8 @@ public abstract class DataStore
         }
 
         //create a new claim instance (but don't save it, yet)
-        Claim newClaim = new Claim(
-                smallerBoundaryCorner,
-                greaterBoundaryCorner,
-                ownerID,
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(),
-                id);
+        Claim newClaim = new Claim(smallerBoundaryCorner, greaterBoundaryCorner, ownerID, new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), id);
 
         newClaim.parent = parent;
 
@@ -1040,7 +1081,9 @@ public abstract class DataStore
             //if any problem, log it
             catch (Exception e)
             {
-                GriefPrevention.AddLogEntry("GriefPrevention: Unexpected exception saving data for player \"" + playerID.toString() + "\": " + e.getMessage());
+                GriefPrevention.AddLogEntry(
+                        "GriefPrevention: Unexpected exception saving data for player \"" + playerID.toString() + "\": "
+                                + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -1072,14 +1115,15 @@ public abstract class DataStore
      * @param newDepth the new depth
      * @return the sanitized new depth
      */
-    private int sanitizeClaimDepth(Claim claim, int newDepth) {
+    private int sanitizeClaimDepth(Claim claim, int newDepth)
+    {
         if (claim.parent != null) claim = claim.parent;
 
         // Get the old depth including the depth of the lowest subdivision.
         int oldDepth = Math.min(
                 claim.getLesserBoundaryCorner().getBlockY(),
-                claim.children.stream().mapToInt(child -> child.getLesserBoundaryCorner().getBlockY())
-                        .min().orElse(Integer.MAX_VALUE));
+                claim.children.stream().mapToInt(child -> child.getLesserBoundaryCorner().getBlockY()).min()
+                        .orElse(Integer.MAX_VALUE));
 
         // Use the lowest of the old and new depths.
         newDepth = Math.min(newDepth, oldDepth);
@@ -1098,7 +1142,8 @@ public abstract class DataStore
      * @param claim the claim
      * @param newDepth the new depth
      */
-    private void setNewDepth(Claim claim, int newDepth) {
+    private void setNewDepth(Claim claim, int newDepth)
+    {
         if (claim.parent != null) claim = claim.parent;
 
         final int depth = sanitizeClaimDepth(claim, newDepth);
@@ -1117,8 +1162,7 @@ public abstract class DataStore
         ArrayList<Claim> claimsToDelete = new ArrayList<>();
         for (Claim claim : this.claims)
         {
-            if (Objects.equals(playerID, claim.ownerID))
-                claimsToDelete.add(claim);
+            if (Objects.equals(playerID, claim.ownerID)) claimsToDelete.add(claim);
         }
 
         //delete them one by one
@@ -1130,10 +1174,30 @@ public abstract class DataStore
 
     //tries to resize a claim
     //see CreateClaim() for details on return value
-    synchronized public CreateClaimResult resizeClaim(Claim claim, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2, Player resizingPlayer)
+    synchronized public CreateClaimResult resizeClaim(
+            Claim claim,
+            int newx1,
+            int newx2,
+            int newy1,
+            int newy2,
+            int newz1,
+            int newz2,
+            Player resizingPlayer)
     {
         //try to create this new claim, ignoring the original when checking for overlap
-        CreateClaimResult result = this.createClaim(claim.getLesserBoundaryCorner().getWorld(), newx1, newx2, newy1, newy2, newz1, newz2, claim.ownerID, claim.parent, claim.id, resizingPlayer, true);
+        CreateClaimResult result = this.createClaim(
+                claim.getLesserBoundaryCorner().getWorld(),
+                newx1,
+                newx2,
+                newy1,
+                newy2,
+                newz1,
+                newz2,
+                claim.ownerID,
+                claim.parent,
+                claim.id,
+                resizingPlayer,
+                true);
 
         //if succeeded
         if (result.succeeded)
@@ -1152,7 +1216,15 @@ public abstract class DataStore
         return result;
     }
 
-    void resizeClaimWithChecks(Player player, PlayerData playerData, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2)
+    void resizeClaimWithChecks(
+            Player player,
+            PlayerData playerData,
+            int newx1,
+            int newx2,
+            int newy1,
+            int newy2,
+            int newz1,
+            int newz2)
     {
         //for top level claims, apply size rules and claim blocks requirement
         if (playerData.claimResizing.parent == null)
@@ -1167,17 +1239,28 @@ public abstract class DataStore
             }
             catch (ArithmeticException e)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.ResizeNeedMoreBlocks, String.valueOf(Integer.MAX_VALUE));
+                GriefPrevention.sendMessage(
+                        player,
+                        TextMode.Err,
+                        Messages.ResizeNeedMoreBlocks,
+                        String.valueOf(Integer.MAX_VALUE));
                 return;
             }
 
-            boolean smaller = newWidth < playerData.claimResizing.getWidth() || newHeight < playerData.claimResizing.getHeight();
+            boolean smaller = newWidth < playerData.claimResizing.getWidth()
+                    || newHeight < playerData.claimResizing.getHeight();
 
-            if (!player.hasPermission("griefprevention.adminclaims") && !playerData.claimResizing.isAdminClaim() && smaller)
+            if (!player.hasPermission("griefprevention.adminclaims") && !playerData.claimResizing.isAdminClaim()
+                    && smaller)
             {
-                if (newWidth < GriefPrevention.instance.config_claims_minWidth || newHeight < GriefPrevention.instance.config_claims_minWidth)
+                if (newWidth < GriefPrevention.instance.config_claims_minWidth
+                        || newHeight < GriefPrevention.instance.config_claims_minWidth)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.ResizeClaimTooNarrow, String.valueOf(GriefPrevention.instance.config_claims_minWidth));
+                    GriefPrevention.sendMessage(
+                            player,
+                            TextMode.Err,
+                            Messages.ResizeClaimTooNarrow,
+                            String.valueOf(GriefPrevention.instance.config_claims_minWidth));
                     return;
                 }
 
@@ -1188,25 +1271,35 @@ public abstract class DataStore
                 }
                 catch (ArithmeticException e)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.ResizeNeedMoreBlocks, String.valueOf(Integer.MAX_VALUE));
+                    GriefPrevention.sendMessage(
+                            player,
+                            TextMode.Err,
+                            Messages.ResizeNeedMoreBlocks,
+                            String.valueOf(Integer.MAX_VALUE));
                     return;
                 }
                 if (newArea < GriefPrevention.instance.config_claims_minArea)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.ResizeClaimInsufficientArea, String.valueOf(GriefPrevention.instance.config_claims_minArea));
+                    GriefPrevention.sendMessage(
+                            player,
+                            TextMode.Err,
+                            Messages.ResizeClaimInsufficientArea,
+                            String.valueOf(GriefPrevention.instance.config_claims_minArea));
                     return;
                 }
             }
 
             //make sure player has enough blocks to make up the difference
-            if (!playerData.claimResizing.isAdminClaim() && player.getName().equals(playerData.claimResizing.getOwnerName()))
+            if (!playerData.claimResizing.isAdminClaim()
+                    && player.getName().equals(playerData.claimResizing.getOwnerName()))
             {
                 int newArea;
                 int blocksRemainingAfter;
                 try
                 {
                     newArea = Math.multiplyExact(newWidth, newHeight);
-                    blocksRemainingAfter = playerData.getRemainingClaimBlocks() + (playerData.claimResizing.getArea() - newArea);
+                    blocksRemainingAfter = playerData.getRemainingClaimBlocks()
+                            + (playerData.claimResizing.getArea() - newArea);
                 }
                 catch (ArithmeticException e)
                 {
@@ -1215,7 +1308,11 @@ public abstract class DataStore
 
                 if (blocksRemainingAfter < 0)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.ResizeNeedMoreBlocks, String.valueOf(Math.abs(blocksRemainingAfter)));
+                    GriefPrevention.sendMessage(
+                            player,
+                            TextMode.Err,
+                            Messages.ResizeNeedMoreBlocks,
+                            String.valueOf(Math.abs(blocksRemainingAfter)));
                     this.tryAdvertiseAdminAlternatives(player);
                     return;
                 }
@@ -1274,20 +1371,35 @@ public abstract class DataStore
             }
 
             //inform about success, visualize, communicate remaining blocks available
-            GriefPrevention.sendMessage(player, TextMode.Success, Messages.ClaimResizeSuccess, String.valueOf(claimBlocksRemaining));
+            GriefPrevention.sendMessage(
+                    player,
+                    TextMode.Success,
+                    Messages.ClaimResizeSuccess,
+                    String.valueOf(claimBlocksRemaining));
             BoundaryVisualization.visualizeClaim(player, result.claim, VisualizationType.CLAIM);
 
             //if resizing someone else's claim, make a log entry
-            if (!player.getUniqueId().equals(playerData.claimResizing.ownerID) && playerData.claimResizing.parent == null)
+            if (!player.getUniqueId().equals(playerData.claimResizing.ownerID)
+                    && playerData.claimResizing.parent == null)
             {
-                GriefPrevention.AddLogEntry(player.getName() + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at " + GriefPrevention.getfriendlyLocationString(playerData.claimResizing.lesserBoundaryCorner) + ".");
+                GriefPrevention.AddLogEntry(
+                        player.getName() + " resized " + playerData.claimResizing.getOwnerName() + "'s claim at "
+                                + GriefPrevention.getfriendlyLocationString(
+                                        playerData.claimResizing.lesserBoundaryCorner)
+                                + ".");
             }
 
             //if increased to a sufficiently large size and no subdivisions yet, send subdivision instructions
-            if (oldClaim.getArea() < 1000 && result.claim.getArea() >= 1000 && result.claim.children.isEmpty() && !player.hasPermission("griefprevention.adminclaims"))
+            if (oldClaim.getArea() < 1000 && result.claim.getArea() >= 1000 && result.claim.children.isEmpty()
+                    && !player.hasPermission("griefprevention.adminclaims"))
             {
                 GriefPrevention.sendMessage(player, TextMode.Info, Messages.BecomeMayor, 200L);
-                GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, 201L, DataStore.SUBDIVISION_VIDEO_URL);
+                GriefPrevention.sendMessage(
+                        player,
+                        TextMode.Instr,
+                        Messages.SubdivisionVideo2,
+                        201L,
+                        DataStore.SUBDIVISION_VIDEO_URL);
             }
 
             //clean up
@@ -1311,10 +1423,11 @@ public abstract class DataStore
         }
     }
 
-    //educates a player about /adminclaims and /acb, if he can use them 
+    //educates a player about /adminclaims and /acb, if he can use them
     public void tryAdvertiseAdminAlternatives(@NotNull Player player)
     {
-        if (player.hasPermission("griefprevention.adminclaims") && player.hasPermission("griefprevention.adjustclaimblocks"))
+        if (player.hasPermission("griefprevention.adminclaims")
+                && player.hasPermission("griefprevention.adjustclaimblocks"))
         {
             GriefPrevention.sendMessage(player, TextMode.Info, Messages.AdvertiseACandACB);
         }
@@ -1364,7 +1477,8 @@ public abstract class DataStore
                 String notesString = config.getString(messagePath + ".Notes", message.notes);
                 // Import existing comment notes.
                 List<String> notes = config.getComments(messagePath);
-                if (notes.isEmpty()) {
+                if (notes.isEmpty())
+                {
                     notes = List.of(notesString);
                 }
                 config.setComments(messagePath, notes);
@@ -1374,16 +1488,17 @@ public abstract class DataStore
         //save any changes
         try
         {
-            config.options().setHeader(List.of(
-                    "Use a YAML editor like NotepadPlusPlus to edit this file.",
-                    "After editing, back up your changes before reloading the server in case you made a syntax error.",
-                    "Use dollar signs ($) for formatting codes, which are documented here: http://minecraft.wiki/Formatting_codes#Color_codes"
-            ));
+            config.options().setHeader(
+                    List.of(
+                            "Use a YAML editor like NotepadPlusPlus to edit this file.",
+                            "After editing, back up your changes before reloading the server in case you made a syntax error.",
+                            "Use dollar signs ($) for formatting codes, which are documented here: http://minecraft.wiki/Formatting_codes#Color_codes"));
             config.save(DataStore.messagesFilePath);
         }
         catch (IOException exception)
         {
-            GriefPrevention.AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
+            GriefPrevention
+                    .AddLogEntry("Unable to write to the configuration file at \"" + DataStore.messagesFilePath + "\"");
         }
     }
 
@@ -1441,7 +1556,9 @@ public abstract class DataStore
 
     private class SavePlayerDataThread extends Thread
     {
+
         private final UUID playerID;
+
         private final PlayerData playerData;
 
         SavePlayerDataThread(UUID playerID, PlayerData playerData)

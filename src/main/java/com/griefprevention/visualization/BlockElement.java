@@ -1,12 +1,14 @@
 package com.griefprevention.visualization;
 
-import com.griefprevention.util.IntVector;
+import java.util.Objects;
+
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
+import com.griefprevention.util.IntVector;
 
 /**
  * An element of a {@link BlockBoundaryVisualization}.
@@ -21,7 +23,8 @@ public abstract class BlockElement
      *
      * @param coordinate the in-world coordinate of the element
      */
-    public BlockElement(@NotNull IntVector coordinate) {
+    public BlockElement(@NotNull IntVector coordinate)
+    {
         this.coordinate = coordinate;
     }
 

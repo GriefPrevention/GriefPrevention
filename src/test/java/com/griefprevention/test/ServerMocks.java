@@ -1,20 +1,21 @@
 package com.griefprevention.test;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Keyed;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.Server;
-import org.jetbrains.annotations.NotNull;
-
-import java.lang.reflect.Field;
-import java.util.logging.Logger;
-
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
+import java.util.logging.Logger;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Keyed;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.Server;
+
+import org.jetbrains.annotations.NotNull;
 
 public final class ServerMocks
 {
@@ -63,6 +64,6 @@ public final class ServerMocks
         }
     }
 
-    private ServerMocks() {}
+    private ServerMocks() { }
 
 }

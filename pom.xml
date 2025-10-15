@@ -112,6 +112,49 @@
                     <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <java>
+                        <eclipse>
+                            <version>4.37</version>
+                            <file>${project.basedir}/eclipse-format.xml</file>
+                        </eclipse>
+                        <removeUnusedImports/>
+                        <importOrder>
+                            <wildcardsLast>true</wildcardsLast>
+                            <order>java,javax,org.bukkit,org,com.griefprevention,com.destroystokyo,com,io.papermc,io</order>
+                            <semanticSort>false</semanticSort>
+                        </importOrder>
+                        <replaceRegex>
+                            <name>remove-whitespace-only-lines</name>
+                            <searchRegex>^[ \t]+(\r?\n)</searchRegex>
+                            <replacement>$1</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>collapseEmptyBlocks</name>
+                            <searchRegex>(?s)[\s\r\n]*\{[\s\r\n]*\}</searchRegex>
+                            <replacement>__FORMATTER_SPACE__ { }</replacement>
+                        </replaceRegex>
+                        <replaceRegex>
+                            <name>collapseEmptyBlocks</name>
+                            <searchRegex>__FORMATTER_SPACE__</searchRegex>
+                            <replacement></replacement>
+                        </replaceRegex>
+                        <trimTrailingWhitespace/>
+                        <endWithNewline/>
+                    </java>
+                </configuration>
+                <executions>
+                    <execution>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
 
         <pluginManagement>

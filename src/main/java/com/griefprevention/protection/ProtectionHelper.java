@@ -1,13 +1,7 @@
 package com.griefprevention.protection;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.ClaimPermission;
-import me.ryanhamshire.GriefPrevention.ClaimsMode;
-import me.ryanhamshire.GriefPrevention.DataStore;
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import me.ryanhamshire.GriefPrevention.Messages;
-import me.ryanhamshire.GriefPrevention.PlayerData;
-import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
+import java.util.function.Supplier;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,10 +10,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Supplier;
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.ClaimPermission;
+import me.ryanhamshire.GriefPrevention.ClaimsMode;
+import me.ryanhamshire.GriefPrevention.DataStore;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import me.ryanhamshire.GriefPrevention.Messages;
+import me.ryanhamshire.GriefPrevention.PlayerData;
+import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
 
 /**
  * A utility used to simplify various protection-related checks.
@@ -27,7 +29,7 @@ import java.util.function.Supplier;
 public final class ProtectionHelper
 {
 
-    private ProtectionHelper() {}
+    private ProtectionHelper() { }
 
     /**
      * Check the {@link ClaimPermission} state for a {@link Player} at a particular {@link Location}.
@@ -56,7 +58,6 @@ public final class ProtectionHelper
 
         Claim claim = GriefPrevention.instance.dataStore.getClaimAt(location, false, playerData.lastClaim);
 
-
         // If there is no claim here, use wilderness rules.
         if (claim == null)
         {
@@ -64,19 +65,19 @@ public final class ProtectionHelper
             if (mode == ClaimsMode.Creative || mode == ClaimsMode.SurvivalRequiringClaims)
             {
                 // Allow placing chest if it would create an automatic claim.
-                if (trigger instanceof BlockPlaceEvent placeEvent
-                        && placeEvent.getBlock().getType() == Material.CHEST
+                if (trigger instanceof BlockPlaceEvent placeEvent && placeEvent.getBlock().getType() == Material.CHEST
                         && playerData.getClaims().isEmpty()
                         && GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius > -1)
                     return null;
 
                 // If claims are required, provide relevant information.
-                return () ->
-                {
+                return () -> {
                     String reason = GriefPrevention.instance.dataStore.getMessage(Messages.NoBuildOutsideClaims);
                     if (player.hasPermission("griefprevention.ignoreclaims"))
-                        reason += "  " + GriefPrevention.instance.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
-                    reason += "  " + GriefPrevention.instance.dataStore.getMessage(Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
+                        reason += "  "
+                                + GriefPrevention.instance.dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
+                    reason += "  " + GriefPrevention.instance.dataStore
+                            .getMessage(Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
                     return reason;
                 };
             }

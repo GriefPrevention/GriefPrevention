@@ -2,13 +2,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.google.common.base.Charsets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.bukkit.OfflinePlayer;
-
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -20,12 +13,25 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.bukkit.OfflinePlayer;
+
+import com.google.common.base.Charsets;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 class UUIDFetcher
 {
+
     private static int PROFILES_PER_REQUEST = 100;
+
     private static final String PROFILE_URL = "https://api.mojang.com/profiles/minecraft";
+
     private final Gson gson = new Gson();
+
     private final List<String> names;
+
     private final boolean rateLimiting;
 
     //cache for username -> uuid lookups
@@ -105,16 +111,15 @@ class UUIDFetcher
             Pattern validNamePattern = Pattern.compile("^\\w+$");
 
             // Don't bother requesting UUIDs for invalid names from Mojang.
-            names.removeIf(name ->
-            {
-                if (name.length() >= 3 && name.length() <= 16 && validNamePattern.matcher(name).find())
-                    return false;
+            names.removeIf(name -> {
+                if (name.length() >= 3 && name.length() <= 16 && validNamePattern.matcher(name).find()) return false;
 
                 GriefPrevention.AddLogEntry(String.format("Cannot convert invalid name: %s", name));
                 return true;
             });
 
-            GriefPrevention.AddLogEntry("Calling Mojang to get UUIDs for remaining unresolved players (this is the slowest step)...");
+            GriefPrevention.AddLogEntry(
+                    "Calling Mojang to get UUIDs for remaining unresolved players (this is the slowest step)...");
 
             for (int i = 0; i * PROFILES_PER_REQUEST < names.size(); i++)
             {
@@ -123,7 +128,10 @@ class UUIDFetcher
                 do
                 {
                     HttpURLConnection connection = createConnection();
-                    String body = gson.toJson(names.subList(i * PROFILES_PER_REQUEST, Math.min((i + 1) * PROFILES_PER_REQUEST, names.size())));
+                    String body = gson.toJson(
+                            names.subList(
+                                    i * PROFILES_PER_REQUEST,
+                                    Math.min((i + 1) * PROFILES_PER_REQUEST, names.size())));
                     writeBody(connection, body);
                     retry = false;
                     array = null;
@@ -142,7 +150,9 @@ class UUIDFetcher
                             //try reducing it
                             if (i == 0 && PROFILES_PER_REQUEST > 1)
                             {
-                                GriefPrevention.AddLogEntry("Batch size " + PROFILES_PER_REQUEST + " seems too large.  Looking for a workable batch size...");
+                                GriefPrevention.AddLogEntry(
+                                        "Batch size " + PROFILES_PER_REQUEST
+                                                + " seems too large.  Looking for a workable batch size...");
                                 PROFILES_PER_REQUEST = Math.max(PROFILES_PER_REQUEST - 5, 1);
                             }
 
@@ -150,7 +160,8 @@ class UUIDFetcher
                             //but wait a little while before trying again.
                             else
                             {
-                                GriefPrevention.AddLogEntry("Mojang says we're sending requests too fast.  Will retry every 30 seconds until we succeed...");
+                                GriefPrevention.AddLogEntry(
+                                        "Mojang says we're sending requests too fast.  Will retry every 30 seconds until we succeed...");
                                 Thread.sleep(30000);
                             }
                         }
@@ -215,7 +226,9 @@ class UUIDFetcher
 
     private static UUID getUUID(String id)
     {
-        return UUID.fromString(id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id.substring(16, 20) + "-" + id.substring(20, 32));
+        return UUID.fromString(
+                id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id.substring(16, 20)
+                        + "-" + id.substring(20, 32));
     }
 
     public static byte[] toBytes(UUID uuid)
@@ -229,9 +242,7 @@ class UUIDFetcher
     public static UUID fromBytes(byte[] array)
     {
         if (array.length != 16)
-        {
-            throw new IllegalArgumentException("Illegal byte array length: " + array.length);
-        }
+        { throw new IllegalArgumentException("Illegal byte array length: " + array.length); }
         ByteBuffer byteBuffer = ByteBuffer.wrap(array);
         long mostSignificant = byteBuffer.getLong();
         long leastSignificant = byteBuffer.getLong();

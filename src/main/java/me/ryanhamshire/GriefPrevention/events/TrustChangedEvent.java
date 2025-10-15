@@ -1,15 +1,17 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.ClaimPermission;
+import java.util.Collections;
+import java.util.List;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.List;
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.ClaimPermission;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when a {@link Player} modifies
@@ -21,8 +23,11 @@ public class TrustChangedEvent extends MultiClaimEvent implements Cancellable
 {
 
     private final @NotNull Player changer;
+
     private final @Nullable ClaimPermission claimPermission;
+
     private final boolean given;
+
     private final @NotNull String identifier;
 
     /**
@@ -34,12 +39,8 @@ public class TrustChangedEvent extends MultiClaimEvent implements Cancellable
      * @param given whether trust is being given or taken
      * @param identifier the identifier whose trust is being affected
      */
-    public TrustChangedEvent(
-            @NotNull Player changer,
-            @Nullable List<Claim> claims,
-            @Nullable ClaimPermission claimPermission,
-            boolean given,
-            @NotNull String identifier)
+    public TrustChangedEvent(@NotNull Player changer, @Nullable List<Claim> claims,
+            @Nullable ClaimPermission claimPermission, boolean given, @NotNull String identifier)
     {
         super(claims);
         this.changer = changer;
@@ -57,12 +58,8 @@ public class TrustChangedEvent extends MultiClaimEvent implements Cancellable
      * @param given whether trust is being given or taken
      * @param identifier the identifier whose trust is being affected
      */
-    public TrustChangedEvent(
-            @NotNull Player changer,
-            @NotNull Claim claim,
-            @Nullable ClaimPermission claimPermission,
-            boolean given,
-            @NotNull String identifier)
+    public TrustChangedEvent(@NotNull Player changer, @NotNull Claim claim, @Nullable ClaimPermission claimPermission,
+            boolean given, @NotNull String identifier)
     {
         super(Collections.singleton(claim));
         this.changer = changer;

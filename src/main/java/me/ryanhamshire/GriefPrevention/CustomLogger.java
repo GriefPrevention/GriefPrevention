@@ -18,10 +18,6 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.google.common.io.FileWriteMode;
-import com.google.common.io.Files;
-import org.bukkit.scheduler.BukkitScheduler;
-
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -30,11 +26,20 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bukkit.scheduler.BukkitScheduler;
+
+import com.google.common.io.FileWriteMode;
+import com.google.common.io.Files;
+
 class CustomLogger
 {
+
     private final SimpleDateFormat timestampFormat = new SimpleDateFormat("HH:mm");
+
     private final SimpleDateFormat filenameFormat = new SimpleDateFormat("yyyy_MM_dd");
+
     private final String logFolderPath = DataStore.dataLayerFolderPath + File.separator + "Logs";
+
     private final int secondsBetweenWrites = 300;
 
     //stringbuilder is not thread safe, stringbuffer is
@@ -56,8 +61,16 @@ class CustomLogger
             BukkitScheduler scheduler = GriefPrevention.instance.getServer().getScheduler();
             final long ticksPerSecond = 20L;
             final long ticksPerDay = ticksPerSecond * 60 * 60 * 24;
-            scheduler.runTaskTimerAsynchronously(GriefPrevention.instance, new EntryWriter(), this.secondsBetweenWrites * ticksPerSecond, this.secondsBetweenWrites * ticksPerSecond);
-            scheduler.runTaskTimerAsynchronously(GriefPrevention.instance, new ExpiredLogRemover(), ticksPerDay, ticksPerDay);
+            scheduler.runTaskTimerAsynchronously(
+                    GriefPrevention.instance,
+                    new EntryWriter(),
+                    this.secondsBetweenWrites * ticksPerSecond,
+                    this.secondsBetweenWrites * ticksPerSecond);
+            scheduler.runTaskTimerAsynchronously(
+                    GriefPrevention.instance,
+                    new ExpiredLogRemover(),
+                    ticksPerDay,
+                    ticksPerDay);
         }
     }
 
@@ -84,7 +97,8 @@ class CustomLogger
         if (entryType == CustomLogEntryTypes.Exception) return true;
         if (entryType == CustomLogEntryTypes.SocialActivity && !GriefPrevention.instance.config_logs_socialEnabled)
             return false;
-        if (entryType == CustomLogEntryTypes.SuspiciousActivity && !GriefPrevention.instance.config_logs_suspiciousEnabled)
+        if (entryType == CustomLogEntryTypes.SuspiciousActivity
+                && !GriefPrevention.instance.config_logs_suspiciousEnabled)
             return false;
         if (entryType == CustomLogEntryTypes.AdminActivity && !GriefPrevention.instance.config_logs_adminEnabled)
             return false;
@@ -108,7 +122,8 @@ class CustomLogger
             File logFile = new File(filepath);
 
             //dump content
-            Files.asCharSink(logFile, StandardCharsets.UTF_8, FileWriteMode. APPEND).write(this.queuedEntries.toString());
+            Files.asCharSink(logFile, StandardCharsets.UTF_8, FileWriteMode.APPEND)
+                    .write(this.queuedEntries.toString());
 
             //in case of a failure to write the above due to exception,
             //the unwritten entries will remain the buffer for the next write to retry
@@ -134,10 +149,10 @@ class CustomLogger
             expirationBoundary.add(Calendar.DATE, -daysToKeepLogs);
             for (File file : files)
             {
-                if (file.isDirectory()) continue;  //skip any folders
+                if (file.isDirectory()) continue; //skip any folders
 
                 String filename = file.getName().replace(".log", "");
-                String[] dateParts = filename.split("_");  //format is yyyy_MM_dd
+                String[] dateParts = filename.split("_"); //format is yyyy_MM_dd
                 if (dateParts.length != 3) continue;
 
                 try
@@ -156,7 +171,10 @@ class CustomLogger
                 catch (NumberFormatException e)
                 {
                     //throw this away - effectively ignoring any files without the correct filename format
-                    GriefPrevention.AddLogEntry("Ignoring an unexpected file in the abridged logs folder: " + file.getName(), CustomLogEntryTypes.Debug, true);
+                    GriefPrevention.AddLogEntry(
+                            "Ignoring an unexpected file in the abridged logs folder: " + file.getName(),
+                            CustomLogEntryTypes.Debug,
+                            true);
                 }
             }
         }
@@ -169,6 +187,7 @@ class CustomLogger
     //transfers the internal buffer to a log file
     private class EntryWriter implements Runnable
     {
+
         @Override
         public void run()
         {
@@ -178,6 +197,7 @@ class CustomLogger
 
     private class ExpiredLogRemover implements Runnable
     {
+
         @Override
         public void run()
         {

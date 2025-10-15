@@ -1,12 +1,14 @@
 package com.griefprevention.visualization.impl;
 
-import com.griefprevention.util.IntVector;
+import java.util.Collection;
+
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.BoundingBox;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
+import com.griefprevention.util.IntVector;
 
 /**
  * A {@link FakeBlockVisualization} with maximum anti-cheat compatibility.

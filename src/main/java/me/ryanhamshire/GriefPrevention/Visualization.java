@@ -18,21 +18,24 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.griefprevention.visualization.Boundary;
-import com.griefprevention.visualization.BoundaryVisualization;
-import com.griefprevention.visualization.VisualizationType;
-import com.griefprevention.events.BoundaryVisualizationEvent;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import com.griefprevention.events.BoundaryVisualizationEvent;
+import com.griefprevention.visualization.Boundary;
+import com.griefprevention.visualization.BoundaryVisualization;
+import com.griefprevention.visualization.VisualizationType;
+
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 
 //represents a visualization sent to a player
 //FEATURE: to show players visually where claim boundaries are, we send them fake block change packets
@@ -47,10 +50,11 @@ public class Visualization
 
     @Deprecated(forRemoval = true, since = "16.18")
     public ArrayList<VisualizationElement> elements = new ArrayList<>();
+
     private final Collection<Boundary> boundaries = new ArrayList<>();
 
     @Deprecated(forRemoval = true, since = "16.18")
-    public Visualization() {}
+    public Visualization() { }
 
     /**
      * Send a visualization to a {@link Player}.
@@ -87,7 +91,11 @@ public class Visualization
      * {@link BoundaryVisualization#visualizeClaim(Player, Claim, VisualizationType, Block)}
      */
     @Deprecated(forRemoval = true, since = "16.18")
-    public static Visualization FromClaim(Claim claim, int height, me.ryanhamshire.GriefPrevention.VisualizationType visualizationType, Location locality)
+    public static Visualization FromClaim(
+            Claim claim,
+            int height,
+            me.ryanhamshire.GriefPrevention.VisualizationType visualizationType,
+            Location locality)
     {
         if (claim.parent != null) claim = claim.parent;
 
@@ -97,8 +105,8 @@ public class Visualization
         Visualization visualization = new Visualization();
         visualization.boundaries.add(new Boundary(claim, type));
         visualization.boundaries.addAll(
-                claim.children.stream()
-                        .map(child -> new Boundary(child, com.griefprevention.visualization.VisualizationType.SUBDIVISION))
+                claim.children.stream().map(
+                        child -> new Boundary(child, com.griefprevention.visualization.VisualizationType.SUBDIVISION))
                         .collect(Collectors.toUnmodifiableSet()));
 
         return visualization;
@@ -136,7 +144,11 @@ public class Visualization
      * @deprecated Add all desired elements to the list of boundaries ({@link BoundaryVisualizationEvent#getBoundaries()})
      */
     @Deprecated(forRemoval = true, since = "16.18")
-    public void addClaimElements(Claim claim, int height, me.ryanhamshire.GriefPrevention.VisualizationType visualizationType, Location locality)
+    public void addClaimElements(
+            Claim claim,
+            int height,
+            me.ryanhamshire.GriefPrevention.VisualizationType visualizationType,
+            Location locality)
     {
         this.boundaries.add(new Boundary(claim, visualizationType.convert()));
     }
@@ -149,15 +161,29 @@ public class Visualization
      */
     @Deprecated(forRemoval = true, since = "16.18")
     //adds a general claim cuboid (represented by min and max) visualization to the current visualization
-    public void addClaimElements(Location min, Location max, Location locality, int height, BlockData cornerBlockData, BlockData accentBlockData, int STEP) {
-        this.boundaries.add(new Boundary(new BoundingBox(min, max), me.ryanhamshire.GriefPrevention.VisualizationType.ofBlockData(accentBlockData)));
+    public void addClaimElements(
+            Location min,
+            Location max,
+            Location locality,
+            int height,
+            BlockData cornerBlockData,
+            BlockData accentBlockData,
+            int STEP)
+    {
+        this.boundaries.add(
+                new Boundary(new BoundingBox(min, max),
+                        me.ryanhamshire.GriefPrevention.VisualizationType.ofBlockData(accentBlockData)));
     }
 
     /**
      * @deprecated Add all desired elements to the list of boundaries ({@link BoundaryVisualizationEvent#getBoundaries()})
      */
     @Deprecated(forRemoval = true, since = "16.18")
-    public static Visualization fromClaims(Iterable<Claim> claims, int height, me.ryanhamshire.GriefPrevention.VisualizationType type, Location locality)
+    public static Visualization fromClaims(
+            Iterable<Claim> claims,
+            int height,
+            me.ryanhamshire.GriefPrevention.VisualizationType type,
+            Location locality)
     {
         Visualization visualization = new Visualization();
         claims.forEach(claim -> visualization.addClaimElements(claim, height, type, locality));

@@ -4,6 +4,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockBreakEvent;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Deprecated(forRemoval = true, since = "17.0.0")
 public class PreventBlockBreakEvent extends Event implements Cancellable
 {
+
     private final @NotNull BlockBreakEvent innerEvent;
 
     /**

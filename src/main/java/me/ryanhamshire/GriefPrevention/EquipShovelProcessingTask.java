@@ -18,16 +18,18 @@
 
 package me.ryanhamshire.GriefPrevention;
 
-import com.griefprevention.visualization.BoundaryVisualization;
-import com.griefprevention.visualization.VisualizationType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
+
+import com.griefprevention.visualization.BoundaryVisualization;
+import com.griefprevention.visualization.VisualizationType;
 
 //tells a player about how many claim blocks he has, etc
 //implemented as a task so that it can be delayed
 //otherwise, it's spammy when players mouse-wheel past the shovel in their hot bars
 class EquipShovelProcessingTask implements Runnable
 {
+
     //player data
     private final Player player;
 
@@ -40,7 +42,8 @@ class EquipShovelProcessingTask implements Runnable
     public void run()
     {
         //if he's not holding the golden shovel anymore, do nothing
-        if (GriefPrevention.instance.getItemInHand(player, EquipmentSlot.HAND).getType() != GriefPrevention.instance.config_claims_modificationTool)
+        if (GriefPrevention.instance.getItemInHand(player, EquipmentSlot.HAND)
+                .getType() != GriefPrevention.instance.config_claims_modificationTool)
             return;
 
         PlayerData playerData = GriefPrevention.instance.dataStore.getPlayerData(player.getUniqueId());
@@ -63,11 +66,13 @@ class EquipShovelProcessingTask implements Runnable
         //link to a video demo of land claiming, based on world type
         if (GriefPrevention.instance.creativeRulesApply(player.getLocation()))
         {
-            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
+            GriefPrevention
+                    .sendMessage(player, TextMode.Instr, Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
         }
         else if (GriefPrevention.instance.claimsEnabledForWorld(player.getWorld()))
         {
-            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, DataStore.SURVIVAL_VIDEO_URL);
+            GriefPrevention
+                    .sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, DataStore.SURVIVAL_VIDEO_URL);
         }
 
         //if standing in a claim owned by the player, visualize it

@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 class WordFinder
 {
+
     private Pattern pattern;
 
     WordFinder(List<String> wordsToFind)
@@ -28,7 +29,8 @@ class WordFinder
             patternString = patternString.substring(1);
         }
         // No words are defined, match nothing.
-        else return;
+        else
+            return;
 
         this.pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }

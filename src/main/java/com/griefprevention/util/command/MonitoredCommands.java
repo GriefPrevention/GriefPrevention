@@ -1,18 +1,5 @@
 package com.griefprevention.util.command;
 
-import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import org.bukkit.Bukkit;
-import org.bukkit.Server;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandMap;
-import org.bukkit.command.FormattedCommandAlias;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.command.PluginIdentifiableCommand;
-import org.bukkit.command.defaults.BukkitCommand;
-import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,6 +9,21 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.FormattedCommandAlias;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.PluginIdentifiableCommand;
+import org.bukkit.command.defaults.BukkitCommand;
+import org.bukkit.plugin.Plugin;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 
 public class MonitoredCommands
 {
@@ -43,8 +45,7 @@ public class MonitoredCommands
         }
         catch (ReflectiveOperationException e)
         {
-            GriefPrevention.instance.getLogger().warning(
-                    """
+            GriefPrevention.instance.getLogger().warning("""
                     Caught exception trying to access server command map!
                     Aliases can only be detected for plugin commands declared in relevant plugin.yml files!
                     """);
@@ -53,6 +54,7 @@ public class MonitoredCommands
     }
 
     private final Set<String> monitoredCommands = new HashSet<>();
+
     private int maxSpaces = -1;
 
     public MonitoredCommands(@NotNull Collection<String> commands)
@@ -83,8 +85,7 @@ public class MonitoredCommands
         boolean slashStart = command.charAt(0) == '/';
         int firstSpace = command.indexOf(' ');
         String commandName;
-        if (firstSpace > -1)
-            commandName = command.substring(slashStart ? 1 : 0, firstSpace);
+        if (firstSpace > -1) commandName = command.substring(slashStart ? 1 : 0, firstSpace);
         else
             commandName = slashStart ? command.substring(1) : command;
 
@@ -112,15 +113,13 @@ public class MonitoredCommands
         // As a result, there may still be relevant aliases.
         boolean present = command != null;
 
-        if (present)
-            addCommand(command, suffix, activePlugin);
+        if (present) addCommand(command, suffix, activePlugin);
 
         // If the command is a specific alias, that command is the one being targeted, not others.
         if (commandName.indexOf(':') != -1)
         {
             // Only update max spaces if this is a real command.
-            if (present)
-                maxSpaces = Math.max(maxSpaces, (int) suffix.chars().filter(ch -> ch == ' ').count());
+            if (present) maxSpaces = Math.max(maxSpaces, (int) suffix.chars().filter(ch -> ch == ' ').count());
             return;
         }
 
@@ -137,8 +136,7 @@ public class MonitoredCommands
             }
         }
 
-        if (present)
-            maxSpaces = Math.max(maxSpaces, (int) suffix.chars().filter(ch -> ch == ' ').count());
+        if (present) maxSpaces = Math.max(maxSpaces, (int) suffix.chars().filter(ch -> ch == ' ').count());
     }
 
     private void addCommand(@NotNull Command command, @NotNull String suffix, @Nullable Plugin plugin)
@@ -183,9 +181,7 @@ public class MonitoredCommands
 
             if (object instanceof List<?> list)
             {
-                list.stream()
-                        .map(Object::toString)
-                        .map(String::toLowerCase)
+                list.stream().map(Object::toString).map(String::toLowerCase)
                         .forEach(alias -> monitoredCommands.add(prefix + alias + suffix));
                 return;
             }
@@ -207,10 +203,10 @@ public class MonitoredCommands
         if (command instanceof BukkitCommand)
         {
             // If this is a command from Bukkit, it is in the same package.
-            if (BukkitCommand.class.getPackage().equals(command.getClass().getPackage()))
-                return "/bukkit:";
+            if (BukkitCommand.class.getPackage().equals(command.getClass().getPackage())) return "/bukkit:";
             // Otherwise this is probably a wrapper for a vanilla command.
-            else return "/minecraft:";
+            else
+                return "/minecraft:";
         }
 
         // User-created commands.yml commands don't ever have a prefix, they're added directly to the map.
@@ -250,7 +246,8 @@ public class MonitoredCommands
         }
         // Otherwise, make a best-effort attempt to support aliases of
         // commands that tried to register this command and got overridden.
-        else activePlugin = null;
+        else
+            activePlugin = null;
 
         // If the command was identified by a specific alias, no other matches to find.
         if (specificAlias) return;
@@ -289,9 +286,8 @@ public class MonitoredCommands
 
             // Zero or more aliases in List form.
             case List<?> list -> Stream.concat(
-                            Stream.of(commandEntry.getKey().toLowerCase()),
-                            list.stream().map(Object::toString).map(String::toLowerCase))
-                    .collect(Collectors.toSet());
+                    Stream.of(commandEntry.getKey().toLowerCase()),
+                    list.stream().map(Object::toString).map(String::toLowerCase)).collect(Collectors.toSet());
 
             // Invalid alias declaration.
             default -> Set.of(commandEntry.getKey().toLowerCase());

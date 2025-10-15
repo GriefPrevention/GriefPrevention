@@ -5,6 +5,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
+
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,8 +13,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * An immutable integer-based vector.
  */
-public record IntVector(int x, int y, int z)
-{
+public record IntVector(int x, int y, int z) {
 
     /**
      * Construct a new {@code IntVector} representing the specified {@link Block}.

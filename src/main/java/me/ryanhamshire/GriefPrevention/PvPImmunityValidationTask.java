@@ -24,6 +24,7 @@ import org.bukkit.entity.Player;
 //used to send delayed messages, for example help text triggered by a player's chat
 class PvPImmunityValidationTask implements Runnable
 {
+
     private final Player player;
 
     public PvPImmunityValidationTask(Player player)
@@ -49,7 +50,8 @@ class PvPImmunityValidationTask implements Runnable
         else
         {
             //otherwise check again in one minute
-            GriefPrevention.instance.getServer().getScheduler().scheduleSyncDelayedTask(GriefPrevention.instance, this, 1200L);
+            GriefPrevention.instance.getServer().getScheduler()
+                    .scheduleSyncDelayedTask(GriefPrevention.instance, this, 1200L);
         }
     }
 }

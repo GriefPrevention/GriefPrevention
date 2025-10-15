@@ -1,18 +1,15 @@
 package com.griefprevention.visualization;
 
-import me.ryanhamshire.GriefPrevention.Claim;
-import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 
 /**
  * A data holder defining an area to be visualized.
  */
-public record Boundary(
-        @NotNull BoundingBox bounds,
-        @NotNull VisualizationType type,
-        @Nullable Claim claim)
-{
+public record Boundary(@NotNull BoundingBox bounds, @NotNull VisualizationType type, @Nullable Claim claim) {
 
     /**
      * Construct a new {@code Boundary} for a {@link BoundingBox} with the given visualization style.

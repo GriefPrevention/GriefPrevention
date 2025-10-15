@@ -21,8 +21,8 @@ package me.ryanhamshire.GriefPrevention;
 /**
  * Enum representing the permissions available in a {@link Claim}.
  */
-public enum ClaimPermission
-{
+public enum ClaimPermission {
+
     /**
      * ClaimPermission used for owner-based checks. Cannot be granted and grants all other permissions.
      */

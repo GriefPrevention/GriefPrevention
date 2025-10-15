@@ -1,5 +1,13 @@
 package me.ryanhamshire.GriefPrevention;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
@@ -12,15 +20,8 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.BlockState;
 import org.bukkit.loot.Lootable;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 //automatically extends a claim downward based on block types detected
 public class AutoExtendClaimTask implements Runnable
@@ -54,14 +55,18 @@ public class AutoExtendClaimTask implements Runnable
                     {
                         // Find the lowest non-natural storage block in the chunk.
                         // This way chests, barrels, etc. are always protected even if player block definitions are lacking.
-                        lowestLootableTile = Math.min(lowestLootableTile, Arrays.stream(chunk.getTileEntities())
-                                // Accept only Lootable tiles that do not have loot tables.
-                                // Naturally generated Lootables only have a loot table reference until the container is
-                                // accessed. On access the loot table is used to calculate the contents and removed.
-                                // This prevents claims from always extending over unexplored structures, spawners, etc.
-                                .filter(tile -> tile instanceof Lootable lootable && lootable.getLootTable() == null)
-                                // Return smallest value or default to existing min Y if no eligible tiles are present.
-                                .mapToInt(BlockState::getY).min().orElse(lowestLootableTile));
+                        lowestLootableTile = Math.min(
+                                lowestLootableTile,
+                                Arrays.stream(chunk.getTileEntities())
+                                        // Accept only Lootable tiles that do not have loot tables.
+                                        // Naturally generated Lootables only have a loot table reference until the container is
+                                        // accessed. On access the loot table is used to calculate the contents and removed.
+                                        // This prevents claims from always extending over unexplored structures, spawners, etc.
+                                        .filter(
+                                                tile -> tile instanceof Lootable lootable
+                                                        && lootable.getLootTable() == null)
+                                        // Return smallest value or default to existing min Y if no eligible tiles are present.
+                                        .mapToInt(BlockState::getY).min().orElse(lowestLootableTile));
                     }
 
                     // Save a snapshot of the chunk for more detailed async block searching.
@@ -76,23 +81,25 @@ public class AutoExtendClaimTask implements Runnable
     }
 
     private final Claim claim;
+
     private final ArrayList<ChunkSnapshot> chunks;
+
     private final Environment worldType;
+
     private final Map<Biome, Set<Material>> biomePlayerMaterials = new HashMap<>();
+
     private final int minY;
+
     private final int lowestExistingY;
+
     // Definitions of biomes where sand covers surfaces instead of grass.
     static final Set<NamespacedKey> SAND_SOIL_BIOMES = Set.of(
             NamespacedKey.minecraft("snowy_beach"),
             NamespacedKey.minecraft("beach"),
-            NamespacedKey.minecraft("desert")
-    );
+            NamespacedKey.minecraft("desert"));
 
-    private AutoExtendClaimTask(
-            @NotNull Claim claim,
-            @NotNull ArrayList<@NotNull ChunkSnapshot> chunks,
-            @NotNull Environment worldType,
-            int lowestExistingY)
+    private AutoExtendClaimTask(@NotNull Claim claim, @NotNull ArrayList<@NotNull ChunkSnapshot> chunks,
+            @NotNull Environment worldType, int lowestExistingY)
     {
         this.claim = claim;
         this.chunks = chunks;
@@ -133,7 +140,7 @@ public class AutoExtendClaimTask implements Runnable
     private int findLowerBuiltY(ChunkSnapshot chunkSnapshot, int y)
     {
         // Specifically not using yTooSmall here to allow protecting bottom layer.
-        nextY: for (int newY = y - 1; newY >= this.minY; newY--)
+        nextY : for (int newY = y - 1; newY >= this.minY; newY--)
         {
             for (int x = 0; x < 16; x++)
             {
@@ -183,12 +190,11 @@ public class AutoExtendClaimTask implements Runnable
 
     private Set<Material> getBiomePlayerBlocks(Biome biome)
     {
-        return biomePlayerMaterials.computeIfAbsent(biome, newBiome ->
-                {
-                    Set<Material> playerBlocks = AutoExtendClaimTask.getPlayerBlocks(this.worldType, newBiome);
-                    playerBlocks.removeAll(BlockEventHandler.TRASH_BLOCKS);
-                    return playerBlocks;
-                });
+        return biomePlayerMaterials.computeIfAbsent(biome, newBiome -> {
+            Set<Material> playerBlocks = AutoExtendClaimTask.getPlayerBlocks(this.worldType, newBiome);
+            playerBlocks.removeAll(BlockEventHandler.TRASH_BLOCKS);
+            return playerBlocks;
+        });
     }
 
     static Set<Material> getPlayerBlocks(Environment environment, Biome biome)
@@ -320,7 +326,7 @@ public class AutoExtendClaimTask implements Runnable
         playerBlocks.add(Material.RAW_GOLD_BLOCK);
         playerBlocks.add(Material.LIGHTNING_ROD);
         playerBlocks.add(Material.DECORATED_POT);
-    
+
         //these are unnatural in the nether and end
         if (environment != Environment.NORMAL && environment != Environment.CUSTOM)
         {
@@ -328,7 +334,7 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.addAll(Tag.DIRT.getValues());
             playerBlocks.addAll(Tag.SAND.getValues());
         }
-    
+
         //these are unnatural in the standard world, but not in the nether
         if (environment != Environment.NETHER)
         {
@@ -372,7 +378,7 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.remove(Material.WARPED_STEM);
             playerBlocks.remove(Material.WARPED_HYPHAE);
         }
-    
+
         //these are unnatural in the standard and nether worlds, but not in the end
         if (environment != Environment.THE_END)
         {
@@ -391,7 +397,7 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.remove(Material.PURPUR_SLAB);
             playerBlocks.remove(Material.PURPUR_STAIRS);
         }
-    
+
         //these are unnatural in sandy biomes, but not elsewhere
         if (SAND_SOIL_BIOMES.contains(biome.getKey()) || environment != Environment.NORMAL)
         {
@@ -407,13 +413,13 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.remove(Material.ACACIA_LOG);
             playerBlocks.remove(Material.DARK_OAK_LOG);
         }
-    
+
         return playerBlocks;
     }
 
     //runs in the main execution thread, where it can safely change claims and save those changes
-    private record ExecuteExtendClaimTask(Claim claim, int newY) implements Runnable
-    {
+    private record ExecuteExtendClaimTask(Claim claim, int newY) implements Runnable {
+
         @Override
         public void run()
         {

@@ -1,8 +1,10 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.event.Event;
+
 import org.jetbrains.annotations.NotNull;
+
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link Event} involving a {@link Claim}.

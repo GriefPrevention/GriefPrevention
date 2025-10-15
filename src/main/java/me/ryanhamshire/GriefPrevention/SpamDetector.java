@@ -6,8 +6,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 class SpamDetector
 {
+
     //last chat message shown and its timestamp, regardless of who sent it
     private String lastChatMessage = "";
+
     private long lastChatMessageTimestamp = 0;
 
     //number of identical chat messages in a row
@@ -65,7 +67,7 @@ class SpamDetector
             this.duplicateMessageCount = 0;
         }
 
-        //check message content and timing      
+        //check message content and timing
         long millisecondsSinceLastMessage = timestamp - chatterData.lastMessageTimestamp;
 
         //if the message came too close to the last one
@@ -77,7 +79,8 @@ class SpamDetector
         }
 
         //if it's exactly the same as the last message from the same player and within 30 seconds
-        if (result.muteReason == null && millisecondsSinceLastMessage < 30000 && result.finalMessage.equalsIgnoreCase(chatterData.lastMessage))
+        if (result.muteReason == null && millisecondsSinceLastMessage < 30000
+                && result.finalMessage.equalsIgnoreCase(chatterData.lastMessage))
         {
             chatterData.spamLevel++;
             spam = true;
@@ -85,7 +88,8 @@ class SpamDetector
         }
 
         //if it's very similar to the last message from the same player and within 10 seconds of that message
-        if (result.muteReason == null && millisecondsSinceLastMessage < 10000 && this.stringsAreSimilar(message.toLowerCase(), chatterData.lastMessage.toLowerCase()))
+        if (result.muteReason == null && millisecondsSinceLastMessage < 10000
+                && this.stringsAreSimilar(message.toLowerCase(), chatterData.lastMessage.toLowerCase()))
         {
             chatterData.spamLevel++;
             spam = true;
@@ -95,7 +99,7 @@ class SpamDetector
             }
         }
 
-        //if the message was mostly non-alpha-numerics or doesn't include much whitespace, consider it a spam (probably ansi art or random text gibberish) 
+        //if the message was mostly non-alpha-numerics or doesn't include much whitespace, consider it a spam (probably ansi art or random text gibberish)
         if (result.muteReason == null && message.length() > 5)
         {
             int symbolsCount = 0;
@@ -114,7 +118,8 @@ class SpamDetector
                 }
             }
 
-            if (symbolsCount > message.length() / 2 || (message.length() > 15 && whitespaceCount < message.length() / 10))
+            if (symbolsCount > message.length() / 2
+                    || (message.length() > 15 && whitespaceCount < message.length() / 10))
             {
                 spam = true;
                 if (chatterData.spamLevel > 0) result.muteReason = "gibberish";
@@ -129,10 +134,10 @@ class SpamDetector
             chatterData.spamLevel++;
         }
 
-        //if the message was determined to be a spam, consider taking action        
+        //if the message was determined to be a spam, consider taking action
         if (spam)
         {
-            //anything above level 8 for a player which has received a warning...  kick or if enabled, ban 
+            //anything above level 8 for a player which has received a warning...  kick or if enabled, ban
             if (chatterData.spamLevel > 8 && chatterData.spamWarned)
             {
                 result.shouldBanChatter = true;
@@ -205,7 +210,8 @@ class SpamDetector
         int j;
         for (j = 0; j < shorterString.length() - i; j++)
         {
-            if (shorterString.charAt(shorterString.length() - j - 1) == longerString.charAt(longerString.length() - j - 1))
+            if (shorterString.charAt(shorterString.length() - j - 1) == longerString
+                    .charAt(longerString.length() - j - 1))
                 identicalCount++;
             if (identicalCount > maxIdenticalCharacters) return true;
         }
@@ -216,21 +222,30 @@ class SpamDetector
 
 class SpamAnalysisResult
 {
+
     String finalMessage;
+
     boolean shouldWarnChatter = false;
+
     boolean shouldBanChatter = false;
+
     String muteReason;
 }
 
 class ChatterData
 {
-    public String lastMessage = "";                 //the player's last chat message, or slash command complete with parameters 
-    public long lastMessageTimestamp;               //last time the player sent a chat message or used a monitored slash command
-    public int spamLevel = 0;                       //number of consecutive "spams"
-    public boolean spamWarned = false;              //whether the player has received a warning recently
+
+    public String lastMessage = ""; //the player's last chat message, or slash command complete with parameters
+
+    public long lastMessageTimestamp; //last time the player sent a chat message or used a monitored slash command
+
+    public int spamLevel = 0; //number of consecutive "spams"
+
+    public boolean spamWarned = false; //whether the player has received a warning recently
 
     //all recent message lengths and their total
     private final ConcurrentLinkedQueue<LengthTimestampPair> recentMessageLengths = new ConcurrentLinkedQueue<>();
+
     private int recentTotalLength = 0;
 
     public void AddMessage(String message, long timestamp)
@@ -259,7 +274,9 @@ class ChatterData
 
 class LengthTimestampPair
 {
+
     public long timestamp;
+
     public int length;
 
     public LengthTimestampPair(int length, long timestamp)

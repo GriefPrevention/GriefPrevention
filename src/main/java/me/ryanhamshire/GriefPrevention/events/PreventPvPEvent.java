@@ -1,12 +1,14 @@
 package me.ryanhamshire.GriefPrevention.events;
 
-import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import me.ryanhamshire.GriefPrevention.Claim;
 
 /**
  * An {@link org.bukkit.event.Event Event} called when GriefPrevention prevents PvP combat.
@@ -16,6 +18,7 @@ public class PreventPvPEvent extends ClaimEvent implements Cancellable
 {
 
     private final @Nullable Player attacker;
+
     private final @NotNull Entity defender;
 
     /**

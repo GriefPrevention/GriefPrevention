@@ -1,14 +1,14 @@
 package com.griefprevention.util.command;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MonitorableCommandTest
 {
@@ -37,8 +37,7 @@ class MonitorableCommandTest
     {
         return List.of(
                 Arguments.of("/cool command execution yeah", List.of("command", "execution", "yeah")),
-                Arguments.of("/single", List.of())
-        );
+                Arguments.of("/single", List.of()));
     }
 
     @Test
@@ -64,9 +63,10 @@ class MonitorableCommandTest
     private static List<Arguments> getCommandData()
     {
         return List.of(
-                Arguments.of("/cool command execution yeah", List.of("/cool", "/cool command", "/cool command execution", "/cool command execution yeah")),
-                Arguments.of("/single", List.of("/single"))
-        );
+                Arguments.of(
+                        "/cool command execution yeah",
+                        List.of("/cool", "/cool command", "/cool command execution", "/cool command execution yeah")),
+                Arguments.of("/single", List.of("/single")));
     }
 
     @Test
