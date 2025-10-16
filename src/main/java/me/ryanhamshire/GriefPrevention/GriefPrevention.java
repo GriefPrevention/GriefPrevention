@@ -552,7 +552,29 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_claimsExtendIntoGroundDistance = Math.abs(config.getInt("GriefPrevention.Claims.ExtendIntoGroundDistance", 5));
         this.config_claims_minWidth = config.getInt("GriefPrevention.Claims.MinimumWidth", 5);
         this.config_claims_minArea = config.getInt("GriefPrevention.Claims.MinimumArea", 100);
+
         this.config_claims_minY = config.getInt("GriefPrevention.Claims.MinimumY", Integer.MIN_VALUE);
+        // Warn if MinimumY is set above sea level, as this is likely unintended
+        if (this.config_claims_minY != Integer.MIN_VALUE)
+        {
+            for (World world : worlds)
+            {
+                // Only check worlds where claims are enabled
+                if (!this.claimsEnabledForWorld(world)) continue;
+
+                int minY = this.config_claims_minY;
+                int seaLevel = this.getSeaLevel(world);
+                if (minY > seaLevel)
+                {
+                    getLogger().warning(
+                            "MinimumY (" + minY + ") is set above sea level (" + seaLevel + ") " +
+                                    "for world '" + world.getName() + "'. This prevents claims extending below Y=" +
+                                    minY + ", which may not have been intended.");
+                    break; // Show warning once only - minY is a global setting
+                }
+            }
+        }
+
         this.config_claims_chestClaimExpirationDays = config.getInt("GriefPrevention.Claims.Expiration.ChestClaimDays", 7);
         this.config_claims_expirationDays = config.getInt("GriefPrevention.Claims.Expiration.AllClaims.DaysInactive", 60);
         this.config_claims_expirationExemptionTotalBlocks = config.getInt("GriefPrevention.Claims.Expiration.AllClaims.ExceptWhenOwnerHasTotalClaimBlocks", 10000);
