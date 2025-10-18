@@ -1111,7 +1111,10 @@ class PlayerEventHandler implements Listener
                     GriefPrevention.sendMessage(player, TextMode.Err, noAccessReason.get());
                     event.setCancelled(true);
                     if (cause == TeleportCause.ENDER_PEARL)
+                    {
+                        if (!instance.config_claims_refundEnderPearls) return;
                         player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL));
+                    }
                 }
             }
         }
