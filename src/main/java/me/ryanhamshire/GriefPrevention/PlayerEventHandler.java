@@ -1112,7 +1112,7 @@ class PlayerEventHandler implements Listener
                     event.setCancelled(true);
                     if (cause == TeleportCause.ENDER_PEARL)
                     {
-                        if (instance.config_claims_refundEnderPearls)
+                        if (instance.config_claims_refundDeniedEnderPearls)
                         {
                             player.getInventory().addItem(new ItemStack(Material.ENDER_PEARL));
                         }
