@@ -89,9 +89,10 @@ class AutoExtendClaimTask implements Runnable
         this.chunks = chunks;
         this.worldType = worldType;
         this.lowestExistingY = Math.min(lowestExistingY, claim.getLesserBoundaryCorner().getBlockY());
+        World world = Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld());
         this.minY = Math.max(
-                Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld()).getMinHeight(),
-                GriefPrevention.instance.config_claims_maxDepth);
+                world.getMinHeight(),
+                GriefPrevention.instance.getMaxDepth(world));
     }
 
     @Override

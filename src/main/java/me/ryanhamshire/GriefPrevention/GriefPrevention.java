@@ -232,6 +232,7 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_silenceBans;                              //whether to remove quit messages on banned players
 
     public HashMap<String, Integer> config_seaLevelOverride;        //override for sea level, because bukkit doesn't report the right value for all situations
+    public HashMap<String, Integer> config_claims_maxDepthOverride; //per-world override for maximum claim depth
 
     public boolean config_limitTreeGrowth;                          //whether trees should be prevented from growing into a claim from outside
     public PistonMode config_pistonMovement;                            //Setting for piston check options
@@ -596,6 +597,25 @@ public class GriefPrevention extends JavaPlugin
             this.config_claims_maxDepth = Integer.MIN_VALUE;
             AddLogEntry("Updated default value for GriefPrevention.Claims.MaximumDepth to " + Integer.MIN_VALUE);
         }
+
+        //maximum depth per world
+        this.config_claims_maxDepthOverride = new HashMap<>();
+        for (World world : worlds)
+        {
+            String configPath = "GriefPrevention.Claims.MaximumDepthOverrides." + world.getName();
+            if (config.contains(configPath))
+            {
+                int maxDepthOverride = config.getInt(configPath);
+                outConfig.set(configPath, maxDepthOverride);
+                this.config_claims_maxDepthOverride.put(world.getName(), maxDepthOverride);
+            }
+            else
+            {
+                // Don't write default values to config - absence means "use global setting"
+                outConfig.set(configPath, null);
+            }
+        }
+
         this.config_claims_chestClaimExpirationDays = config.getInt("GriefPrevention.Claims.Expiration.ChestClaimDays", 7);
         this.config_claims_unusedClaimExpirationDays = config.getInt("GriefPrevention.Claims.Expiration.UnusedClaimDays", 14);
         this.config_claims_expirationDays = config.getInt("GriefPrevention.Claims.Expiration.AllClaims.DaysInactive", 60);
@@ -3831,6 +3851,11 @@ public class GriefPrevention extends JavaPlugin
         {
             return overrideValue;
         }
+    }
+
+    public int getMaxDepth(World world)
+    {
+        return this.config_claims_maxDepthOverride.getOrDefault(world.getName(), this.config_claims_maxDepth);
     }
 
     public boolean containsBlockedIP(String message)
