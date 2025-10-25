@@ -133,15 +133,13 @@ class AutoExtendClaimTask implements Runnable
                     // If the block is natural, ignore it and continue searching the same Y level.
                     if (!isPlayerBlock(chunkSnapshot, x, newY, z)) continue;
 
-                    // If the block is player-placed and we're at the minimum Y allowed, we're done searching.
-                    if (yTooSmall(y)) return this.minY;
-
-                    // Because we found a player block, repeatedly check the next block in the column.
-                    while (isPlayerBlock(chunkSnapshot, x, newY--, z))
+                    do
                     {
                         // If we've hit minimum Y we're done searching.
-                        if (yTooSmall(y)) return this.minY;
+                        if (yTooSmall(newY)) return this.minY;
                     }
+                    // Because we found a player block, repeatedly check the next block in the column.
+                    while (isPlayerBlock(chunkSnapshot, x, --newY, z));
 
                     // Undo increment for unsuccessful player block check.
                     newY++;
