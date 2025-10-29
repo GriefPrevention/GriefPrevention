@@ -112,6 +112,7 @@ public class GriefPrevention extends JavaPlugin
 
     public boolean config_claims_preventGlobalMonsterEggs; //whether monster eggs can be placed regardless of trust.
     public boolean config_claims_preventTheft;                        //whether containers and crafting blocks are protectable
+    public boolean config_claims_ownablePets;                             //whether pets are owned
     public boolean config_claims_protectCreatures;                    //whether claimed animals may be injured by players without permission
     public boolean config_claims_protectHorses;                        //whether horses on a claim should be protected by that claim's rules
     public boolean config_claims_protectDonkeys;                    //whether donkeys on a claim should be protected by that claim's rules
@@ -529,6 +530,7 @@ public class GriefPrevention extends JavaPlugin
 
         this.config_claims_preventGlobalMonsterEggs = config.getBoolean("GriefPrevention.Claims.PreventGlobalMonsterEggs", true);
         this.config_claims_preventTheft = config.getBoolean("GriefPrevention.Claims.PreventTheft", true);
+        this.config_claims_ownablePets = config.getBoolean("GriefPrevention.Claims.OwnablePets", true);
         this.config_claims_protectCreatures = config.getBoolean("GriefPrevention.Claims.ProtectCreatures", true);
         this.config_claims_protectHorses = config.getBoolean("GriefPrevention.Claims.ProtectHorses", true);
         this.config_claims_protectDonkeys = config.getBoolean("GriefPrevention.Claims.ProtectDonkeys", true);
@@ -695,6 +697,7 @@ public class GriefPrevention extends JavaPlugin
 
         outConfig.set("GriefPrevention.Claims.PreventGlobalMonsterEggs", this.config_claims_preventGlobalMonsterEggs);
         outConfig.set("GriefPrevention.Claims.PreventTheft", this.config_claims_preventTheft);
+        outConfig.set("GriefPrevention.Claims.OwnablePets", this.config_claims_ownablePets);
         outConfig.set("GriefPrevention.Claims.ProtectCreatures", this.config_claims_protectCreatures);
         outConfig.set("GriefPrevention.Claims.PreventButtonsSwitches", this.config_claims_preventButtonsSwitches);
         outConfig.set("GriefPrevention.Claims.LockWoodenDoors", this.config_claims_lockWoodenDoors);

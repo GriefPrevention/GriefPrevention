@@ -1090,7 +1090,8 @@ class PlayerEventHandler implements Listener
                     UUID ownerID = tameable.getOwner().getUniqueId();
 
                     //if the player interacting is the owner or an admin in ignore claims mode, always allow
-                    if (player.getUniqueId().equals(ownerID) || playerData.ignoreClaims)
+                    //also if onwnable pets has been disabled
+                    if (player.getUniqueId().equals(ownerID) || playerData.ignoreClaims || !instance.config_claims_ownablePets)
                     {
                         return;
                     }
