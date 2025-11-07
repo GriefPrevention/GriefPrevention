@@ -1744,7 +1744,13 @@ class PlayerEventHandler implements Listener
             {
                 playerData.lastClaim = claim;
 
-                Supplier<String> noContainersReason = claim.checkPermission(player, ClaimPermission.Inventory, event);
+                ClaimPermission requiredPermission = ClaimPermission.Inventory;
+                if (instance.config_claims_hoppersRequireBuildTrust && clickedBlockType == Material.HOPPER)
+                {
+                    requiredPermission = ClaimPermission.Build;
+                }
+
+                Supplier<String> noContainersReason = claim.checkPermission(player, requiredPermission, event);
                 if (noContainersReason != null)
                 {
                     event.setCancelled(true);
