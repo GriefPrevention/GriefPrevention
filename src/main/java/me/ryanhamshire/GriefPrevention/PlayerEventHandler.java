@@ -1614,6 +1614,32 @@ class PlayerEventHandler implements Listener
         }
     }
 
+    //special case to handle End portal frame interactions before the portal is created,
+    //ensuring build permission checks happen prior to vanilla portal creation logic
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    void onEndPortalFrameInteract(PlayerInteractEvent event)
+    {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+
+        Block block = event.getClickedBlock();
+        if (block == null || block.getType() != Material.END_PORTAL_FRAME) return;
+
+        ItemStack item = event.getItem();
+        if (item == null || item.getType() != Material.ENDER_EYE) return;
+
+        //use instanceof check instead of direct cast to safely handle potential modded block data implementations
+        if (!(block.getBlockData() instanceof org.bukkit.block.data.type.EndPortalFrame frameData)) return;
+        if (frameData.hasEye()) return;
+
+        Player player = event.getPlayer();
+        String noBuildReason = instance.allowBuild(player, block.getLocation(), Material.END_PORTAL_FRAME);
+        if (noBuildReason != null)
+        {
+            event.setCancelled(true);
+            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+        }
+    }
+
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.LOW)
     void onPlayerInteract(PlayerInteractEvent event)
