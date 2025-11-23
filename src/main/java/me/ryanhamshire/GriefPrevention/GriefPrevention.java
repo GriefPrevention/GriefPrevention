@@ -115,6 +115,7 @@ public class GriefPrevention extends JavaPlugin
 
     public boolean config_claims_preventGlobalMonsterEggs; //whether monster eggs can be placed regardless of trust.
     public boolean config_claims_preventTheft;                        //whether containers and crafting blocks are protectable
+    public boolean config_claims_hoppersRequireBuildTrust;            //whether hoppers require build trust instead of container trust
     public boolean config_claims_protectCreatures;                    //whether claimed animals may be injured by players without permission
     public boolean config_claims_protectHorses;                        //whether horses on a claim should be protected by that claim's rules
     public boolean config_claims_protectDonkeys;                    //whether donkeys on a claim should be protected by that claim's rules
@@ -125,6 +126,7 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_claims_lockFenceGates;                    //whether fence gates should be locked by default (require /accesstrust)
     public boolean config_claims_preventNonPlayerCreatedPortals;    // whether portals where we cannot determine the creating player should be prevented from creation in claims
     public boolean config_claims_enderPearlsRequireAccessTrust;        //whether teleporting into a claim with a pearl requires access trust
+    public boolean config_claims_refundDeniedEnderPearls;                   // Whether to refund ender pearls after failing to teleport into a claim that requires trust
     public boolean config_claims_raidTriggersRequireBuildTrust;      //whether raids are triggered by a player that doesn't have build permission in that claim
     public int config_claims_maxClaimsPerPlayer;                    //maximum number of claims per player
     public boolean config_claims_respectWorldGuard;                 //whether claim creations requires WG build permission in creation area
@@ -564,6 +566,7 @@ public class GriefPrevention extends JavaPlugin
 
         this.config_claims_preventGlobalMonsterEggs = config.getBoolean("GriefPrevention.Claims.PreventGlobalMonsterEggs", true);
         this.config_claims_preventTheft = config.getBoolean("GriefPrevention.Claims.PreventTheft", true);
+        this.config_claims_hoppersRequireBuildTrust = config.getBoolean("GriefPrevention.Claims.HoppersRequireBuildTrust", false);
         this.config_claims_protectCreatures = config.getBoolean("GriefPrevention.Claims.ProtectCreatures", true);
         this.config_claims_protectHorses = config.getBoolean("GriefPrevention.Claims.ProtectHorses", true);
         this.config_claims_protectDonkeys = config.getBoolean("GriefPrevention.Claims.ProtectDonkeys", true);
@@ -574,6 +577,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_lockFenceGates = config.getBoolean("GriefPrevention.Claims.LockFenceGates", true);
         this.config_claims_preventNonPlayerCreatedPortals = config.getBoolean("GriefPrevention.Claims.PreventNonPlayerCreatedPortals", false);
         this.config_claims_enderPearlsRequireAccessTrust = config.getBoolean("GriefPrevention.Claims.EnderPearlsRequireAccessTrust", true);
+        this.config_claims_refundDeniedEnderPearls = config.getBoolean("GriefPrevention.Claims.RefundDeniedEnderPearls", true);
         this.config_claims_raidTriggersRequireBuildTrust = config.getBoolean("GriefPrevention.Claims.RaidTriggersRequireBuildTrust", true);
         this.config_claims_initialBlocks = config.getInt("GriefPrevention.Claims.InitialBlocks", 100);
         this.config_claims_blocksAccruedPerHour_default = config.getInt("GriefPrevention.Claims.BlocksAccruedPerHour", 100);
@@ -846,12 +850,14 @@ public class GriefPrevention extends JavaPlugin
 
         outConfig.set("GriefPrevention.Claims.PreventGlobalMonsterEggs", this.config_claims_preventGlobalMonsterEggs);
         outConfig.set("GriefPrevention.Claims.PreventTheft", this.config_claims_preventTheft);
+        outConfig.set("GriefPrevention.Claims.HoppersRequireBuildTrust", this.config_claims_hoppersRequireBuildTrust);
         outConfig.set("GriefPrevention.Claims.ProtectCreatures", this.config_claims_protectCreatures);
         outConfig.set("GriefPrevention.Claims.PreventButtonsSwitches", this.config_claims_preventButtonsSwitches);
         outConfig.set("GriefPrevention.Claims.LockWoodenDoors", this.config_claims_lockWoodenDoors);
         outConfig.set("GriefPrevention.Claims.LockTrapDoors", this.config_claims_lockTrapDoors);
         outConfig.set("GriefPrevention.Claims.LockFenceGates", this.config_claims_lockFenceGates);
         outConfig.set("GriefPrevention.Claims.EnderPearlsRequireAccessTrust", this.config_claims_enderPearlsRequireAccessTrust);
+        outConfig.set("GriefPrevention.Claims.RefundDeniedEnderPearls", this.config_claims_refundDeniedEnderPearls);
         outConfig.set("GriefPrevention.Claims.RaidTriggersRequireBuildTrust", this.config_claims_raidTriggersRequireBuildTrust);
         outConfig.set("GriefPrevention.Claims.ProtectHorses", this.config_claims_protectHorses);
         outConfig.set("GriefPrevention.Claims.ProtectDonkeys", this.config_claims_protectDonkeys);
