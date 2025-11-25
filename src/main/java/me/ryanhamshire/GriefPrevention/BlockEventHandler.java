@@ -65,6 +65,7 @@ import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.event.world.StructureGrowEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.projectiles.BlockProjectileSource;
@@ -1174,11 +1175,20 @@ public class BlockEventHandler implements Listener
         }
     }
 
+    /**
+     * Check if the inventory is a hopper. Extracted for testability since
+     * InventoryType requires server initialization in Spigot 1.21.10+.
+     */
+    protected boolean isHopperInventory(Inventory inventory)
+    {
+        return inventory.getType() == InventoryType.HOPPER;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onInventoryPickupItem(InventoryPickupItemEvent event)
     {
         // Prevent hoppers from taking items dropped by players upon death.
-        if (event.getInventory().getType() != InventoryType.HOPPER)
+        if (!isHopperInventory(event.getInventory()))
         {
             return;
         }
