@@ -864,8 +864,8 @@ public abstract class DataStore
         int smallx, bigx, smally, bigy, smallz, bigz;
 
         int worldMinY = world.getMinHeight();
-        y1 = Math.max(worldMinY, Math.max(GriefPrevention.instance.config_claims_minY, y1));
-        y2 = Math.max(worldMinY, Math.max(GriefPrevention.instance.config_claims_minY, y2));
+        y1 = Math.max(worldMinY, Math.max(GriefPrevention.instance.getMinY(world), y1));
+        y2 = Math.max(worldMinY, Math.max(GriefPrevention.instance.getMinY(world), y2));
 
         //determine small versus big inputs
         if (x1 < x2)
@@ -1083,10 +1083,10 @@ public abstract class DataStore
 
         // Use the lowest of the old and new depths.
         newDepth = Math.min(newDepth, oldDepth);
-        // Cap depth to maximum depth allowed by the configuration.
-        newDepth = Math.max(newDepth, GriefPrevention.instance.config_claims_minY);
         // Cap the depth to the world's minimum height.
         World world = Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld());
+        // Cap depth to maximum depth allowed by the configuration.
+        newDepth = Math.max(newDepth, GriefPrevention.instance.getMinY(world));
         newDepth = Math.max(newDepth, world.getMinHeight());
 
         return newDepth;

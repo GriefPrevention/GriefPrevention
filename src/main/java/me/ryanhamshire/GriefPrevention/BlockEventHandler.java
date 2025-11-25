@@ -337,7 +337,7 @@ public class BlockEventHandler implements Listener
         else if (GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius > -1 && player.hasPermission("griefprevention.createclaims") && block.getType() == Material.CHEST)
         {
             //if the chest is too deep underground, don't create the claim and explain why
-            if (GriefPrevention.instance.config_claims_preventTheft && block.getY() < GriefPrevention.instance.config_claims_minY)
+            if (GriefPrevention.instance.config_claims_preventTheft && block.getY() < GriefPrevention.instance.getMinY(block.getWorld()))
             {
                 GriefPrevention.sendMessage(player, TextMode.Warn, Messages.TooDeepToClaim);
                 return;

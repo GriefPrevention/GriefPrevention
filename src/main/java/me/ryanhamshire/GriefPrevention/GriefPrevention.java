@@ -216,6 +216,7 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_silenceBans;                              //whether to remove quit messages on banned players
 
     public HashMap<String, Integer> config_seaLevelOverride;        //override for sea level, because bukkit doesn't report the right value for all situations
+    public HashMap<String, Integer> config_claims_minYOverride;     //per-world override for minimum Y coordinate
 
     public boolean config_limitTreeGrowth;                          //whether trees should be prevented from growing into a claim from outside
     public PistonMode config_pistonMovement;                            //Setting for piston check options
@@ -576,6 +577,24 @@ public class GriefPrevention extends JavaPlugin
                                     minY + ", which may not have been intended.");
                     break; // Show warning once only - minY is a global setting
                 }
+            }
+        }
+
+        //minimum Y per world
+        this.config_claims_minYOverride = new HashMap<>();
+        for (World world : worlds)
+        {
+            String configPath = "GriefPrevention.Claims.MinimumYOverrides." + world.getName();
+            if (config.contains(configPath))
+            {
+                int minYOverride = config.getInt(configPath);
+                outConfig.set(configPath, minYOverride);
+                this.config_claims_minYOverride.put(world.getName(), minYOverride);
+            }
+            else
+            {
+                // Don't write default values to config - absence means "use global setting"
+                outConfig.set(configPath, null);
             }
         }
 
@@ -2984,6 +3003,11 @@ public class GriefPrevention extends JavaPlugin
         {
             return overrideValue;
         }
+    }
+
+    public int getMinY(World world)
+    {
+        return this.config_claims_minYOverride.getOrDefault(world.getName(), this.config_claims_minY);
     }
 
     public boolean containsBlockedIP(String message)
