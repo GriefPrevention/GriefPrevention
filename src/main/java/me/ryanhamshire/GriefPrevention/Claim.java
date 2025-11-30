@@ -66,6 +66,8 @@ public class Claim
     //use getOwnerName() to get a friendly name (will be "an administrator" for admin claims)
     public UUID ownerID;
 
+    public String ownerName;
+
     //list of players who (beyond the claim owner) have permission to grant permissions in this claim
     public ArrayList<String> managers = new ArrayList<>();
 
@@ -284,6 +286,11 @@ public class Claim
     {
         Supplier<String> supplier = checkPermission(player, ClaimPermission.Build, new CompatBuildBreakEvent(material, false));
         return supplier != null ? supplier.get() : null;
+    }
+
+    public void setOwnerName(String name)
+    {
+        this.ownerName = name;
     }
 
     public static class CompatBuildBreakEvent extends Event
@@ -680,7 +687,11 @@ public class Claim
         if (this.ownerID == null)
             return GriefPrevention.instance.dataStore.getMessage(Messages.OwnerNameForAdminClaims);
 
-        return GriefPrevention.lookupPlayerName(this.ownerID);
+        if (ownerName != null)
+            return ownerName;
+
+        ownerName = GriefPrevention.lookupPlayerName(this.ownerID);
+        return ownerName;
     }
 
     public UUID getOwnerID()
