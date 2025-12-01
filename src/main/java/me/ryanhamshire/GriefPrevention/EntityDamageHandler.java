@@ -4,17 +4,14 @@ import me.ryanhamshire.GriefPrevention.events.PreventPvPEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Animals;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Donkey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.EvokerFangs;
 import org.bukkit.entity.Explosive;
-import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
@@ -38,7 +35,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityKnockbackByEntityEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
@@ -79,13 +75,17 @@ public class EntityDamageHandler implements Listener
 
     private final @NotNull DataStore dataStore;
     private final @NotNull GriefPrevention instance;
-    private final @NotNull NamespacedKey luredByPlayer;
+    private static NamespacedKey luredByPlayer;
 
     EntityDamageHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
     {
         this.dataStore = dataStore;
         instance = plugin;
-        luredByPlayer = new NamespacedKey(plugin, "lured_by_player");
+        // Static field initialization - safe because only one instance is created at startup
+        if (luredByPlayer == null)
+        {
+            luredByPlayer = new NamespacedKey(plugin, "lured_by_player");
+        }
     }
 
     // Tag passive animals that can become aggressive so that we can tell whether they are hostile later
@@ -280,7 +280,7 @@ public class EntityDamageHandler implements Listener
      * @param entity the {@code Entity}
      * @return true if the {@code Entity} is hostile
      */
-    private boolean isHostile(@NotNull Entity entity)
+    static boolean isHostile(@NotNull Entity entity)
     {
         if (entity instanceof Monster) return true;
 
@@ -1271,174 +1271,6 @@ public class EntityDamageHandler implements Listener
                     handlePvpInClaim(thrower, affectedPlayer, affectedPlayer.getLocation(), playerData, () -> cancelHandler.accept(Messages.PlayerInPvPSafeZone));
                 }
             }
-        }
-    }
-
-    /**
-     * Handle knockback caused by wind charges. Prevents players from using wind charges to
-     * push other players out of claims or to grief entities within claims.
-     *
-     * @param event the {@link EntityKnockbackByEntityEvent}
-     */
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onEntityKnockbackByEntity(@NotNull EntityKnockbackByEntityEvent event)
-    {
-        // Only handle wind charge knockback.
-        if (!(event.getSourceEntity() instanceof AbstractWindCharge windCharge)) return;
-
-        // Only handle player-caused wind charges.
-        if (!(windCharge.getShooter() instanceof Player attacker)) return;
-
-        Entity entity = event.getEntity();
-
-        if (entity instanceof Player defender)
-        {
-            handleWindChargeKnockbackPlayer(event, attacker, defender);
-        }
-        else
-        {
-            handleWindChargeKnockbackEntity(event, attacker, entity);
-        }
-    }
-
-    /**
-     * Handle wind charge knockback against players. Uses PVP rules to determine if knockback
-     * should be allowed.
-     *
-     * @param event the {@link EntityKnockbackByEntityEvent}
-     * @param attacker the {@link Player} who shot the wind charge
-     * @param defender the {@link Player} being knocked back
-     */
-    private void handleWindChargeKnockbackPlayer(
-            @NotNull EntityKnockbackByEntityEvent event,
-            @NotNull Player attacker,
-            @NotNull Player defender)
-    {
-        // Always allow self-knockback for mobility.
-        if (attacker.equals(defender)) return;
-
-        PlayerData defenderData = this.dataStore.getPlayerData(defender.getUniqueId());
-        PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
-
-        if (attackerData.ignoreClaims) return;
-
-        // Check if defender is in a claim where attacker has trust.
-        Claim defenderClaim = this.dataStore.getClaimAt(defender.getLocation(), false, defenderData.lastClaim);
-        if (defenderClaim != null)
-        {
-            defenderData.lastClaim = defenderClaim;
-
-            // If the attacker has container trust, allow the knockback.
-            if (defenderClaim.checkPermission(attacker, ClaimPermission.Inventory, null) == null)
-            {
-                return;
-            }
-        }
-
-        // If PVP rules don't apply to this world, prevent knockback.
-        // In PvE worlds, players shouldn't be able to push each other
-        // around (unless in a trusted claim, see previous checks).
-        if (!instance.pvpRulesApply(defender.getWorld()))
-        {
-            event.setCancelled(true);
-            return;
-        }
-
-        // Protect fresh spawns from knockback abuse.
-        if (instance.config_pvp_protectFreshSpawns)
-        {
-            if (attackerData.pvpImmune || defenderData.pvpImmune)
-            {
-                event.setCancelled(true);
-                GriefPrevention.sendMessage(
-                        attacker,
-                        TextMode.Err,
-                        attackerData.pvpImmune ? Messages.CantFightWhileImmune : Messages.ThatPlayerPvPImmune);
-                return;
-            }
-        }
-
-        // Check if defender is in a PVP safezone.
-        if (defenderClaim != null && instance.claimIsPvPSafeZone(defenderClaim))
-        {
-            PreventPvPEvent pvpEvent = new PreventPvPEvent(defenderClaim, attacker, defender);
-            Bukkit.getPluginManager().callEvent(pvpEvent);
-            if (!pvpEvent.isCancelled())
-            {
-                event.setCancelled(true);
-                GriefPrevention.sendMessage(attacker, TextMode.Err, Messages.PlayerInPvPSafeZone);
-            }
-            return;
-        }
-
-        // Check if attacker is in a PVP safezone (prevent shooting from safezone).
-        Claim attackerClaim = this.dataStore.getClaimAt(attacker.getLocation(), false, attackerData.lastClaim);
-        if (attackerClaim != null)
-        {
-            attackerData.lastClaim = attackerClaim;
-            if (instance.claimIsPvPSafeZone(attackerClaim))
-            {
-                PreventPvPEvent pvpEvent = new PreventPvPEvent(attackerClaim, attacker, defender);
-                Bukkit.getPluginManager().callEvent(pvpEvent);
-                if (!pvpEvent.isCancelled())
-                {
-                    event.setCancelled(true);
-                    GriefPrevention.sendMessage(attacker, TextMode.Err, Messages.CantFightWhileImmune);
-                }
-            }
-        }
-    }
-
-    /**
-     * Handle wind charge knockback against non-player entities. Prevents moving protected
-     * entities out of claims.
-     *
-     * @param event the {@link EntityKnockbackByEntityEvent}
-     * @param attacker the {@link Player} who shot the wind charge
-     * @param entity the {@link Entity} being knocked back
-     */
-    private void handleWindChargeKnockbackEntity(
-            @NotNull EntityKnockbackByEntityEvent event,
-            @NotNull Player attacker,
-            @NotNull Entity entity)
-    {
-        if (!instance.claimsEnabledForWorld(entity.getWorld())) return;
-
-        // Determine protection type and required permission.
-        ClaimPermission requiredPermission;
-        if (entity instanceof ArmorStand || entity instanceof Hanging)
-        {
-            // These require build trust, matching handleClaimedBuildTrustDamageByEntity.
-            requiredPermission = ClaimPermission.Build;
-        }
-        else if (entity instanceof Creature && instance.config_claims_protectCreatures)
-        {
-            // Creatures require container trust, matching handleCreatureDamageByEntity,
-            // but skip monsters - they are never protected.
-            if (isHostile(entity)) return;
-            requiredPermission = ClaimPermission.Inventory;
-        }
-        else
-        {
-            // Entity type not protected.
-            return;
-        }
-
-        PlayerData attackerData = this.dataStore.getPlayerData(attacker.getUniqueId());
-
-        if (attackerData.ignoreClaims) return;
-
-        Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, attackerData.lastClaim);
-
-        if (claim == null) return;
-
-        attackerData.lastClaim = claim;
-
-        Supplier<String> noPermissionReason = claim.checkPermission(attacker, requiredPermission, event);
-        if (noPermissionReason != null)
-        {
-            event.setCancelled(true);
-            GriefPrevention.sendMessage(attacker, TextMode.Err, noPermissionReason.get());
         }
     }
 
