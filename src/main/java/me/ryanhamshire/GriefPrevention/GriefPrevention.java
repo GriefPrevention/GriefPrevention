@@ -48,6 +48,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -400,6 +401,14 @@ public class GriefPrevention extends JavaPlugin
         //combat/damage-specific entity events
         entityDamageHandler = new EntityDamageHandler(this.dataStore, this);
         pluginManager.registerEvents(entityDamageHandler, this);
+
+        //wind charge knockback handling - register appropriate listener for server implementation
+        WindChargeKnockbackHandler windChargeHandler = new WindChargeKnockbackHandler(this.dataStore, this);
+        Listener windChargeListener = windChargeHandler.createListener();
+        if (windChargeListener != null)
+        {
+            pluginManager.registerEvents(windChargeListener, this);
+        }
 
         //siege events
         SiegeEventHandler siegeEventHandler = new SiegeEventHandler();
