@@ -1135,10 +1135,15 @@ class PlayerEventHandler implements Listener
         //always allow interactions when player is in ignore claims mode
         if (playerData.ignoreClaims) return;
 
-        //don't allow container access during pvp combat
+        //check allow container access during pvp combat
         if ((entity instanceof StorageMinecart || entity instanceof PoweredMinecart))
         {
-            if (playerData.inPvpCombat())
+            //allow the access if the entity is in a claim AND the user has access to the claim AND container access is allowed during PvP.
+            Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
+            Supplier<String> noContainersReason = claim.checkPermission(player, ClaimPermission.Inventory, event);
+            boolean allowcontainerAccess = claim != null && noContainersReason == null && instance.config_pvp_allowTrustedContainerAccess; 
+            
+            if (!allowcontainerAccess && playerData.inPvpCombat())
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
                 event.setCancelled(true);
@@ -1568,20 +1573,11 @@ class PlayerEventHandler implements Listener
         {
             if (playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
 
-            //block container use during pvp combat, same reason
-            if (playerData.inPvpCombat())
-            {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
-                event.setCancelled(true);
-                return;
-            }
-
-            //otherwise check permissions for the claim the player is in
+            //Otherwise check permissions for the claim the player is in
             Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
             if (claim != null)
             {
                 playerData.lastClaim = claim;
-
                 Supplier<String> noContainersReason = claim.checkPermission(player, ClaimPermission.Inventory, event);
                 if (noContainersReason != null)
                 {
@@ -1589,6 +1585,16 @@ class PlayerEventHandler implements Listener
                     GriefPrevention.sendMessage(player, TextMode.Err, noContainersReason.get());
                     return;
                 }
+            }
+
+            //block container use during pvp combat, unless configured to allow access to containers in claims with permissions
+            //the permissions are implied by the check above.
+            boolean allowContainerAccess = claim != null && instance.config_pvp_allowTrustedContainerAccess;
+            if (!allowContainerAccess && playerData.inPvpCombat())
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
+                event.setCancelled(true);
+                return;
             }
 
             //if the event hasn't been cancelled, then the player is allowed to use the container
