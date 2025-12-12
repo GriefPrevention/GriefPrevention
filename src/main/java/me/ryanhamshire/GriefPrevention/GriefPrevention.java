@@ -48,8 +48,11 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -430,6 +433,79 @@ public class GriefPrevention extends JavaPlugin
             new MetricsHandler(this, dataMode);
         }
         catch (Throwable ignored) {}
+        Bukkit.getPluginManager().registerEvents(new WorldLoadListener(), this);
+    }
+
+    private class WorldLoadListener implements Listener {
+        @EventHandler
+        public void onWorldLoad(WorldLoadEvent event) {
+            loadConfig();
+
+            if (dataStore != null) {
+                for (Player player : getServer().getOnlinePlayers())
+                {
+                    UUID playerID = player.getUniqueId();
+                    PlayerData playerData = dataStore.getPlayerData(playerID);
+                    dataStore.savePlayerDataSync(playerID, playerData);
+                }
+
+                dataStore.close();
+            }
+
+            if (!databaseUrl.isEmpty())
+            {
+                try
+                {
+                    DatabaseDataStore databaseStore = new DatabaseDataStore(databaseUrl, databaseUserName, databasePassword);
+
+                    if (FlatFileDataStore.hasData())
+                    {
+                        GriefPrevention.AddLogEntry("There appears to be some data on the hard drive.  Migrating those data to the database...");
+                        FlatFileDataStore flatFileStore = new FlatFileDataStore();
+                        dataStore = flatFileStore;
+                        flatFileStore.migrateData(databaseStore);
+                        GriefPrevention.AddLogEntry("Data migration process complete.");
+                    }
+
+                    dataStore = databaseStore;
+                }
+                catch (Exception e)
+                {
+                    GriefPrevention.AddLogEntry("Because there was a problem with the database, GriefPrevention will not function properly.  Either update the database config settings resolve the issue, or delete those lines from your config.yml so that GriefPrevention can use the file system to store data.");
+                    e.printStackTrace();
+                    GriefPrevention.this.getServer().getPluginManager().disablePlugin(GriefPrevention.this);
+                    return;
+                }
+            }
+
+            //if not using the database because it's not configured or because there was a problem, use the file system to store data
+            //this is the preferred method, as it's simpler than the database scenario
+            if (dataStore == null)
+            {
+                File oldclaimdata = new File(getDataFolder(), "ClaimData");
+                if (oldclaimdata.exists())
+                {
+                    if (!FlatFileDataStore.hasData())
+                    {
+                        File claimdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "ClaimData");
+                        oldclaimdata.renameTo(claimdata);
+                        File oldplayerdata = new File(getDataFolder(), "PlayerData");
+                        File playerdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "PlayerData");
+                        oldplayerdata.renameTo(playerdata);
+                    }
+                }
+                try
+                {
+                    dataStore = new FlatFileDataStore();
+                }
+                catch (Exception e)
+                {
+                    GriefPrevention.AddLogEntry("Unable to initialize the file system data store.  Details:");
+                    GriefPrevention.AddLogEntry(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private void loadConfig()
@@ -840,6 +916,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_logs_mutedChatEnabled = config.getBoolean("GriefPrevention.Abridged Logs.Included Entry Types.Muted Chat Messages", false);
 
         //claims mode by world
+        outConfig.set("GriefPrevention.Claims.Mode", config.get("GriefPrevention.Claims.Mode"));
         for (World world : this.config_claims_worldModes.keySet())
         {
             outConfig.set(
@@ -907,6 +984,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Spam.DeathMessageCooldownSeconds", this.config_spam_deathMessageCooldownSeconds);
         outConfig.set("GriefPrevention.Spam.Logout Message Delay In Seconds", this.config_spam_logoutMessageDelaySeconds);
 
+        outConfig.set("GriefPrevention.PvP.RulesEnabledInWorld", config.get("GriefPrevention.PvP.RulesEnabledInWorld"));
         for (World world : worlds)
         {
             outConfig.set("GriefPrevention.PvP.RulesEnabledInWorld." + world.getName(), this.pvpRulesApply(world));
