@@ -186,6 +186,8 @@ public class GriefPrevention extends JavaPlugin
     public boolean config_pvp_punishLogout;                            //whether to kill players who log out during PvP combat
     public int config_pvp_combatTimeoutSeconds;                        //how long combat is considered to continue after the most recent damage
     public boolean config_pvp_allowCombatItemDrop;                    //whether a player can drop items during combat to hide them
+    public boolean config_pvp_allowTrustedContainerAccess;          //whether a player can access containers, in allowed claims, during combat
+    
     public ArrayList<String> config_pvp_blockedCommands;            //list of commands which may not be used during pvp combat
     public boolean config_pvp_noCombatInPlayerLandClaims;            //whether players may fight in player-owned land claims
     public boolean config_pvp_noCombatInAdminLandClaims;            //whether players may fight in admin-owned land claims
@@ -656,6 +658,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_pvp_punishLogout = config.getBoolean("GriefPrevention.PvP.PunishLogout", true);
         this.config_pvp_combatTimeoutSeconds = config.getInt("GriefPrevention.PvP.CombatTimeoutSeconds", 15);
         this.config_pvp_allowCombatItemDrop = config.getBoolean("GriefPrevention.PvP.AllowCombatItemDrop", false);
+        this.config_pvp_allowTrustedContainerAccess = config.getBoolean("GriefPrevention.PvP.AllowTrustedContainerAccess", false);
         String bannedPvPCommandsList = config.getString("GriefPrevention.PvP.BlockedSlashCommands", "/home;/vanish;/spawn;/tpa");
 
         this.config_economy_claimBlocksMaxBonus = config.getInt("GriefPrevention.Economy.ClaimBlocksMaxBonus", 0);
@@ -915,6 +918,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.PvP.PunishLogout", this.config_pvp_punishLogout);
         outConfig.set("GriefPrevention.PvP.CombatTimeoutSeconds", this.config_pvp_combatTimeoutSeconds);
         outConfig.set("GriefPrevention.PvP.AllowCombatItemDrop", this.config_pvp_allowCombatItemDrop);
+        outConfig.set("GriefPrevention.PvP.AllowTrustedContainerAccess", this.config_pvp_allowTrustedContainerAccess);
         outConfig.set("GriefPrevention.PvP.BlockedSlashCommands", bannedPvPCommandsList);
         outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.PlayerOwnedClaims", this.config_pvp_noCombatInPlayerLandClaims);
         outConfig.set("GriefPrevention.PvP.ProtectPlayersInLandClaims.AdministrativeClaims", this.config_pvp_noCombatInAdminLandClaims);
