@@ -1296,8 +1296,8 @@ class PlayerEventHandler implements Listener
             //allow the access if the entity is in a claim AND the user has access to the claim AND container access is allowed during PvP.
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
             Supplier<String> noContainersReason = claim != null ? claim.checkPermission(player, ClaimPermission.Inventory, event) : null;
-            boolean allowcontainerAccess = claim != null && noContainersReason == null && instance.config_pvp_allowTrustedContainerAccess; 
-            if (!allowcontainerAccess && playerData.inPvpCombat())
+            boolean allowContainerAccess = claim != null && noContainersReason == null && instance.config_pvp_allowTrustedContainerAccess; 
+            if (!allowContainerAccess && playerData.inPvpCombat())
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
                 event.setCancelled(true);
@@ -1791,7 +1791,6 @@ class PlayerEventHandler implements Listener
                 event.setCancelled(true);
                 return;
             }
-
 
             //if the event hasn't been cancelled, then the player is allowed to use the container
             //so drop any pvp protection
