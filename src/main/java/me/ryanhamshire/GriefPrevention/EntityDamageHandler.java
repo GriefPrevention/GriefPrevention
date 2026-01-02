@@ -276,7 +276,7 @@ public class EntityDamageHandler implements Listener
      * @param entity the {@code Entity}
      * @return true if the {@code Entity} is hostile
      */
-    static boolean isHostile(@NotNull Entity entity)
+    public static boolean isHostile(@NotNull Entity entity)
     {
         if (entity instanceof Monster) return true;
 

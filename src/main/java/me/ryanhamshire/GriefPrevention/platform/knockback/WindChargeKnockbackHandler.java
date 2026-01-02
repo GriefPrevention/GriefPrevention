@@ -1,8 +1,15 @@
-package me.ryanhamshire.GriefPrevention;
+package me.ryanhamshire.GriefPrevention.platform.knockback;
 
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.ClaimPermission;
+import me.ryanhamshire.GriefPrevention.DataStore;
+import me.ryanhamshire.GriefPrevention.EntityDamageHandler;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
+import me.ryanhamshire.GriefPrevention.Messages;
+import me.ryanhamshire.GriefPrevention.PlayerData;
+import me.ryanhamshire.GriefPrevention.TextMode;
 import me.ryanhamshire.GriefPrevention.events.PreventPvPEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.AbstractWindCharge;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
@@ -10,122 +17,28 @@ import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Supplier;
 
 /**
- * Handles wind charge knockback events. This class supports both Paper's
- * {@code com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent} and Bukkit's
- * {@code org.bukkit.event.entity.EntityKnockbackByEntityEvent}.
+ * Abstract base class for wind charge knockback handling.
+ * Contains shared logic for both Paper and Spigot implementations.
  * <p>
- * At runtime, the appropriate listener is registered based on server implementation:
- * Paper's event is preferred when available since it fires first and is not deprecated on Paper.
- * <p>
- * Note: Paper resolves projectiles to their shooter, so the Paper listener handles all
- * EXPLOSION knockback caused by players (covering wind charges and other player-caused explosions).
- * On Spigot/Bukkit, the handler checks for {@link AbstractWindCharge} directly.
+ * Subclasses provide the event listener method that extracts attacker/defender
+ * from platform-specific events, then delegate to the protected handler methods.
  */
-public class WindChargeKnockbackHandler
+public abstract class WindChargeKnockbackHandler implements Listener
 {
 
-    private final DataStore dataStore;
-    private final GriefPrevention instance;
+    protected final DataStore dataStore;
+    protected final GriefPrevention instance;
 
-    WindChargeKnockbackHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
+    protected WindChargeKnockbackHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
     {
         this.dataStore = dataStore;
         this.instance = plugin;
-    }
-
-    /**
-     * Creates and returns the appropriate listener for the current server implementation.
-     * Prefers Paper's event when available, falls back to Bukkit's event otherwise.
-     *
-     * @return the listener to register, or null if no knockback event is available
-     */
-    public Listener createListener()
-    {
-        try
-        {
-            Class.forName("com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent");
-            return new PaperKnockbackListener();
-        }
-        catch (ClassNotFoundException ignored)
-        {
-            // Paper event not available, try Bukkit's.
-        }
-
-        try
-        {
-            Class.forName("org.bukkit.event.entity.EntityKnockbackByEntityEvent");
-            return new BukkitKnockbackListener();
-        }
-        catch (ClassNotFoundException ignored)
-        {
-            // Neither event is available.
-        }
-
-        return null;
-    }
-
-    /**
-     * Listener for Paper's EntityKnockbackByEntityEvent.
-     * <p>
-     * Paper resolves projectiles to their shooter, so we cannot check for AbstractWindCharge
-     * directly. Instead, we handle EXPLOSION knockback caused by players, which covers
-     * wind charges and other player-caused explosions.
-     */
-    private class PaperKnockbackListener implements Listener
-    {
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onEntityKnockbackByEntity(
-                @NotNull com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent event)
-        {
-            var explosionCause = io.papermc.paper.event.entity.EntityKnockbackEvent.Cause.EXPLOSION;
-            if (event.getCause() != explosionCause) return;
-            if (!(event.getHitBy() instanceof Player attacker)) return;
-
-            if (event.getEntity() instanceof Player defender)
-            {
-                handleWindChargeKnockbackPlayer(event, attacker, defender);
-            }
-            else
-            {
-                handleWindChargeKnockbackEntity(event, attacker, event.getEntity());
-            }
-        }
-    }
-
-    /**
-     * Listener for Bukkit's EntityKnockbackByEntityEvent.
-     */
-    private class BukkitKnockbackListener implements Listener
-    {
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-        public void onEntityKnockbackByEntity(
-                @NotNull org.bukkit.event.entity.EntityKnockbackByEntityEvent event)
-        {
-            Entity sourceEntity = event.getSourceEntity();
-            Entity knockedEntity = event.getEntity();
-
-            if (!(sourceEntity instanceof AbstractWindCharge windCharge)) return;
-
-            // Only handle player-caused wind charges.
-            if (!(windCharge.getShooter() instanceof Player attacker)) return;
-
-            if (knockedEntity instanceof Player defender)
-            {
-                handleWindChargeKnockbackPlayer(event, attacker, defender);
-            }
-            else
-            {
-                handleWindChargeKnockbackEntity(event, attacker, knockedEntity);
-            }
-        }
     }
 
     /**
@@ -137,7 +50,7 @@ public class WindChargeKnockbackHandler
      * @param defender the {@link Player} being knocked back
      * @param <T> event type that extends Event and implements Cancellable
      */
-    private <T extends Event & Cancellable> void handleWindChargeKnockbackPlayer(
+    protected <T extends Event & Cancellable> void handleWindChargeKnockbackPlayer(
             @NotNull T event,
             @NotNull Player attacker,
             @NotNull Player defender)
@@ -226,7 +139,7 @@ public class WindChargeKnockbackHandler
      * @param entity the {@link Entity} being knocked back
      * @param <T> event type that extends Event and implements Cancellable
      */
-    private <T extends Event & Cancellable> void handleWindChargeKnockbackEntity(
+    protected <T extends Event & Cancellable> void handleWindChargeKnockbackEntity(
             @NotNull T event,
             @NotNull Player attacker,
             @NotNull Entity entity)
