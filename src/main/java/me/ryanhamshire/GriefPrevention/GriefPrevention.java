@@ -27,7 +27,7 @@ import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
 import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
 import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
 import me.ryanhamshire.GriefPrevention.metrics.MetricsHandler;
-import me.ryanhamshire.GriefPrevention.platform.knockback.WindChargeKnockbackListener;
+import me.ryanhamshire.GriefPrevention.platform.knockback.KnockbackProtectionListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.BanList;
 import org.bukkit.BanList.Type;
@@ -403,8 +403,8 @@ public class GriefPrevention extends JavaPlugin
         entityDamageHandler = new EntityDamageHandler(this.dataStore, this);
         pluginManager.registerEvents(entityDamageHandler, this);
 
-        //wind charge knockback handling - register appropriate listener for server implementation
-        new WindChargeKnockbackListener(this.dataStore, this).register(this);
+        //knockback protection - handles melee, projectile, and other player-caused knockback in claims
+        new KnockbackProtectionListener(this.dataStore, this).register(this);
 
         //siege events
         SiegeEventHandler siegeEventHandler = new SiegeEventHandler();

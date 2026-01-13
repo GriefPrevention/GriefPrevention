@@ -8,19 +8,20 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Platform-specific listener for handling wind charge knockback in claims.
+ * Platform-specific listener for handling player-caused knockback in claims.
  * <p>
  * Uses Paper-specific or Spigot event depending on the detected platform.
- * This prevents players from using wind charges to knock others around
- * in protected claims where PvP or entity interaction is restricted.
+ * This prevents players from using melee attacks (spears), projectiles
+ * (wind charges), or other mechanisms to knock entities around in protected
+ * claims where such interaction is restricted.
  */
-public class WindChargeKnockbackListener implements PlatformListener
+public class KnockbackProtectionListener implements PlatformListener
 {
 
     private final DataStore dataStore;
     private final GriefPrevention plugin;
 
-    public WindChargeKnockbackListener(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
+    public KnockbackProtectionListener(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
     {
         this.dataStore = dataStore;
         this.plugin = plugin;
@@ -29,9 +30,10 @@ public class WindChargeKnockbackListener implements PlatformListener
     @Override
     public boolean isSupported()
     {
-        // Example: Check if the required event class exists for the current platform.
-        // Both Paper and Spigot support these events, but this pattern is useful
-        // for listeners that depend on classes which may not exist on all servers.
+        // Example check if the required event class exists for the current
+        // platform. In this case, both Paper and Spigot support these events,
+        // but this pattern is useful for listeners that depend on classes
+        // which may not exist on all servers.
         return switch (PlatformDetection.getPlatform())
         {
             case PAPER -> PlatformDetection.classExists("com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent");
@@ -44,8 +46,8 @@ public class WindChargeKnockbackListener implements PlatformListener
     {
         return switch (PlatformDetection.getPlatform())
         {
-            case PAPER -> new PaperWindChargeKnockbackHandler(dataStore, plugin);
-            case SPIGOT -> new SpigotWindChargeKnockbackHandler(dataStore, plugin);
+            case PAPER -> new PaperKnockbackProtectionHandler(dataStore, plugin);
+            case SPIGOT -> new SpigotKnockbackProtectionHandler(dataStore, plugin);
         };
     }
 

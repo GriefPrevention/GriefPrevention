@@ -23,34 +23,37 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.Supplier;
 
 /**
- * Abstract base class for wind charge knockback handling.
+ * Abstract base class for player-caused knockback protection in claims.
  * Contains shared logic for both Paper and Spigot implementations.
+ * <p>
+ * Handles knockback from all player sources including melee attacks (spears, swords),
+ * projectiles (wind charges), and other mechanisms (shield blocks).
  * <p>
  * Subclasses provide the event listener method that extracts attacker/defender
  * from platform-specific events, then delegate to the protected handler methods.
  */
-public abstract class WindChargeKnockbackHandler implements Listener
+public abstract class KnockbackProtectionHandler implements Listener
 {
 
     protected final DataStore dataStore;
     protected final GriefPrevention instance;
 
-    protected WindChargeKnockbackHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
+    protected KnockbackProtectionHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
     {
         this.dataStore = dataStore;
         this.instance = plugin;
     }
 
     /**
-     * Handle wind charge knockback against players. Uses PVP rules to determine if knockback
-     * should be allowed.
+     * Handle player-caused knockback against other players. Uses PVP rules to determine
+     * if knockback should be allowed.
      *
      * @param event the knockback event
-     * @param attacker the {@link Player} who shot the wind charge
+     * @param attacker the {@link Player} who caused the knockback
      * @param defender the {@link Player} being knocked back
      * @param <T> event type that extends Event and implements Cancellable
      */
-    protected <T extends Event & Cancellable> void handleWindChargeKnockbackPlayer(
+    protected <T extends Event & Cancellable> void handleKnockbackPlayer(
             @NotNull T event,
             @NotNull Player attacker,
             @NotNull Player defender)
@@ -131,15 +134,15 @@ public abstract class WindChargeKnockbackHandler implements Listener
     }
 
     /**
-     * Handle wind charge knockback against non-player entities. Prevents moving protected
+     * Handle player-caused knockback against non-player entities. Prevents moving protected
      * entities out of claims.
      *
      * @param event the knockback event
-     * @param attacker the {@link Player} who shot the wind charge
+     * @param attacker the {@link Player} who caused the knockback
      * @param entity the {@link Entity} being knocked back
      * @param <T> event type that extends Event and implements Cancellable
      */
-    protected <T extends Event & Cancellable> void handleWindChargeKnockbackEntity(
+    protected <T extends Event & Cancellable> void handleKnockbackEntity(
             @NotNull T event,
             @NotNull Player attacker,
             @NotNull Entity entity)
