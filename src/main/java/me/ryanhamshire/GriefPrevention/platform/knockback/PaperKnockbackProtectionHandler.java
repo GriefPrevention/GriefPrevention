@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * Paper implementation of knockback protection handling.
  * Uses Paper's {@link EntityKnockbackByEntityEvent} and {@link EntityPushedByEntityAttackEvent}.
  * <p>
- * Handles all player-caused knockback including melee attacks (spears, swords),
+ * Handles all player-caused knockback including melee attacks (spears),
  * projectiles (wind charges), mace smash AoE, and other mechanisms (shield blocks).
  * <p>
  * Paper resolves projectiles to their shooter, so {@code getHitBy()} returns

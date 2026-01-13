@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * Abstract base class for player-caused knockback protection in claims.
  * Contains shared logic for both Paper and Spigot implementations.
  * <p>
- * Handles knockback from all player sources including melee attacks (spears, swords),
+ * Handles knockback from all player sources including melee attacks (spears),
  * projectiles (wind charges), and other mechanisms (shield blocks).
  * <p>
  * Subclasses provide the event listener method that extracts attacker/defender
