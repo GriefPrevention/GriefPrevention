@@ -44,6 +44,11 @@ public class BlockEventHandlerTest
         }).when(server).getTag(notNull(), notNull(), notNull());
         Bukkit.setServer(server);
 
+        // Force initialization of InventoryType before tests run.
+        // In 1.21.10+, InventoryType depends on MenuType which requires registry lookups.
+        // Initializing here ensures this happens with proper mocks, not mid-stubbing.
+        InventoryType.values();
+
         // Touch class to load material list.
         //noinspection ResultOfMethodCallIgnored
         BlockEventHandler.class.getName();
