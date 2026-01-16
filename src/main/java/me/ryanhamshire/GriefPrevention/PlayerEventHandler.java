@@ -1295,7 +1295,7 @@ class PlayerEventHandler implements Listener
 
             if (playerData.inPvpCombat())
             {
-                Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
+                Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
                 if (claim != null)
                 {
                     GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
