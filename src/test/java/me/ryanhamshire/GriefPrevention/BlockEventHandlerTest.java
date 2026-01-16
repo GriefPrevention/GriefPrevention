@@ -5,7 +5,6 @@ import org.bukkit.Server;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryPickupItemEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -24,6 +23,26 @@ public class BlockEventHandlerTest
 {
     private static final UUID PLAYER_UUID = UUID.fromString("fa8d60a7-9645-4a9f-b74d-173966174739");
 
+    /**
+     * Test subclass that overrides isHopperInventory to avoid loading InventoryType class.
+     */
+    private static class TestableBlockEventHandler extends BlockEventHandler
+    {
+        private final boolean isHopper;
+
+        TestableBlockEventHandler(DataStore dataStore, boolean isHopper)
+        {
+            super(dataStore);
+            this.isHopper = isHopper;
+        }
+
+        @Override
+        protected boolean isHopperInventory(Inventory inventory)
+        {
+            return isHopper;
+        }
+    }
+
     @Test
     void verifyNormalHopperPassthrough()
     {
@@ -33,10 +52,9 @@ public class BlockEventHandlerTest
         Inventory inventory = mock(Inventory.class);
         InventoryPickupItemEvent event = mock(InventoryPickupItemEvent.class);
         when(item.getMetadata("GP_ITEMOWNER")).thenReturn(List.of());
-        when(inventory.getType()).thenReturn(InventoryType.HOPPER);
         when(event.getItem()).thenReturn(item);
         when(event.getInventory()).thenReturn(inventory);
-        BlockEventHandler handler = new BlockEventHandler(null);
+        BlockEventHandler handler = new TestableBlockEventHandler(null, true);
 
         handler.onInventoryPickupItem(event);
 
@@ -52,10 +70,9 @@ public class BlockEventHandlerTest
         when(item.getMetadata("GP_ITEMOWNER"))
                 .thenReturn(List.of(new FixedMetadataValue(mock(Plugin.class), PLAYER_UUID)));
         Inventory inventory = mock(Inventory.class);
-        when(inventory.getType()).thenReturn(InventoryType.HOPPER);
         DataStore dataStore = mock(DataStore.class);
         when(dataStore.getPlayerData(PLAYER_UUID)).thenReturn(new PlayerData());
-        BlockEventHandler handler = new BlockEventHandler(dataStore);
+        BlockEventHandler handler = new TestableBlockEventHandler(dataStore, true);
         InventoryPickupItemEvent event = mock(InventoryPickupItemEvent.class);
         when(event.getInventory()).thenReturn(inventory);
         when(event.getItem()).thenReturn(item);
@@ -83,8 +100,7 @@ public class BlockEventHandlerTest
         when(item.getMetadata("GP_ITEMOWNER"))
                 .thenReturn(List.of(new FixedMetadataValue(mock(Plugin.class), PLAYER_UUID)));
         Inventory inventory = mock(Inventory.class);
-        when(inventory.getType()).thenReturn(InventoryType.HOPPER);
-        BlockEventHandler handler = new BlockEventHandler(null);
+        BlockEventHandler handler = new TestableBlockEventHandler(null, true);
         InventoryPickupItemEvent event = mock(InventoryPickupItemEvent.class);
         when(event.getInventory()).thenReturn(inventory);
         when(event.getItem()).thenReturn(item);
