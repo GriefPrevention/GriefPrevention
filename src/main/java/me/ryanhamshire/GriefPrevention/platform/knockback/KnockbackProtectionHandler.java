@@ -72,8 +72,8 @@ public abstract class KnockbackProtectionHandler implements Listener
         {
             defenderData.lastClaim = defenderClaim;
 
-            // If the attacker has container trust, allow the knockback.
-            if (defenderClaim.checkPermission(attacker, ClaimPermission.Inventory, null) == null)
+            // If the attacker has access trust, allow the knockback.
+            if (defenderClaim.checkPermission(attacker, ClaimPermission.Access, null) == null)
             {
                 return;
             }
