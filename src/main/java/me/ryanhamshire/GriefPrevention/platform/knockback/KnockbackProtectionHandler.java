@@ -156,7 +156,7 @@ public abstract class KnockbackProtectionHandler implements Listener
             // These require build trust, matching handleClaimedBuildTrustDamageByEntity.
             requiredPermission = ClaimPermission.Build;
         }
-        else if (entity instanceof Creature && instance.config_claims_protectCreatures)
+        else if (entity instanceof Creature && instance.config_claims_preventTheft)
         {
             // Creatures require container trust, matching handleCreatureDamageByEntity,
             // but skip monsters - they are never protected.
