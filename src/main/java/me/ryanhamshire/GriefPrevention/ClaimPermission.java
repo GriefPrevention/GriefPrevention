@@ -28,12 +28,12 @@ public enum ClaimPermission
      */
     Edit(Messages.OnlyOwnersModifyClaims),
     /**
-     * ClaimPermission that allows users to grant ClaimPermissions. Grants {@link #Build}, {@link #Inventory}, and {@link #Access}.
+     * ClaimPermission that allows users to grant ClaimPermissions. Grants {@link #Build}, {@link #Container}, and {@link #Access}.
      * Command: /permissiontrust or /managetrust
      */
     Manage(Messages.NoPermissionTrust),
     /**
-     * ClaimPermission used for building checks. Grants {@link #Inventory} and {@link #Access}.
+     * ClaimPermission used for building checks. Grants {@link #Container} and {@link #Access}.
      * Command: /trust
      */
     Build(Messages.NoBuildPermission),
@@ -41,7 +41,7 @@ public enum ClaimPermission
      * ClaimPermission used for inventory management, such as containers and farming. Grants {@link #Access}.
      * Command: /containertrust
      */
-    Inventory(Messages.NoContainersPermission),
+    Container(Messages.NoContainersPermission),
     /**
      * ClaimPermission used for basic access.
      * Command: /accesstrust
