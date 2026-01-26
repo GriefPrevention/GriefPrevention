@@ -27,6 +27,7 @@ import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
 import me.ryanhamshire.GriefPrevention.events.SaveTrappedPlayerEvent;
 import me.ryanhamshire.GriefPrevention.events.TrustChangedEvent;
 import me.ryanhamshire.GriefPrevention.metrics.MetricsHandler;
+import me.ryanhamshire.GriefPrevention.platform.knockback.KnockbackProtectionListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.BanList;
 import org.bukkit.BanList.Type;
@@ -48,6 +49,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -400,6 +402,9 @@ public class GriefPrevention extends JavaPlugin
         //combat/damage-specific entity events
         entityDamageHandler = new EntityDamageHandler(this.dataStore, this);
         pluginManager.registerEvents(entityDamageHandler, this);
+
+        //knockback protection - handles melee, projectile, and other player-caused knockback in claims
+        new KnockbackProtectionListener(this.dataStore, this).register(this);
 
         //siege events
         SiegeEventHandler siegeEventHandler = new SiegeEventHandler();

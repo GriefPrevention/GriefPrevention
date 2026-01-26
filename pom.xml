@@ -46,6 +46,10 @@
             <id>essx-repo</id>
             <url>https://ci.ender.zone/plugin/repository/everything/</url>
         </repository>
+        <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <build>
@@ -138,6 +142,14 @@
             <artifactId>spigot-api</artifactId>
             <version>1.21.10-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- Paper API for Paper-specific features (optional at runtime) -->
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.10-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <!-- Worldguard dependency -->
         <dependency>
