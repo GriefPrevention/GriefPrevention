@@ -644,7 +644,7 @@ public class Claim
             {
                 builders.add(entry.getKey());
             }
-            else if (entry.getValue() == ClaimPermission.Container)
+            else if (entry.getValue() == ClaimPermission.Container || entry.getValue() == ClaimPermission.Inventory)
             {
                 containers.add(entry.getKey());
             }
