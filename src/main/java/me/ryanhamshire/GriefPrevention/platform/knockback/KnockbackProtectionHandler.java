@@ -161,7 +161,7 @@ public abstract class KnockbackProtectionHandler implements Listener
             // Creatures require container trust, matching handleCreatureDamageByEntity,
             // but skip monsters - they are never protected.
             if (EntityDamageHandler.isHostile(entity)) return;
-            requiredPermission = ClaimPermission.Inventory;
+            requiredPermission = ClaimPermission.Container;
         }
         else
         {

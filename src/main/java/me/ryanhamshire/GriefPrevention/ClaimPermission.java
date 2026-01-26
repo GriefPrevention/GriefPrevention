@@ -28,13 +28,13 @@ public enum ClaimPermission
      */
     Edit(Messages.OnlyOwnersModifyClaims),
     /**
-     * ClaimPermission used for building checks. Grants {@link #Inventory} and {@link #Access}.
+     * ClaimPermission used for building checks. Grants {@link #Container} and {@link #Access}.
      */
     Build(Messages.NoBuildPermission),
     /**
      * ClaimPermission used for inventory management checks. Grants {@link #Access}.
      */
-    Inventory(Messages.NoContainersPermission),
+    Container(Messages.NoContainersPermission),
     /**
      * ClaimPermission used for basic access.
      */
@@ -43,7 +43,13 @@ public enum ClaimPermission
      * ClaimPermission that allows users to grant ClaimPermissions. Uses a separate track from normal
      * permissions and does not grant any other permissions.
      */
-    Manage(Messages.NoPermissionTrust);
+    Manage(Messages.NoPermissionTrust),
+
+    /**
+     * @deprecated Use {@link #Container} instead. This alias exists for backward compatibility only.
+     */
+    @Deprecated
+    Inventory(Messages.NoContainersPermission);
 
     private final Messages denialMessage;
 
@@ -68,9 +74,13 @@ public enum ClaimPermission
      */
     public boolean isGrantedBy(ClaimPermission other)
     {
+        if (other == null) return false;
         if (other == Manage || this == Manage) return other == this || other == Edit;
         // This uses declaration order to compare! If trust levels are reordered this method must be rewritten.
-        return other != null && other.ordinal() <= this.ordinal();
+        // Normalize deprecated Inventory alias to Container for comparison.
+        int thisOrdinal = this == Inventory ? Container.ordinal() : this.ordinal();
+        int otherOrdinal = other == Inventory ? Container.ordinal() : other.ordinal();
+        return otherOrdinal <= thisOrdinal;
     }
 
 }
