@@ -48,7 +48,7 @@ public enum ClaimPermission
     /**
      * @deprecated Use {@link #Container} instead. This alias exists for backward compatibility only.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     Inventory(Messages.NoContainersPermission);
 
     private final Messages denialMessage;
