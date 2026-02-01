@@ -700,7 +700,7 @@ public class EntityDamageHandler implements Listener
         }
 
         // Check for permission to access containers.
-        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Inventory, event.original(), override);
+        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Container, event.original(), override);
 
         // If player has permission, action is allowed.
         if (noContainersReason == null) return true;
@@ -903,7 +903,7 @@ public class EntityDamageHandler implements Listener
                 message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
             return message;
         };
-        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Inventory, event, override);
+        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Container, event, override);
         if (noContainersReason != null)
         {
             event.setCancelled(true);
@@ -965,7 +965,7 @@ public class EntityDamageHandler implements Listener
                             {
                                 // Source is a player. Determine if they have permission to access entities in the claim.
                                 Supplier<String> override = () -> instance.dataStore.getMessage(Messages.NoDamageClaimedEntity, claim.getOwnerName());
-                                final Supplier<String> noContainersReason = claim.checkPermission(thrower, ClaimPermission.Inventory, event, override);
+                                final Supplier<String> noContainersReason = claim.checkPermission(thrower, ClaimPermission.Container, event, override);
                                 if (noContainersReason != null)
                                 {
                                     event.setIntensity(affected, 0);

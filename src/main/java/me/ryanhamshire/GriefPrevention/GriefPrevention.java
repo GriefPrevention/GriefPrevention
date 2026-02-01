@@ -1556,7 +1556,7 @@ public class GriefPrevention extends JavaPlugin
             //requires exactly one parameter, the other player's name
             if (args.length != 1) return false;
 
-            this.handleTrustCommand(player, ClaimPermission.Inventory, args[0]);
+            this.handleTrustCommand(player, ClaimPermission.Container, args[0]);
 
             return true;
         }
@@ -2522,7 +2522,7 @@ public class GriefPrevention extends JavaPlugin
         {
             permissionDescription = this.dataStore.getMessage(Messages.AccessPermission);
         }
-        else //ClaimPermission.Inventory
+        else //ClaimPermission.Container
         {
             permissionDescription = this.dataStore.getMessage(Messages.ContainersPermission);
         }
