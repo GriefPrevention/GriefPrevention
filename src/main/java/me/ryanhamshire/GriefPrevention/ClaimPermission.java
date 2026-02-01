@@ -79,10 +79,13 @@ public enum ClaimPermission
     {
         if (other == null) return false;
         // This uses declaration order to compare! If trust levels are reordered this method must be rewritten.
+        // return other != null && other.ordinal() <= this.ordinal();
+        // DEPRECATED start
         // Normalize deprecated Inventory alias to Container for comparison.
         int thisOrdinal = this == Inventory ? Container.ordinal() : this.ordinal();
         int otherOrdinal = other == Inventory ? Container.ordinal() : other.ordinal();
         return otherOrdinal <= thisOrdinal;
+        // DEPRECATED end
     }
 
 }
