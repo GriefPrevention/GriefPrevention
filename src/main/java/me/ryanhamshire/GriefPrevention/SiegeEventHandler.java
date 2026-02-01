@@ -45,7 +45,7 @@ public class SiegeEventHandler implements Listener
         }
 
         // If under siege, nobody accesses containers.
-        if (event.getRequiredPermission() == ClaimPermission.Inventory)
+        if (event.getRequiredPermission() == ClaimPermission.Container)
         {
             // Trying to access inventory in a claim may extend an existing siege to include this claim.
             GriefPrevention.instance.dataStore.tryExtendSiege(player, claim);
