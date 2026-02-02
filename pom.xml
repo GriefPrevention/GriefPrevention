@@ -90,22 +90,10 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <!-- Required to inflate Mockito jar location. -->
-                            <goal>properties</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Add Mockito agent and retain existing JVM args, if any. -->
-                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+                    <!-- Retain existing JVM args (e.g. from JaCoCo). Agent paths set by plugins are not available at POM interpolation time, so we do not add -javaagent here. -->
+                    <argLine>@{argLine} -Xshare:off</argLine>
                     <!-- GitHub Actions offers 2 cores for Linux. -->
                     <forkCount>2</forkCount>
                     <!--
