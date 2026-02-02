@@ -77,15 +77,15 @@ public class EntityDamageHandler implements Listener
             EntityType.PANDA
     );
 
+    private static final NamespacedKey LURED_BY_PLAYER = NamespacedKey.fromString("griefprevention:lured_by_player");
+
     private final @NotNull DataStore dataStore;
     private final @NotNull GriefPrevention instance;
-    private final @NotNull NamespacedKey luredByPlayer;
 
     EntityDamageHandler(@NotNull DataStore dataStore, @NotNull GriefPrevention plugin)
     {
         this.dataStore = dataStore;
         instance = plugin;
-        luredByPlayer = new NamespacedKey(plugin, "lured_by_player");
     }
 
     // Tag passive animals that can become aggressive so that we can tell whether they are hostile later
@@ -99,9 +99,9 @@ public class EntityDamageHandler implements Listener
             return;
 
         if (event.getReason() == EntityTargetEvent.TargetReason.TEMPT)
-            event.getEntity().getPersistentDataContainer().set(luredByPlayer, PersistentDataType.BYTE, (byte) 1);
+            event.getEntity().getPersistentDataContainer().set(LURED_BY_PLAYER, PersistentDataType.BYTE, (byte) 1);
         else
-            event.getEntity().getPersistentDataContainer().remove(luredByPlayer);
+            event.getEntity().getPersistentDataContainer().remove(LURED_BY_PLAYER);
 
     }
 
@@ -207,12 +207,15 @@ public class EntityDamageHandler implements Listener
     }
 
     /**
-     * Check if an {@link Entity} is considered hostile.
+     * Checks if the given entity is considered hostile.
+     * <p>
+     * Used to determine whether an entity should be protected in claims.
+     * Hostile entities are never protected.
      *
      * @param entity the {@code Entity}
      * @return true if the {@code Entity} is hostile
      */
-    private boolean isHostile(@NotNull Entity entity)
+    public static boolean isHostile(@NotNull Entity entity)
     {
         if (entity instanceof Monster) return true;
 
@@ -233,7 +236,7 @@ public class EntityDamageHandler implements Listener
             return rabbit.getRabbitType() == Rabbit.Type.THE_KILLER_BUNNY;
 
         if ((TEMPTABLE_SEMI_HOSTILES.contains(type)) && entity instanceof Mob mob)
-            return !entity.getPersistentDataContainer().has(luredByPlayer, PersistentDataType.BYTE) && mob.getTarget() != null;
+            return !entity.getPersistentDataContainer().has(LURED_BY_PLAYER, PersistentDataType.BYTE) && mob.getTarget() != null;
 
         return false;
     }
@@ -697,7 +700,7 @@ public class EntityDamageHandler implements Listener
         }
 
         // Check for permission to access containers.
-        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Inventory, event.original(), override);
+        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Container, event.original(), override);
 
         // If player has permission, action is allowed.
         if (noContainersReason == null) return true;
@@ -900,7 +903,7 @@ public class EntityDamageHandler implements Listener
                 message += "  " + dataStore.getMessage(Messages.IgnoreClaimsAdvertisement);
             return message;
         };
-        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Inventory, event, override);
+        Supplier<String> noContainersReason = claim.checkPermission(attacker, ClaimPermission.Container, event, override);
         if (noContainersReason != null)
         {
             event.setCancelled(true);
@@ -962,7 +965,7 @@ public class EntityDamageHandler implements Listener
                             {
                                 // Source is a player. Determine if they have permission to access entities in the claim.
                                 Supplier<String> override = () -> instance.dataStore.getMessage(Messages.NoDamageClaimedEntity, claim.getOwnerName());
-                                final Supplier<String> noContainersReason = claim.checkPermission(thrower, ClaimPermission.Inventory, event, override);
+                                final Supplier<String> noContainersReason = claim.checkPermission(thrower, ClaimPermission.Container, event, override);
                                 if (noContainersReason != null)
                                 {
                                     event.setIntensity(affected, 0);
