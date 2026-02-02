@@ -4,7 +4,7 @@
 
     <groupId>com.griefprevention</groupId>
     <artifactId>GriefPrevention</artifactId>
-    <version>16.18.5</version>
+    <version>16.18.6</version>
 
     <name>GriefPrevention</name>
     <description>The official self-service anti-griefing Bukkit plugin for Minecraft servers since 2011.</description>
