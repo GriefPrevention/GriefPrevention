@@ -52,9 +52,12 @@ import java.util.function.Supplier;
 public class Claim
 {
     //two locations, which together define the boundaries of the claim
-    //note that the upper Y value is always ignored, because claims ALWAYS extend up to the sky
+    //for subdivisions, if is3D is true, the Y boundaries are respected
     Location lesserBoundaryCorner;
     Location greaterBoundaryCorner;
+
+    //whether this claim respects Y boundaries (for 3D subdivisions)
+    private boolean is3D = false;
 
     //modification date.  this comes from the file timestamp during load, and is updated with runtime changes
     public Date modifiedDate;
@@ -93,6 +96,31 @@ public class Claim
 
     //following a siege, buttons/levers are unlocked temporarily.  this represents that state
     public boolean doorsOpen = false;
+
+    //set whether this claim should respect Y boundaries (for 3D subdivisions)
+    public void set3D(boolean is3D)
+    {
+        this.is3D = is3D;
+    }
+
+    //check if this is a 3D claim (respects Y boundaries)
+    public boolean is3D()
+    {
+        return this.is3D;
+    }
+
+    //check if a Y coordinate is within this claim's boundaries (for 3D claims only)
+    public boolean containsY(int y)
+    {
+        if (!this.is3D)
+        {
+            // For non-3D claims, Y boundaries are not enforced, so always return true.
+            return true;
+        }
+        int minY = Math.min(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
+        int maxY = Math.max(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
+        return y >= minY && y <= maxY;
+    }
 
     //whether or not this is an administrative claim
     //administrative claims are created and maintained by players with the griefprevention.adminclaims permission.
@@ -730,8 +758,10 @@ public class Claim
             //search all subdivisions to see if the location is in any of them
             for (Claim child : this.children)
             {
+                // For 3D subdivisions, always check height boundaries
+                boolean childIgnoreHeight = child.is3D() ? false : ignoreHeight;
                 //if we find such a subdivision, return false
-                if (child.contains(location, ignoreHeight, true))
+                if (child.contains(location, childIgnoreHeight, true))
                 {
                     return false;
                 }

@@ -209,18 +209,60 @@ public abstract class BoundaryVisualization
     {
         if (claim == null) return Set.of();
 
-        // For single claims, always visualize parent and children.
-        if (claim.parent != null) claim = claim.parent;
+        // When targeting a 3D claim, visualize it (and its descendants) without promoting to the parent
+        // so inner 3D subdivisions render correctly.
+        if (claim.is3D())
+        {
+            Set<Boundary> boundaries = new HashSet<>();
+            addClaimWithDescendants(boundaries, claim, VisualizationType.SUBDIVISION_3D);
+            return boundaries;
+        }
+
+        // For non-3D claims, promote to the highest non-3D ancestor so all subdivisions are rendered together.
+        Claim root = claim;
+        while (root.parent != null && !root.parent.is3D())
+        {
+            root = root.parent;
+        }
 
         // Correct visualization type for claim type for simplicity.
-        if (type == VisualizationType.CLAIM && claim.isAdminClaim()) type = VisualizationType.ADMIN_CLAIM;
+        if (type == VisualizationType.CLAIM && root.isAdminClaim()) type = VisualizationType.ADMIN_CLAIM;
 
         // Gather all boundaries. It's important that children override parent so
         // that users can always find children, no matter how oddly sized or positioned.
-        return Stream.concat(
-                Stream.of(new Boundary(claim, type)),
-                claim.children.stream().map(child -> new Boundary(child, VisualizationType.SUBDIVISION)))
-                .collect(Collectors.toSet());
+        Set<Boundary> boundaries = new HashSet<>();
+        boundaries.add(new Boundary(root, type));
+        for (Claim child : root.children)
+        {
+            if (!child.inDataStore) continue;
+
+            VisualizationType childType = child.is3D()
+                    ? VisualizationType.SUBDIVISION_3D
+                    : VisualizationType.SUBDIVISION;
+
+            addClaimWithDescendants(boundaries, child, childType);
+        }
+        return boundaries;
+    }
+
+    /**
+     * Recursively add a claim and all its descendants to the boundaries set.
+     *
+     * @param boundaries the set to add to
+     * @param claim the claim to add
+     * @param type the visualization type
+     */
+    private static void addClaimWithDescendants(Set<Boundary> boundaries, Claim claim, VisualizationType type)
+    {
+        boundaries.add(new Boundary(claim, type));
+        for (Claim child : claim.children)
+        {
+            if (!child.inDataStore) continue;
+            VisualizationType childType = child.is3D()
+                    ? VisualizationType.SUBDIVISION_3D
+                    : VisualizationType.SUBDIVISION;
+            addClaimWithDescendants(boundaries, child, childType);
+        }
     }
 
     /**

@@ -176,13 +176,19 @@ public class BoundingBox implements Cloneable
 
     /**
      * Construct a new bounding box representing the given claim.
+     * For 3D claims, preserves exact Y boundaries; for 2D claims, extends to world max height.
      *
      * @param claim the claim
      */
     public BoundingBox(@NotNull Claim claim)
     {
         this(claim.getLesserBoundaryCorner(), claim.getGreaterBoundaryCorner(), false);
-        this.maxY = Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld()).getMaxHeight();
+        // For 3D claims, preserve their exact Y boundaries
+        // For 2D claims, extend to world max height
+        if (!claim.is3D())
+        {
+            this.maxY = Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld()).getMaxHeight();
+        }
     }
 
     /**
