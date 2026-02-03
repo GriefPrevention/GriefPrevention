@@ -88,12 +88,29 @@
                     <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
                 </configuration>
             </plugin>
+            <!-- Set org.mockito:mockito-core:jar for Surefire argLine. For standalone test runs use: mvn dependency:properties surefire:test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>set-mockito-jar-path</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                        <configuration>
+                            <includeScope>test</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Retain existing JVM args (e.g. from JaCoCo). Agent paths set by plugins are not available at POM interpolation time, so we do not add -javaagent here. -->
-                    <argLine>@{argLine} -Xshare:off</argLine>
+                    <!-- Mockito agent avoids self-attach warnings; run mvn dependency:properties surefire:test for standalone test runs. -->
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
                     <!-- GitHub Actions offers 2 cores for Linux. -->
                     <forkCount>2</forkCount>
                     <!--
@@ -181,6 +198,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.16.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Direct dependency so dependency:properties sets org.mockito:mockito-core:jar for Surefire argLine. -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <version>5.16.0</version>
             <scope>test</scope>
         </dependency>
