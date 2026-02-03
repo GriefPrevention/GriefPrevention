@@ -1,5 +1,7 @@
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.platform.EntityTypeAlias;
+import com.griefprevention.platform.PotionEffectAlias;
 import me.ryanhamshire.GriefPrevention.events.PreventPvPEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -64,11 +66,11 @@ public class EntityDamageHandler implements Listener
 
     private static final Set<PotionEffectType> GRIEF_EFFECTS = Set.of(
             // Damaging effects
-            PotionEffectType.INSTANT_DAMAGE,
+            PotionEffectAlias.INSTANT_DAMAGE.type(),
             PotionEffectType.POISON,
             PotionEffectType.WITHER,
             // Effects that could remove entities from normally-secure pens
-            PotionEffectType.JUMP_BOOST,
+            PotionEffectAlias.JUMP_BOOST.type(),
             PotionEffectType.LEVITATION
     );
     private static final Set<EntityType> TEMPTABLE_SEMI_HOSTILES = Set.of(
@@ -130,7 +132,7 @@ public class EntityDamageHandler implements Listener
         if (event.damaged() instanceof Mule && !instance.config_claims_protectDonkeys) return;
         if (event.damaged() instanceof Llama && !instance.config_claims_protectLlamas) return;
         //protected death loot can't be destroyed, only picked up or despawned due to expiration
-        if (event.damaged().getType() == EntityType.ITEM)
+        if (event.damaged().getType() == EntityTypeAlias.ITEM.type())
         {
             if (event.damaged().hasMetadata("GP_ITEMOWNER"))
             {
@@ -565,7 +567,7 @@ public class EntityDamageHandler implements Listener
                 && entityType != EntityType.GLOW_ITEM_FRAME
                 && entityType != EntityType.ARMOR_STAND
                 && entityType != EntityType.VILLAGER
-                && entityType != EntityType.END_CRYSTAL
+                && entityType != EntityTypeAlias.END_CRYSTAL.type()
                 // Item Displays have no hitbox, but display plugins may manually fire events where appropriate.
                 && entityType != EntityType.ITEM_DISPLAY)
         {
@@ -648,7 +650,7 @@ public class EntityDamageHandler implements Listener
         if (attacker == null
                 && damageSourceType != EntityType.CREEPER
                 && damageSourceType != EntityType.WITHER
-                && damageSourceType != EntityType.END_CRYSTAL
+                && damageSourceType != EntityTypeAlias.END_CRYSTAL.type()
                 && damageSourceType != EntityType.AREA_EFFECT_CLOUD
                 && damageSourceType != EntityType.WITCH
                 && !(damageSource instanceof Projectile)
@@ -684,7 +686,7 @@ public class EntityDamageHandler implements Listener
         playerData.lastClaim = claim;
 
         // Do not message players about fireworks to prevent spam due to multi-hits.
-        sendMessages &= damageSourceType != EntityType.FIREWORK_ROCKET;
+        sendMessages &= damageSourceType != EntityTypeAlias.FIREWORK_ROCKET.type();
 
         Supplier<String> override = null;
         if (sendMessages)
@@ -865,7 +867,7 @@ public class EntityDamageHandler implements Listener
         }
 
         //if not a player and not an explosion, always allow
-        if (attacker == null && damageSourceType != EntityType.CREEPER && damageSourceType != EntityType.WITHER && damageSourceType != EntityType.TNT)
+        if (attacker == null && damageSourceType != EntityType.CREEPER && damageSourceType != EntityType.WITHER && damageSourceType != EntityTypeAlias.TNT.type())
         {
             return;
         }
