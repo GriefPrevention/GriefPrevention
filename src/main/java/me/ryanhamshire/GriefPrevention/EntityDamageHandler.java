@@ -47,7 +47,7 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionEffectTypeCategory;
+import com.griefprevention.platform.PotionEffectTypeCompat;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
@@ -986,7 +986,7 @@ public class EntityDamageHandler implements Listener
             if (thrower == null) return;
 
             //otherwise, no restrictions for positive effects
-            if (effectType.getCategory() == PotionEffectTypeCategory.BENEFICIAL) continue;
+            if (PotionEffectTypeCompat.isBeneficial(effectType)) continue;
 
             for (LivingEntity affected : event.getAffectedEntities())
             {
