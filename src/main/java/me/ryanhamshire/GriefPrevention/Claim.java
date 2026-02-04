@@ -109,14 +109,10 @@ public class Claim
         return this.is3D;
     }
 
-    //check if a Y coordinate is within this claim's boundaries (for 3D claims only)
+    //check if a Y coordinate is within this claim's boundaries
+    // For 3D claims this is the full Y enforcement; for non-3D claims this is a lesser check against the claim's stored Y range.
     public boolean containsY(int y)
     {
-        if (!this.is3D)
-        {
-            // For non-3D claims, Y boundaries are not enforced, so always return true.
-            return true;
-        }
         int minY = Math.min(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
         int maxY = Math.max(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
         return y >= minY && y <= maxY;
