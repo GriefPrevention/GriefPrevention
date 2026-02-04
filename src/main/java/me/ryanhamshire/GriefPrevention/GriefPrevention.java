@@ -160,6 +160,7 @@ public class GriefPrevention extends JavaPlugin
     public Material config_claims_modificationTool;                    //which material will be used to create/resize claims with a right click
 
     public ArrayList<String> config_claims_commandsRequiringAccessTrust; //the list of slash commands requiring access trust when in a claim
+    public boolean config_claims_claimCommandRequiresRadius;          //whether /claim requires a radius argument
     public boolean config_claims_supplyPlayerManual;                //whether to give new players a book with land claim help in it
     public int config_claims_manualDeliveryDelaySeconds;            //how long to wait before giving a book to a new player
 
@@ -637,6 +638,7 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_respectWorldGuard = config.getBoolean("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", true);
         this.config_claims_villagerTradingRequiresTrust = config.getBoolean("GriefPrevention.Claims.VillagerTradingRequiresPermission", true);
         String accessTrustSlashCommands = config.getString("GriefPrevention.Claims.CommandsRequiringAccessTrust", "/sethome");
+        this.config_claims_claimCommandRequiresRadius = config.getBoolean("GriefPrevention.Claims.ClaimCommandRequiresRadius", false);
         this.config_claims_supplyPlayerManual = config.getBoolean("GriefPrevention.Claims.DeliverManuals", true);
         this.config_claims_manualDeliveryDelaySeconds = config.getInt("GriefPrevention.Claims.ManualDeliveryDelaySeconds", 30);
         this.config_claims_ravagersBreakBlocks = config.getBoolean("GriefPrevention.Claims.RavagersBreakBlocks", true);
@@ -892,6 +894,7 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", this.config_claims_respectWorldGuard);
         outConfig.set("GriefPrevention.Claims.VillagerTradingRequiresPermission", this.config_claims_villagerTradingRequiresTrust);
         outConfig.set("GriefPrevention.Claims.CommandsRequiringAccessTrust", accessTrustSlashCommands);
+        outConfig.set("GriefPrevention.Claims.ClaimCommandRequiresRadius", this.config_claims_claimCommandRequiresRadius);
         outConfig.set("GriefPrevention.Claims.DeliverManuals", config_claims_supplyPlayerManual);
         outConfig.set("GriefPrevention.Claims.ManualDeliveryDelaySeconds", config_claims_manualDeliveryDelaySeconds);
         outConfig.set("GriefPrevention.Claims.RavagersBreakBlocks", config_claims_ravagersBreakBlocks);
@@ -1135,6 +1138,12 @@ public class GriefPrevention extends JavaPlugin
                     playerData.getClaims().size() >= GriefPrevention.instance.config_claims_maxClaimsPerPlayer)
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimCreationFailedOverClaimCountLimit);
+                return true;
+            }
+
+            if (GriefPrevention.instance.config_claims_claimCommandRequiresRadius && args.length == 0)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimCommandRequiresRadius);
                 return true;
             }
 

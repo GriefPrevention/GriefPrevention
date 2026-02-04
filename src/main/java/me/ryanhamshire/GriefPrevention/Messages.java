@@ -244,6 +244,7 @@ public enum Messages
     StandInClaimToResize,
     ClaimsExtendToSky,
     ClaimsAutoExtendDownward,
+    ClaimCommandRequiresRadius,
     MinimumRadius,
     RadiusRequiresGoldenShovel,
     ClaimTooSmallForActiveBlocks,
