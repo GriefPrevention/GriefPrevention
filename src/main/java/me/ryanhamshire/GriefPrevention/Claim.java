@@ -699,6 +699,27 @@ public class Claim
         return this.greaterBoundaryCorner.clone();
     }
 
+    /**
+     * Returns a bounding box representing this claim's volume.
+     * For 3D claims, uses exact Y boundaries; for 2D claims, extends to world max height.
+     * Addons may override this to provide implementation-specific bounds (e.g. shaped claims).
+     *
+     * @return a bounding box for this claim
+     */
+    public @NotNull BoundingBox getBoundingBox()
+    {
+        Location less = this.getLesserBoundaryCorner();
+        Location great = this.getGreaterBoundaryCorner();
+        int maxY = great.getBlockY();
+        if (!this.is3D())
+        {
+            maxY = Objects.requireNonNull(less.getWorld()).getMaxHeight();
+        }
+        return new BoundingBox(
+                less.getBlockX(), less.getBlockY(), less.getBlockZ(),
+                great.getBlockX(), maxY, great.getBlockZ());
+    }
+
     //returns a friendly owner name (for admin claims, returns "an administrator" as the owner)
     public String getOwnerName()
     {

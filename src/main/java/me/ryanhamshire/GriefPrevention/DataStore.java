@@ -433,11 +433,10 @@ public abstract class DataStore
     //adds a claim to the datastore, making it an effective claim
     synchronized void addClaim(Claim newClaim, boolean writeToStorage)
     {
-        //subdivisions are added under their parent but must also be in claimIDMap for getClaim(id) and API use
+        //subdivisions are added under their parent; assignClaimID also registers them in claimIDMap
         if (newClaim.parent != null)
         {
             this.assignClaimID(newClaim);
-            this.claimIDMap.put(newClaim.id, newClaim);
             if (!newClaim.parent.children.contains(newClaim))
             {
                 newClaim.parent.children.add(newClaim);
@@ -590,6 +589,11 @@ public abstract class DataStore
         {
             claim.id = this.nextClaimID;
             this.incrementNextClaimID();
+        }
+        // Keep claimIDMap in sync so getClaim(id) and API use work for all claims (including subdivisions).
+        if (claim.id != null && claim.id != -1)
+        {
+            this.claimIDMap.put(claim.id, claim);
         }
     }
 
