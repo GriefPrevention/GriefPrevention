@@ -1327,7 +1327,7 @@ class PlayerEventHandler implements Listener
         }
 
         //if the entity is an animal, apply container rules
-        if ((instance.config_claims_preventTheft && (entity instanceof Animals || entity instanceof Fish || entity instanceof CopperGolem)) || (entity.getType() == EntityType.VILLAGER && instance.config_claims_villagerTradingRequiresTrust))
+        if ((instance.config_claims_preventTheft && EntityEventHandler.isProtectedAnimal(entity)) || (entity.getType() == EntityType.VILLAGER && instance.config_claims_villagerTradingRequiresTrust))
         {
             //if the entity is in a claim
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
@@ -1437,7 +1437,7 @@ class PlayerEventHandler implements Listener
         if (entity == null) return;  //if nothing pulled, uninteresting event
 
         //if should be protected from pulling in land claims without permission
-        if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Animals)
+        if (entity.getType() == EntityType.ARMOR_STAND || EntityEventHandler.isProtectedAnimal(entity))
         {
             Player player = event.getPlayer();
             PlayerData playerData = instance.dataStore.getPlayerData(player.getUniqueId());

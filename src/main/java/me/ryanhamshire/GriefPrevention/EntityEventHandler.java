@@ -27,9 +27,13 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Allay;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.CopperGolem;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.Fish;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -239,6 +243,21 @@ public class EntityEventHandler implements Listener
                 }
             }
         }
+    }
+
+    /**
+     * Check if an entity is a protected "animal" type for container trust purposes.
+     * Includes animals, fish, allays, copper golems, and similar passive/utility mobs.
+     *
+     * @param entity the {@code Entity}
+     * @return true if the {@code Entity} is a protected animal type
+     */
+    public static boolean isProtectedAnimal(@NotNull Entity entity)
+    {
+        return entity instanceof Animals
+            || entity instanceof Fish
+            || entity instanceof Allay
+            || entity instanceof CopperGolem;
     }
 
     private void handleProjectileChangeBlock(EntityChangeBlockEvent event, Projectile projectile)
