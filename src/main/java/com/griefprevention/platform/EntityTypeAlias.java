@@ -1,5 +1,6 @@
 package com.griefprevention.platform;
 
+import org.bukkit.Registry;
 import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
@@ -7,26 +8,23 @@ import org.jetbrains.annotations.NotNull;
  * Compatibility layer for entity types that were renamed across Minecraft versions.
  * <p>
  * Several entity type constants were renamed in 1.20.5. This enum provides version-safe
- * access to these types by trying both old and new field names.
+ * access to these types by looking up stable minecraft registry keys.
  *
  * @see EntityCompat for entity classes that may not exist on all versions
  */
 public enum EntityTypeAlias
 {
-    ITEM("ITEM", "DROPPED_ITEM"),
-    END_CRYSTAL("END_CRYSTAL", "ENDER_CRYSTAL"),
-    FIREWORK_ROCKET("FIREWORK_ROCKET", "FIREWORK"),
-    TNT("TNT", "PRIMED_TNT");
-    // To support more types, add constants with their new and legacy field names
+    ITEM("item"),
+    END_CRYSTAL("end_crystal"),
+    FIREWORK_ROCKET("firework_rocket"),
+    TNT("tnt");
+    // To support more types, add constants with their minecraft registry keys
 
     private final @NotNull EntityType entityType;
 
-    EntityTypeAlias(@NotNull String newName, @NotNull String legacyName)
+    EntityTypeAlias(@NotNull String... keys)
     {
-        EntityType resolved = FieldResolver.resolve(EntityType.class, newName, legacyName);
-        if (resolved == null)
-            throw new ExceptionInInitializerError("Failed to resolve EntityType: " + newName + " or " + legacyName);
-        this.entityType = resolved;
+        this.entityType = RegistryResolver.resolve(Registry.ENTITY_TYPE, keys);
     }
 
     /**

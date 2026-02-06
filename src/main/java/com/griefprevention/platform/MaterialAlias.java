@@ -1,28 +1,26 @@
 package com.griefprevention.platform;
 
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Compatibility layer for materials that were renamed across Minecraft versions.
  * <p>
- * Some material constants were renamed in 1.20.5. This enum provides version-safe
- * access to these materials by trying both old and new field names.
+ * Some material registry keys changed between versions. This enum provides version-safe
+ * access to these materials by trying multiple registry keys in order.
  */
 public enum MaterialAlias
 {
-    CHAIN("IRON_CHAIN", "CHAIN"),
-    SHORT_GRASS("SHORT_GRASS", "GRASS");
-    // To support more materials, add constants with their new and legacy field names
+    CHAIN("iron_chain", "chain"),
+    SHORT_GRASS("short_grass", "grass");
+    // To support more materials, add constants with their minecraft registry keys
 
     private final @NotNull Material material;
 
-    MaterialAlias(@NotNull String newName, @NotNull String legacyName)
+    MaterialAlias(@NotNull String... keys)
     {
-        Material resolved = FieldResolver.resolve(Material.class, newName, legacyName);
-        if (resolved == null)
-            throw new ExceptionInInitializerError("Failed to resolve Material: " + newName + " or " + legacyName);
-        this.material = resolved;
+        this.material = RegistryResolver.resolve(Registry.MATERIAL, keys);
     }
 
     /**
