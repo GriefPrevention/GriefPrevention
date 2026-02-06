@@ -244,7 +244,6 @@ public enum Messages
     StandInClaimToResize,
     ClaimsExtendToSky,
     ClaimsAutoExtendDownward,
-    ClaimCommandRequiresRadius,
     MinimumRadiusWithArea,
     MinimumRadius,
     RadiusRequiresGoldenShovel,

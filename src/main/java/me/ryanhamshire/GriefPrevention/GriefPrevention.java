@@ -160,7 +160,6 @@ public class GriefPrevention extends JavaPlugin
     public Material config_claims_modificationTool;                    //which material will be used to create/resize claims with a right click
 
     public ArrayList<String> config_claims_commandsRequiringAccessTrust; //the list of slash commands requiring access trust when in a claim
-    public boolean config_claims_claimCommandRequiresRadius;          //whether /claim requires a radius argument
     public boolean config_claims_supplyPlayerManual;                //whether to give new players a book with land claim help in it
     public int config_claims_manualDeliveryDelaySeconds;            //how long to wait before giving a book to a new player
 
@@ -638,7 +637,6 @@ public class GriefPrevention extends JavaPlugin
         this.config_claims_respectWorldGuard = config.getBoolean("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", true);
         this.config_claims_villagerTradingRequiresTrust = config.getBoolean("GriefPrevention.Claims.VillagerTradingRequiresPermission", true);
         String accessTrustSlashCommands = config.getString("GriefPrevention.Claims.CommandsRequiringAccessTrust", "/sethome");
-        this.config_claims_claimCommandRequiresRadius = config.getBoolean("GriefPrevention.Claims.ClaimCommandRequiresRadius", false);
         this.config_claims_supplyPlayerManual = config.getBoolean("GriefPrevention.Claims.DeliverManuals", true);
         this.config_claims_manualDeliveryDelaySeconds = config.getInt("GriefPrevention.Claims.ManualDeliveryDelaySeconds", 30);
         this.config_claims_ravagersBreakBlocks = config.getBoolean("GriefPrevention.Claims.RavagersBreakBlocks", true);
@@ -894,7 +892,6 @@ public class GriefPrevention extends JavaPlugin
         outConfig.set("GriefPrevention.Claims.CreationRequiresWorldGuardBuildPermission", this.config_claims_respectWorldGuard);
         outConfig.set("GriefPrevention.Claims.VillagerTradingRequiresPermission", this.config_claims_villagerTradingRequiresTrust);
         outConfig.set("GriefPrevention.Claims.CommandsRequiringAccessTrust", accessTrustSlashCommands);
-        outConfig.set("GriefPrevention.Claims.ClaimCommandRequiresRadius", this.config_claims_claimCommandRequiresRadius);
         outConfig.set("GriefPrevention.Claims.DeliverManuals", config_claims_supplyPlayerManual);
         outConfig.set("GriefPrevention.Claims.ManualDeliveryDelaySeconds", config_claims_manualDeliveryDelaySeconds);
         outConfig.set("GriefPrevention.Claims.RavagersBreakBlocks", config_claims_ravagersBreakBlocks);
@@ -1141,16 +1138,15 @@ public class GriefPrevention extends JavaPlugin
                 return true;
             }
 
-            if (GriefPrevention.instance.config_claims_claimCommandRequiresRadius && args.length == 0)
+            if (args.length == 0)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimCommandRequiresRadius);
-                return true;
+                return false;
             }
 
             //default is chest claim radius, unless -1
             int radius = GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius;
             if (radius < 0) radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
-            if (GriefPrevention.instance.config_claims_claimCommandRequiresRadius && playerData.getClaims().isEmpty())
+            if (playerData.getClaims().isEmpty())
             {
                 radius = Math.max(radius, (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2));
             }
@@ -1189,15 +1185,8 @@ public class GriefPrevention extends JavaPlugin
 
                 if (specifiedRadius < radius)
                 {
-                    if (GriefPrevention.instance.config_claims_claimCommandRequiresRadius)
-                    {
-                        GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadiusWithArea,
-                                String.valueOf(GriefPrevention.instance.config_claims_minArea));
-                    }
-                    else
-                    {
-                        GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
-                    }
+                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadiusWithArea,
+                            String.valueOf(GriefPrevention.instance.config_claims_minArea));
                     return true;
                 }
                 else

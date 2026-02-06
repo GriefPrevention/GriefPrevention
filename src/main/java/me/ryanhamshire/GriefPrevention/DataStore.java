@@ -1830,7 +1830,6 @@ public abstract class DataStore
         this.addDefault(defaults, Messages.StandInClaimToResize, "Stand inside the land claim you want to resize.", null);
         this.addDefault(defaults, Messages.ClaimsExtendToSky, "Land claims always extend to max build height.", null);
         this.addDefault(defaults, Messages.ClaimsAutoExtendDownward, "Land claims auto-extend deeper into the ground when you place blocks under them.", null);
-        this.addDefault(defaults, Messages.ClaimCommandRequiresRadius, "You must specify a radius. Example: /claim 10", null);
         this.addDefault(defaults, Messages.MinimumRadiusWithArea, "Minimum claim size is {0} blocks.", "0: minimum claim area");
         this.addDefault(defaults, Messages.MinimumRadius, "Minimum radius is {0}.", "0: minimum radius");
         this.addDefault(defaults, Messages.RadiusRequiresGoldenShovel, "You must be holding a golden shovel when specifying a radius.", null);
