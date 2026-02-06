@@ -1,0 +1,30 @@
+name: Build GriefPrevention
+
+on:
+  push:
+    branches:
+      - master
+      - legacy/v16
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17]
+      fail-fast: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: maven
+      - name: Build
+        run: mvn clean package --batch-mode
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: GriefPrevention
+          path: target/GriefPrevention.jar
