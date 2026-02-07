@@ -34,4 +34,10 @@ Updating Other Claim Fields
 
 Uniquely Identifying a Claim
 
+All claims, including subdivisions, have a unique Long id (never null after being saved). Use DataStore.getClaim(long id) to look up any claim by ID. Subdivisions are stored with a parent reference and their own ID.
+
+3D Subdivisions (Stackable Subclaims)
+
+When is3D is true on a subdivision, Y boundaries are enforced: the claim only contains blocks within its Y range. Multiple subdivisions of the same parent can share the same X/Z area at different Y levels (stackable) as long as their Y ranges do not overlap. Use Claim.is3D(), Claim.containsY(int y), and the createClaim overload that accepts an is3D parameter. Creating: call createClaim(World, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, dryRun, true) for a 3D subdivision. Resize preserves the claim's is3D flag and Y boundaries; extend-claim-down does not change 3D subdivisions (they keep their explicit Y bounds). getClaimAt respects 3D and returns the most specific claim (e.g. a 3D subdivision over its parent) when a location is inside both.
+
 Getting/Updating Player Data

@@ -1941,8 +1941,17 @@ class PlayerEventHandler implements Listener
                     newz2 = clickedBlock.getZ();
                 }
 
-                newy1 = playerData.claimResizing.getLesserBoundaryCorner().getBlockY();
-                newy2 = clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                // For 3D claims, use exact Y coordinates; for 2D claims, extend into ground
+                if (playerData.claimResizing.is3D())
+                {
+                    newy1 = playerData.claimResizing.getLesserBoundaryCorner().getBlockY();
+                    newy2 = playerData.claimResizing.getGreaterBoundaryCorner().getBlockY();
+                }
+                else
+                {
+                    newy1 = playerData.claimResizing.getLesserBoundaryCorner().getBlockY();
+                    newy2 = clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                }
 
                 this.dataStore.resizeClaimWithChecks(player, playerData, newx1, newx2, newy1, newy2, newz1, newz2);
 
@@ -1968,7 +1977,7 @@ class PlayerEventHandler implements Listener
                     }
 
                     //if he didn't click on a corner and is in subdivision mode, he's creating a new subdivision
-                    else if (playerData.shovelMode == ShovelMode.Subdivide)
+                    else if (playerData.shovelMode == ShovelMode.Subdivide || playerData.shovelMode == ShovelMode.Subdivide3D)
                     {
                         //if it's the first click, he's trying to start a new subdivision
                         if (playerData.lastShovelLocation == null)
@@ -2000,14 +2009,27 @@ class PlayerEventHandler implements Listener
                             }
 
                             //try to create a new claim (will return null if this subdivision overlaps another)
+                            // For 3D subdivisions, use exact Y coordinates; for 2D subdivisions, extend into ground
+                            boolean is3DMode = playerData.shovelMode == ShovelMode.Subdivide3D;
+                            int y1, y2;
+                            if (is3DMode)
+                            {
+                                y1 = playerData.lastShovelLocation.getBlockY();
+                                y2 = clickedBlock.getY();
+                            }
+                            else
+                            {
+                                y1 = playerData.lastShovelLocation.getBlockY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                                y2 = clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                            }
                             CreateClaimResult result = this.dataStore.createClaim(
                                     player.getWorld(),
                                     playerData.lastShovelLocation.getBlockX(), clickedBlock.getX(),
-                                    playerData.lastShovelLocation.getBlockY() - instance.config_claims_claimsExtendIntoGroundDistance, clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance,
+                                    y1, y2,
                                     playerData.lastShovelLocation.getBlockZ(), clickedBlock.getZ(),
                                     null,  //owner is not used for subdivisions
                                     playerData.claimSubdividing,
-                                    null, player);
+                                    null, player, false, is3DMode);
 
                             //if it didn't succeed, tell the player why
                             if (!result.succeeded || result.claim == null)
