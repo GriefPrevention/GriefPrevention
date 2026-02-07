@@ -1,5 +1,7 @@
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.platform.BiomeAlias;
+import com.griefprevention.platform.MaterialAlias;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.ChunkSnapshot;
@@ -345,7 +347,7 @@ public class AutoExtendClaimTask implements Runnable
             playerBlocks.add(Material.NETHER_BRICK);
             playerBlocks.add(Material.MAGMA_BLOCK);
             playerBlocks.add(Material.ANCIENT_DEBRIS);
-            playerBlocks.add(Material.IRON_CHAIN);
+            playerBlocks.add(MaterialAlias.CHAIN.material());
             playerBlocks.add(Material.SHROOMLIGHT);
             playerBlocks.add(Material.NETHER_GOLD_ORE);
             playerBlocks.add(Material.NETHER_SPROUTS);
@@ -392,7 +394,7 @@ public class AutoExtendClaimTask implements Runnable
         }
     
         //these are unnatural in sandy biomes, but not elsewhere
-        if (SAND_SOIL_BIOMES.contains(biome.getKey()) || environment != Environment.NORMAL)
+        if (SAND_SOIL_BIOMES.contains(BiomeAlias.keyOf(biome)) || environment != Environment.NORMAL)
         {
             playerBlocks.addAll(Tag.LEAVES.getValues());
         }

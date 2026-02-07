@@ -18,10 +18,10 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.platform.ExplosionResultCompat;
 import com.griefprevention.protection.ProtectionHelper;
 import me.ryanhamshire.GriefPrevention.events.ProtectDeathDropsEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -382,7 +382,7 @@ public class EntityEventHandler implements Listener
         if (explodeEvent.blockList().isEmpty()) return;
 
         // Explosion causes interactable blocks (levers, buttons, etc.) to change state.
-        if (explodeEvent.getExplosionResult() == ExplosionResult.TRIGGER_BLOCK)
+        if (ExplosionResultCompat.isTriggerBlock(explodeEvent))
         {
             handleExplodeInteract(explodeEvent.getLocation(), explodeEvent.getEntity(), explodeEvent.blockList(), explodeEvent);
         }
@@ -401,7 +401,7 @@ public class EntityEventHandler implements Listener
         if (explodeEvent.blockList().isEmpty()) return;
 
         // Explosion causes interactable blocks (levers, buttons, etc.) to change state.
-        if (explodeEvent.getExplosionResult() == ExplosionResult.TRIGGER_BLOCK)
+        if (ExplosionResultCompat.isTriggerBlock(explodeEvent))
         {
             handleExplodeInteract(explodeEvent.getBlock().getLocation(), null, explodeEvent.blockList(), explodeEvent);
         }
