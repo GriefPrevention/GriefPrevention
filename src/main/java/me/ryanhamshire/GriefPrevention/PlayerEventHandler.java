@@ -2204,14 +2204,7 @@ class PlayerEventHandler implements Listener
                 else
                 {
 
-                    // in Minecraft 1.20.3 GRASS was renamed to SHORT_GRASS
-                    // This will support both before/after the change
-                    try{
-                        allowedFillBlocks.add(Material.valueOf("GRASS"));
-                    } catch(IllegalArgumentException e){
-                        allowedFillBlocks.add(Material.valueOf("SHORT_GRASS"));
-                    }
-
+                    allowedFillBlocks.add(Material.GRASS_BLOCK);
                     allowedFillBlocks.add(Material.DIRT);
                     allowedFillBlocks.add(Material.STONE);
                     allowedFillBlocks.add(Material.SAND);

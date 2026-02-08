@@ -414,16 +414,7 @@ public class BlockEventHandler implements Listener
             Block earthBlock = placeEvent.getBlockAgainst();
 
 
-            // in Minecraft 1.20.3 GRASS was renamed to SHORT_GRASS
-            // This will support both before/after the change
-            Material grassMaterial;
-            try{
-                grassMaterial = Material.valueOf("GRASS");
-            } catch(IllegalArgumentException e){
-                grassMaterial = Material.valueOf("SHORT_GRASS");
-            }
-
-            if (earthBlock.getType() != grassMaterial)
+            if (earthBlock.getType() != Material.GRASS_BLOCK)
             {
                 if (earthBlock.getRelative(BlockFace.DOWN).getType() == Material.AIR ||
                         earthBlock.getRelative(BlockFace.DOWN).getRelative(BlockFace.DOWN).getType() == Material.AIR)
