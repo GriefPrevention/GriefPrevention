@@ -1135,14 +1135,18 @@ class PlayerEventHandler implements Listener
         //always allow interactions when player is in ignore claims mode
         if (playerData.ignoreClaims) return;
 
-        //don't allow container access during pvp combat
+        //don't allow container access during pvp combat in claimed areas
         if ((entity instanceof StorageMinecart || entity instanceof PoweredMinecart))
         {
             if (playerData.inPvpCombat())
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
-                event.setCancelled(true);
-                return;
+                Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
+                if (claim != null)
+                {
+                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
+                    event.setCancelled(true);
+                    return;
+                }
             }
         }
 
@@ -1568,16 +1572,17 @@ class PlayerEventHandler implements Listener
         {
             if (playerData == null) playerData = this.dataStore.getPlayerData(player.getUniqueId());
 
-            //block container use during pvp combat, same reason
-            if (playerData.inPvpCombat())
+            //check if player is in a claim for pvp and permission checks below
+            Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
+
+            //block container use during pvp combat in claimed areas, same reason as above, so players
+            //can't hide items from attackers
+            if (playerData.inPvpCombat() && claim != null)
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
                 event.setCancelled(true);
                 return;
             }
-
-            //otherwise check permissions for the claim the player is in
-            Claim claim = this.dataStore.getClaimAt(clickedBlock.getLocation(), false, playerData.lastClaim);
             if (claim != null)
             {
                 playerData.lastClaim = claim;
