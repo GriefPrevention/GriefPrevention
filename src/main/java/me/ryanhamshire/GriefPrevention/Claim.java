@@ -52,9 +52,12 @@ import java.util.function.Supplier;
 public class Claim
 {
     //two locations, which together define the boundaries of the claim
-    //note that the upper Y value is always ignored, because claims ALWAYS extend up to the sky
+    //for subdivisions, if is3D is true, the Y boundaries are respected
     Location lesserBoundaryCorner;
     Location greaterBoundaryCorner;
+
+    //whether this claim respects Y boundaries (for 3D subdivisions)
+    private boolean is3D = false;
 
     //modification date.  this comes from the file timestamp during load, and is updated with runtime changes
     public Date modifiedDate;
@@ -93,6 +96,27 @@ public class Claim
 
     //following a siege, buttons/levers are unlocked temporarily.  this represents that state
     public boolean doorsOpen = false;
+
+    //set whether this claim should respect Y boundaries (for 3D subdivisions)
+    public void set3D(boolean is3D)
+    {
+        this.is3D = is3D;
+    }
+
+    //check if this is a 3D claim (respects Y boundaries)
+    public boolean is3D()
+    {
+        return this.is3D;
+    }
+
+    //check if a Y coordinate is within this claim's boundaries
+    // For 3D claims this is the full Y enforcement; for non-3D claims this is a lesser check against the claim's stored Y range.
+    public boolean containsY(int y)
+    {
+        int minY = Math.min(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
+        int maxY = Math.max(this.lesserBoundaryCorner.getBlockY(), this.greaterBoundaryCorner.getBlockY());
+        return y >= minY && y <= maxY;
+    }
 
     //whether or not this is an administrative claim
     //administrative claims are created and maintained by players with the griefprevention.adminclaims permission.
@@ -671,6 +695,27 @@ public class Claim
         return this.greaterBoundaryCorner.clone();
     }
 
+    /**
+     * Returns a bounding box representing this claim's volume.
+     * For 3D claims, uses exact Y boundaries; for 2D claims, extends to world max height.
+     * Addons may override this to provide implementation-specific bounds (e.g. shaped claims).
+     *
+     * @return a bounding box for this claim
+     */
+    public @NotNull BoundingBox getBoundingBox()
+    {
+        Location less = this.getLesserBoundaryCorner();
+        Location great = this.getGreaterBoundaryCorner();
+        int maxY = great.getBlockY();
+        if (!this.is3D())
+        {
+            maxY = Objects.requireNonNull(less.getWorld()).getMaxHeight();
+        }
+        return new BoundingBox(
+                less.getBlockX(), less.getBlockY(), less.getBlockZ(),
+                great.getBlockX(), maxY, great.getBlockZ());
+    }
+
     //returns a friendly owner name (for admin claims, returns "an administrator" as the owner)
     public String getOwnerName()
     {
@@ -730,8 +775,10 @@ public class Claim
             //search all subdivisions to see if the location is in any of them
             for (Claim child : this.children)
             {
+                // For 3D subdivisions, always check height boundaries
+                boolean childIgnoreHeight = child.is3D() ? false : ignoreHeight;
                 //if we find such a subdivision, return false
-                if (child.contains(location, ignoreHeight, true))
+                if (child.contains(location, childIgnoreHeight, true))
                 {
                     return false;
                 }

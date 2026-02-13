@@ -12,6 +12,8 @@ public enum VisualizationType
     ADMIN_CLAIM,
     /** Boundaries for a claim subdivision. */
     SUBDIVISION,
+    /** Boundaries for a 3D claim subdivision with vertical limits. */
+    SUBDIVISION_3D,
     /** Boundaries for a new claim area. */
     INITIALIZE_ZONE,
     /** Boundaries for a conflicting area. */
