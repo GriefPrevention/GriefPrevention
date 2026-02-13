@@ -47,7 +47,7 @@ public class DatabaseDataStore extends DataStore
     private static final String SQL_UPDATE_NAME =
             "UPDATE griefprevention_playerdata SET name = ? WHERE name = ?";
     private static final String SQL_INSERT_CLAIM =
-            "INSERT INTO griefprevention_claimdata (id, owner, lessercorner, greatercorner, builders, containers, accessors, managers, inheritnothing, parentid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "INSERT INTO griefprevention_claimdata (id, owner, ownername, lessercorner, greatercorner, builders, containers, accessors, managers, inheritnothing, parentid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     private static final String SQL_DELETE_CLAIM =
             "DELETE FROM griefprevention_claimdata WHERE id = ?";
     private static final String SQL_SELECT_PLAYER_DATA =
@@ -258,6 +258,12 @@ public class DatabaseDataStore extends DataStore
             statement.execute("ALTER TABLE griefprevention_claimdata ADD inheritNothing BOOLEAN DEFAULT 0 AFTER managers");
         }
 
+        if (this.getSchemaVersion() <= 4)
+        {
+            statement = this.databaseConnection.createStatement();
+            statement.execute("ALTER TABLE griefprevention_claimdata ADD ownername VARCHAR(50) AFTER owner");
+        }
+
         //load claims data into memory
 
         results = statement.executeQuery("SELECT * FROM griefprevention_claimdata");
@@ -431,6 +437,7 @@ public class DatabaseDataStore extends DataStore
         String greaterCornerString = this.locationToString(claim.getGreaterBoundaryCorner());
         String owner = "";
         if (claim.ownerID != null) owner = claim.ownerID.toString();
+        String ownerName = claim.ownerName == null ? "" : claim.ownerName;
 
         ArrayList<String> builders = new ArrayList<>();
         ArrayList<String> containers = new ArrayList<>();
@@ -451,14 +458,15 @@ public class DatabaseDataStore extends DataStore
 
             insertStmt.setLong(1, claim.id);
             insertStmt.setString(2, owner);
-            insertStmt.setString(3, lesserCornerString);
-            insertStmt.setString(4, greaterCornerString);
-            insertStmt.setString(5, buildersString);
-            insertStmt.setString(6, containersString);
-            insertStmt.setString(7, accessorsString);
-            insertStmt.setString(8, managersString);
-            insertStmt.setBoolean(9, inheritNothing);
-            insertStmt.setLong(10, parentId);
+            insertStmt.setString(3, ownerName);
+            insertStmt.setString(4, lesserCornerString);
+            insertStmt.setString(5, greaterCornerString);
+            insertStmt.setString(6, buildersString);
+            insertStmt.setString(7, containersString);
+            insertStmt.setString(8, accessorsString);
+            insertStmt.setString(9, managersString);
+            insertStmt.setBoolean(10, inheritNothing);
+            insertStmt.setLong(11, parentId);
             insertStmt.executeUpdate();
         }
         catch (SQLException e)

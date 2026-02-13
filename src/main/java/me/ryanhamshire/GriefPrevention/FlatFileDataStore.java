@@ -541,6 +541,7 @@ public class FlatFileDataStore extends DataStore
         String ownerID = "";
         if (claim.ownerID != null) ownerID = claim.ownerID.toString();
         yaml.set("Owner", ownerID);
+        yaml.set("Owner Name", claim.ownerName == null ? "" : claim.ownerName);
 
         ArrayList<String> builders = new ArrayList<>();
         ArrayList<String> containers = new ArrayList<>();
