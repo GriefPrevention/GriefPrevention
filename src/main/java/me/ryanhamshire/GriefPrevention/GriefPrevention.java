@@ -1185,8 +1185,7 @@ public class GriefPrevention extends JavaPlugin
 
                 if (specifiedRadius < radius)
                 {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadiusWithArea,
-                            String.valueOf(GriefPrevention.instance.config_claims_minArea));
+                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
                     return true;
                 }
                 else
