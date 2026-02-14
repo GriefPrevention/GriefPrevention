@@ -1143,12 +1143,14 @@ public class GriefPrevention extends JavaPlugin
                 return false;
             }
 
+            int minimumRadius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
+
             //default is chest claim radius, unless -1
             int radius = GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius;
-            if (radius < 0) radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
+            if (radius < 0) radius = minimumRadius;
             if (playerData.getClaims().isEmpty())
             {
-                radius = Math.max(radius, (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2));
+                radius = Math.max(radius, minimumRadius);
             }
 
             //if player has any claims, respect claim minimum size setting
