@@ -1164,34 +1164,31 @@ public class GriefPrevention extends JavaPlugin
                 radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
             }
 
-            //allow for specifying the radius
-            if (args.length > 0)
+            //radius is required
+            if (playerData.getClaims().size() < 2 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
             {
-                if (playerData.getClaims().size() < 2 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
-                {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.RadiusRequiresGoldenShovel);
-                    return true;
-                }
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.RadiusRequiresGoldenShovel);
+                return true;
+            }
 
-                int specifiedRadius;
-                try
-                {
-                    specifiedRadius = Integer.parseInt(args[0]);
-                }
-                catch (NumberFormatException e)
-                {
-                    return false;
-                }
+            int specifiedRadius;
+            try
+            {
+                specifiedRadius = Integer.parseInt(args[0]);
+            }
+            catch (NumberFormatException e)
+            {
+                return false;
+            }
 
-                if (specifiedRadius < radius)
-                {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
-                    return true;
-                }
-                else
-                {
-                    radius = specifiedRadius;
-                }
+            if (specifiedRadius < radius)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
+                return true;
+            }
+            else
+            {
+                radius = specifiedRadius;
             }
 
             if (radius < 0) radius = 0;
