@@ -95,15 +95,7 @@ class RestoreNatureProcessingTask implements Runnable
 
         this.notAllowedToHang = new HashSet<>();
         this.notAllowedToHang.add(Material.DIRT);
-
-//        in Minecraft 1.20.3 GRASS was renamed to SHORT_GRASS
-//        This will support both before/after the change
-        try{
-            this.notAllowedToHang.add(Material.valueOf("GRASS"));
-        } catch(IllegalArgumentException e){
-            this.notAllowedToHang.add(Material.valueOf("SHORT_GRASS"));
-        }
-
+        this.notAllowedToHang.add(Material.GRASS_BLOCK);
         this.notAllowedToHang.add(Material.SNOW);
         this.notAllowedToHang.add(Material.OAK_LOG);
         this.notAllowedToHang.add(Material.SPRUCE_LOG);
@@ -114,14 +106,6 @@ class RestoreNatureProcessingTask implements Runnable
 
         if (this.aggressiveMode)
         {
-            //  in Minecraft 1.20.3 GRASS was renamed to SHORT_GRASS
-            //  This will support both before/after the change
-            try{
-                this.notAllowedToHang.add(Material.valueOf("GRASS"));
-            } catch(IllegalArgumentException e){
-                this.notAllowedToHang.add(Material.valueOf("SHORT_GRASS"));
-            }
-
             this.notAllowedToHang.add(Material.STONE);
         }
 
