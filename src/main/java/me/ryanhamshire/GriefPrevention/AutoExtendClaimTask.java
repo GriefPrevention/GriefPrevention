@@ -135,6 +135,8 @@ public class AutoExtendClaimTask implements Runnable
         for (int newY = y - 1; newY >= this.minY; newY--)
         {
             y = scanLayerForPlayerColumn(chunkSnapshot, newY, y);
+            // If we've hit minimum Y we're done searching.
+            if (yTooSmall(y)) return this.minY;
         }
 
         // Return provided value or last located player block level.
