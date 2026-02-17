@@ -141,17 +141,11 @@ public class AutoExtendClaimTask implements Runnable
                     // If the block is natural, ignore it and continue searching the same Y level.
                     if (!isPlayerBlock(chunkSnapshot, x, newY, z)) continue;
 
-                    do
-                    {
-                        // If we've hit minimum Y we're done searching.
-                        if (yTooSmall(newY)) return this.minY;
-                        newY--;
-                    }
-                    // Because we found a player block, repeatedly check the next block in the column.
-                    while (isPlayerBlock(chunkSnapshot, x, newY, z));
+                    // Found a player block: find the bottom of the player-built column.
+                    newY = findBottomOfPlayerColumn(chunkSnapshot, x, newY, z);
 
-                    // Undo final decrement for unsuccessful player block check.
-                    newY++;
+                    // If we've hit minimum Y we're done searching.
+                    if (yTooSmall(newY)) return this.minY;
 
                     // Move built level down to current level.
                     y = newY;
@@ -163,6 +157,15 @@ public class AutoExtendClaimTask implements Runnable
         }
 
         // Return provided value or last located player block level.
+        return y;
+    }
+
+    private int findBottomOfPlayerColumn(ChunkSnapshot chunk, int x, int y, int z)
+    {
+        while (y > this.minY && isPlayerBlock(chunk, x, y - 1, z))
+        {
+            y--;
+        }
         return y;
     }
 
