@@ -1138,51 +1138,46 @@ public class GriefPrevention extends JavaPlugin
                 return true;
             }
 
-            //default is chest claim radius, unless -1
-            int radius = GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius;
-            if (radius < 0) radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
-
-            //if player has any claims, respect claim minimum size setting
-            if (playerData.getClaims().size() > 0)
+            if (args.length == 0)
             {
-                //if player has exactly one land claim, this requires the claim modification tool to be in hand (or creative mode player)
-                if (playerData.getClaims().size() == 1 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
-                {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MustHoldModificationToolForThat);
-                    return true;
-                }
-
-                radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
+                return false;
             }
 
-            //allow for specifying the radius
-            if (args.length > 0)
+            int minimumRadius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
+
+            //default is chest claim radius, unless -1
+            int radius = GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius;
+            if (radius < 0) radius = minimumRadius;
+            if (playerData.getClaims().isEmpty())
             {
-                if (playerData.getClaims().size() < 2 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
-                {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.RadiusRequiresGoldenShovel);
-                    return true;
-                }
+                minimumRadius = Math.max(radius, minimumRadius);
+            }
 
-                int specifiedRadius;
-                try
-                {
-                    specifiedRadius = Integer.parseInt(args[0]);
-                }
-                catch (NumberFormatException e)
-                {
-                    return false;
-                }
+            //radius is required
+            if (playerData.getClaims().size() < 2 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.MustHoldModificationToolForThat);
+                return true;
+            }
 
-                if (specifiedRadius < radius)
-                {
-                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
-                    return true;
-                }
-                else
-                {
-                    radius = specifiedRadius;
-                }
+            int specifiedRadius;
+            try
+            {
+                specifiedRadius = Integer.parseInt(args[0]);
+            }
+            catch (NumberFormatException e)
+            {
+                return false;
+            }
+
+            if (specifiedRadius < minimumRadius)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(minimumRadius));
+                return true;
+            }
+            else
+            {
+                radius = specifiedRadius;
             }
 
             if (radius < 0) radius = 0;
