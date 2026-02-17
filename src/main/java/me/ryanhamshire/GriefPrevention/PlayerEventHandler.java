@@ -1283,7 +1283,7 @@ class PlayerEventHandler implements Listener
         //always allow interactions when player is in ignore claims mode
         if (playerData.ignoreClaims) return;
 
-        //don't allow container access during pvp combat
+        //check allow container access during pvp combat
         if ((entity instanceof StorageMinecart || entity instanceof PoweredMinecart))
         {
             if (playerData.siegeData != null)
@@ -1293,7 +1293,11 @@ class PlayerEventHandler implements Listener
                 return;
             }
 
-            if (playerData.inPvpCombat())
+            //allow the access if the entity is in a claim AND the user has access to the claim AND container access is allowed during PvP.
+            Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, null);
+            Supplier<String> noContainersReason = claim != null ? claim.checkPermission(player, ClaimPermission.Inventory, event) : null;
+            boolean allowContainerAccess = claim != null && noContainersReason == null && instance.config_pvp_allowTrustedContainerAccess; 
+            if (!allowContainerAccess && playerData.inPvpCombat())
             {
                 Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
                 if (claim != null)
@@ -1789,6 +1793,16 @@ class PlayerEventHandler implements Listener
                     GriefPrevention.sendMessage(player, TextMode.Err, noContainersReason.get());
                     return;
                 }
+            }
+            
+            //block container use during pvp combat, unless configured to allow access to containers in claims with permissions
+            //the permissions are implied by the check above.
+            boolean allowContainerAccess = claim != null && instance.config_pvp_allowTrustedContainerAccess;
+            if (!allowContainerAccess && playerData.inPvpCombat())
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoContainers);
+                event.setCancelled(true);
+                return;
             }
 
             //if the event hasn't been cancelled, then the player is allowed to use the container
