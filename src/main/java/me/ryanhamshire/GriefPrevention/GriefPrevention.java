@@ -1150,7 +1150,7 @@ public class GriefPrevention extends JavaPlugin
             if (radius < 0) radius = minimumRadius;
             if (playerData.getClaims().isEmpty())
             {
-                radius = Math.max(radius, minimumRadius);
+                minimumRadius = Math.max(radius, minimumRadius);
             }
 
             //if player has any claims, respect claim minimum size setting
@@ -1162,8 +1162,6 @@ public class GriefPrevention extends JavaPlugin
                     GriefPrevention.sendMessage(player, TextMode.Err, Messages.MustHoldModificationToolForThat);
                     return true;
                 }
-
-                radius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
             }
 
             //radius is required
@@ -1183,9 +1181,9 @@ public class GriefPrevention extends JavaPlugin
                 return false;
             }
 
-            if (specifiedRadius < radius)
+            if (specifiedRadius < minimumRadius)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(radius));
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(minimumRadius));
                 return true;
             }
             else
