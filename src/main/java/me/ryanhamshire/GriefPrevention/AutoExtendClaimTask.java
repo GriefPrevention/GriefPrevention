@@ -132,32 +132,28 @@ public class AutoExtendClaimTask implements Runnable
     private int findLowerBuiltY(ChunkSnapshot chunkSnapshot, int y)
     {
         // Specifically not using yTooSmall here to allow protecting bottom layer.
-        nextY: for (int newY = y - 1; newY >= this.minY; newY--)
+        for (int newY = y - 1; newY >= this.minY; newY--)
         {
-            for (int x = 0; x < 16; x++)
-            {
-                for (int z = 0; z < 16; z++)
-                {
-                    // If the block is natural, ignore it and continue searching the same Y level.
-                    if (!isPlayerBlock(chunkSnapshot, x, newY, z)) continue;
-
-                    // Found a player block: find the bottom of the player-built column.
-                    newY = findBottomOfPlayerColumn(chunkSnapshot, x, newY, z);
-
-                    // If we've hit minimum Y we're done searching.
-                    if (yTooSmall(newY)) return this.minY;
-
-                    // Move built level down to current level.
-                    y = newY;
-
-                    // Because the level is now protected, continue downwards.
-                    continue nextY;
-                }
-            }
+            y = scanLayerForPlayerColumn(chunkSnapshot, newY, y);
         }
 
         // Return provided value or last located player block level.
         return y;
+    }
+
+    private int scanLayerForPlayerColumn(ChunkSnapshot chunk, int layerY, int currentLowestY)
+    {
+        for (int x = 0; x < 16; x++)
+        {
+            for (int z = 0; z < 16; z++)
+            {
+                if (!isPlayerBlock(chunk, x, layerY, z)) continue;
+
+                // Found a player block: find the bottom of the player-built column.
+                return Math.min(currentLowestY, findBottomOfPlayerColumn(chunk, x, layerY, z));
+            }
+        }
+        return currentLowestY;
     }
 
     private int findBottomOfPlayerColumn(ChunkSnapshot chunk, int x, int y, int z)
