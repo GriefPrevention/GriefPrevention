@@ -1145,14 +1145,6 @@ public class GriefPrevention extends JavaPlugin
 
             int minimumRadius = (int) Math.ceil(Math.sqrt(GriefPrevention.instance.config_claims_minArea) / 2);
 
-            //default is chest claim radius, unless -1
-            int radius = GriefPrevention.instance.config_claims_automaticClaimsForNewPlayersRadius;
-            if (radius < 0) radius = minimumRadius;
-            if (playerData.getClaims().isEmpty())
-            {
-                minimumRadius = Math.max(radius, minimumRadius);
-            }
-
             //radius is required
             if (playerData.getClaims().size() < 2 && player.getGameMode() != GameMode.CREATIVE && player.getItemInHand().getType() != GriefPrevention.instance.config_claims_modificationTool)
             {
@@ -1175,10 +1167,8 @@ public class GriefPrevention extends JavaPlugin
                 GriefPrevention.sendMessage(player, TextMode.Err, Messages.MinimumRadius, String.valueOf(minimumRadius));
                 return true;
             }
-            else
-            {
-                radius = specifiedRadius;
-            }
+
+            int radius = specifiedRadius;
 
             if (radius < 0) radius = 0;
 
