@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.AnimalTamer;
-import org.bukkit.entity.Animals;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Donkey;
 import org.bukkit.entity.Entity;
@@ -1199,7 +1198,7 @@ public class EntityDamageHandler implements Listener
                     // Always impact the thrower.
                     if (affected == thrower) continue;
 
-                    if (affected.getType() == EntityType.VILLAGER || affected instanceof Animals)
+                    if (affected.getType() == EntityType.VILLAGER || EntityEventHandler.isProtectedAnimal(affected))
                     {
                         Claim claim = this.dataStore.getClaimAt(affected.getLocation(), false, cachedClaim);
                         if (claim != null)

@@ -3,7 +3,7 @@ main: me.ryanhamshire.GriefPrevention.GriefPrevention
 softdepend: [Vault, Multiverse-Core, My_Worlds, MystCraft, Transporter, WorldGuard, WorldEdit, RoyalCommands, MultiWorld, Denizen, CommandHelper, Iris]
 dev-url: https://dev.bukkit.org/projects/grief-prevention
 version: '${git.commit.id.describe}'
-api-version: '1.21'
+api-version: '1.21.10'
 commands:
     abandonclaim:
       description: Deletes a claim.
@@ -117,8 +117,8 @@ commands:
       aliases: [expandclaim, resizeclaim]
       permission: griefprevention.claims
     claim:
-      description: Creates a land claim centered at your current location.
-      usage: /<command> [optional radius]
+      description: Creates a land claim centered at your current location with the given radius.
+      usage: /<command> <radius>
       aliases: [createclaim, makeclaim, newclaim]
       permission: griefprevention.claims
     buyclaimblocks:
