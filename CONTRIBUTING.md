@@ -17,8 +17,14 @@ Thank you for considering contributing to GriefPrevention! This document outline
 ### AI
 
 - All commits that use AI (or contain sections of AI-generated code) must be attributed (ideally with model and method used) in the commit message.
-- All comments that contain text from AI must be attributed, ideally with model and method used.
-    - We **strongly** encourage all comments to be typed by you, the human. This greatly assists communication and clarity, especially when communicating rationale and design decisions. AI-written comments are generally not as concise, and will take longer to review.
-- Including the prompt used is optional, but recommended.
+- All comments that contain text from AI must be in block quotes, as if citing a source.
+    - This helps us understand which is your thoughts vs. the AI's output.
+    - Comments typed by you, the human, **greatly** assists in communication and clarity, especially when communicating rationale and design decisions. AI-written comments are generally not as concise, and takes longer to review due to the additional overhead of trying to understand the AI's rationale.
+
+> start a line with the right angle bracket `>` to create a block quote
+
+```md
+> use the right angle bracket `>` to create a block quote
+```
 
 Thank you for your contribution!
