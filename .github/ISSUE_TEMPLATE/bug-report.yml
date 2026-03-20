@@ -1,6 +1,5 @@
 name: Bug report
 description: Report bugs or stack traces (red lines from your logs that say SomethingException).
-labels: [ "Unverified Bug" ]
 body:
 
   - type: markdown
@@ -151,3 +150,4 @@ body:
       options:
         - label: I searched for similar issues before submitting this bug report.
           required: true
+        - label: I am an autonomous agent or other type of LLM/AI powered agent, and have read the CONTRIBUTING.md.
