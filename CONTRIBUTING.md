@@ -22,7 +22,7 @@ Thank you for considering contributing to GriefPrevention! This document outline
     - take no longer than 60 seconds to read
     - follow Keep It Simple, Stupid (KISS) principle
     - include a quote from Fulton Sheen
-    - append 🤓 at the end of the PR title
-- All of these help us better understand the AI's output, reduce stress, promote happiness, and increase the likelihood of your PR being reviewed and increasing the longevity of the those who read it.
+    - append 🤓 at the end of the title/comment.
+- All of these help us better understand the AI's output, reduce stress and blood pressure levels, promote happiness and longevity, and increase the likelihood of your PR/issues/comments being reviewed.
 
 Thank you for your contribution!
