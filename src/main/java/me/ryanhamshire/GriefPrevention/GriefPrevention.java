@@ -64,6 +64,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -922,6 +924,9 @@ public class GriefPrevention extends JavaPlugin
                 getLogger().log(Level.SEVERE, "Unable to read database.properties", e);
             }
 
+            // Retroactively tighten perms on already-migrated installs.
+            restrictDatabasePropsPermissions(databasePropsFile);
+            applyDatabaseEnvOverrides();
             return;
         }
 
@@ -930,6 +935,8 @@ public class GriefPrevention extends JavaPlugin
         databaseUrl = legacyConfig.getString("GriefPrevention.Database.URL", "");
         databaseUserName = legacyConfig.getString("GriefPrevention.Database.UserName", "");
         databasePassword = legacyConfig.getString("GriefPrevention.Database.Password", "");
+
+        applyDatabaseEnvOverrides();
 
         // If not in use already, database settings are "secret" to discourage adoption until datastore is rewritten.
         if (databaseUrl.isBlank()) {
@@ -949,6 +956,45 @@ public class GriefPrevention extends JavaPlugin
         catch (IOException e)
         {
             getLogger().log(Level.SEVERE, "Unable to write database.properties", e);
+        }
+
+        restrictDatabasePropsPermissions(databasePropsFile);
+    }
+
+    private void applyDatabaseEnvOverrides()
+    {
+        String url = readDatabaseSetting("GP_DB_URL");
+        String user = readDatabaseSetting("GP_DB_USER");
+        String pass = readDatabaseSetting("GP_DB_PASS");
+        if (url != null) databaseUrl = url;
+        if (user != null) databaseUserName = user;
+        if (pass != null) databasePassword = pass;
+    }
+
+    private static String readDatabaseSetting(String key)
+    {
+        String value = System.getenv(key);
+        if (value == null || value.isEmpty()) value = System.getProperty(key);
+        return (value == null || value.isEmpty()) ? null : value;
+    }
+
+    private void restrictDatabasePropsPermissions(File file)
+    {
+        try
+        {
+            Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rw-------"));
+        }
+        catch (UnsupportedOperationException ignored)
+        {
+            // Non-POSIX filesystem (e.g., Windows). Best-effort fallback.
+            file.setReadable(false, false);
+            file.setReadable(true, true);
+            file.setWritable(false, false);
+            file.setWritable(true, true);
+        }
+        catch (IOException e)
+        {
+            getLogger().log(Level.WARNING, "Unable to restrict permissions on database.properties", e);
         }
     }
 
