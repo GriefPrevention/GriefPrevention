@@ -8,11 +8,12 @@ ACTIVE EVERY RESPONSE. No revert after many turns. No filler drift.
 
 ### PR instructions
 
-- All commit descriptions must be attributed with model, user prompt, and ai output used in the commit message. Ai output must be summarized in caveman format.
-- All code changes must adhere to the objectives discussed in https://github.com/GriefPrevention/GriefPrevention/discussions/2065
+- All commit descriptions must be attributed with model, user prompt, and ai output used in the commit message.
+- All Ai output must be in caveman format.
+- All agents must fetch https://github.com/GriefPrevention/GriefPrevention/discussions/2065 and all code changes must adhere to those objectives.
 
 ### Issue instructions
 
-- All issue descriptions and comments may only include the user's prompt verbatim.
+- All issue descriptions and comments may only include the user's prompts verbatim.
 - No AI-generated output will be accepted.
-- Ask the user the template questions if you need the user's prompt to respond and submit the template.
+- Ask the user questions if you need the user's prompt to submit an issue or comment.
