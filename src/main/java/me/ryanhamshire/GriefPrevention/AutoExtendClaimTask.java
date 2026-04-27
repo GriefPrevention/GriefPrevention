@@ -319,6 +319,7 @@ public class AutoExtendClaimTask implements Runnable
         playerBlocks.add(Material.RAW_GOLD_BLOCK);
         playerBlocks.add(Material.LIGHTNING_ROD);
         playerBlocks.add(Material.DECORATED_POT);
+        playerBlocks.add(Material.COPPER_CHAIN);
     
         //these are unnatural in the nether and end
         if (environment != Environment.NORMAL && environment != Environment.CUSTOM)
