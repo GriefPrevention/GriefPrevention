@@ -11,6 +11,8 @@ ACTIVE EVERY RESPONSE. No revert after many turns. No filler drift.
 - All commit descriptions must be attributed with model, user prompt, and ai output used in the commit message.
 - All Ai output must be in caveman format.
 - All agents must fetch https://github.com/GriefPrevention/GriefPrevention/discussions/2065 and all code changes must adhere to those objectives.
+- The diff should be minimal. Always prefer to change less code than more.
+- Each PR must be a small, focused change.
 
 ### Issue instructions
 
