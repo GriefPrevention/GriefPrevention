@@ -3,6 +3,7 @@ package me.ryanhamshire.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.events.PreventPvPEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.Creature;
@@ -12,6 +13,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.EvokerFangs;
 import org.bukkit.entity.Explosive;
 import org.bukkit.entity.Horse;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.LightningStrike;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Llama;
@@ -37,6 +39,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -722,7 +725,8 @@ public class EntityDamageHandler implements Listener
             return true;
         }
 
-        Supplier<String> failureReason = claim.checkPermission(attacker, ClaimPermission.Build, event);
+        ClaimPermission requiredPermission = this.getRequiredPermissionForEntityDamage(event.getEntity());
+        Supplier<String> failureReason = claim.checkPermission(attacker, requiredPermission, event);
 
         // If player has build trust, fall through to next checks.
         if (failureReason == null) return false;
@@ -731,6 +735,21 @@ public class EntityDamageHandler implements Listener
         if (sendMessages) GriefPrevention.sendMessage(attacker, TextMode.Err, failureReason.get());
         return true;
     }
+
+    private ClaimPermission getRequiredPermissionForEntityDamage(@NotNull Entity entity)
+    {
+        if (entity instanceof ItemFrame itemFrame)
+        {
+            ItemStack item = itemFrame.getItem();
+            if (item != null && item.getType() != Material.AIR)
+            {
+                return ClaimPermission.Container;
+            }
+        }
+
+        return ClaimPermission.Build;
+    }
+
     private boolean handleClaimedBuildTrustDamageByEntity(
             @NotNull EntityCombustByEntityEvent event,
             @Nullable Player attacker,

@@ -48,6 +48,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fish;
 import org.bukkit.entity.Hanging;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Mule;
 import org.bukkit.entity.Player;
@@ -1253,7 +1254,17 @@ class PlayerEventHandler implements Listener
         }
 
         //don't allow interaction with item frames or armor stands in claimed areas without build permission
-        if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging)
+        if (entity instanceof ItemFrame)
+        {
+            String noContainerReason = this.allowItemFrameContentInteraction(player, entity, event);
+            if (noContainerReason != null)
+            {
+                GriefPrevention.sendMessage(player, TextMode.Err, noContainerReason);
+                event.setCancelled(true);
+                return;
+            }
+        }
+        else if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging)
         {
             String noBuildReason = instance.allowBuild(player, entity.getLocation(), Material.ITEM_FRAME);
             if (noBuildReason != null)
@@ -1394,6 +1405,21 @@ class PlayerEventHandler implements Listener
             event.setCancelled(true);
             GriefPrevention.sendMessage(player, TextMode.Err, noContainersReason.get());
         }
+    }
+
+    private String allowItemFrameContentInteraction(Player player, Entity entity, PlayerInteractEntityEvent event)
+    {
+        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+        Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
+
+        if (claim == null)
+        {
+            return instance.allowBuild(player, entity.getLocation(), Material.ITEM_FRAME);
+        }
+
+        playerData.lastClaim = claim;
+        Supplier<String> noContainerReason = claim.checkPermission(player, ClaimPermission.Container, event);
+        return noContainerReason == null ? null : noContainerReason.get();
     }
 
     //when a player throws an egg
