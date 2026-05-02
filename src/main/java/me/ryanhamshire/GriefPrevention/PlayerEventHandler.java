@@ -1254,7 +1254,7 @@ class PlayerEventHandler implements Listener
         }
 
         //don't allow interaction with item frames or armor stands in claimed areas without build permission
-        if (entity instanceof ItemFrame)
+        if (instance.config_claims_itemFrameContentsRequireContainerTrust && entity instanceof ItemFrame)
         {
             String noContainerReason = this.allowItemFrameContentInteraction(player, entity, event);
             if (noContainerReason != null)

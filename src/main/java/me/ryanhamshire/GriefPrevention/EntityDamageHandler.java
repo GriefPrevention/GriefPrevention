@@ -738,7 +738,7 @@ public class EntityDamageHandler implements Listener
 
     private ClaimPermission getRequiredPermissionForEntityDamage(@NotNull Entity entity)
     {
-        if (entity instanceof ItemFrame itemFrame)
+        if (instance.config_claims_itemFrameContentsRequireContainerTrust && entity instanceof ItemFrame itemFrame)
         {
             ItemStack item = itemFrame.getItem();
             if (item != null && item.getType() != Material.AIR)
