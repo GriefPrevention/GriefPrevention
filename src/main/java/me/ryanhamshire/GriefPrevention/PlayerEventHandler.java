@@ -1255,10 +1255,14 @@ class PlayerEventHandler implements Listener
         //don't allow interaction with item frames or armor stands in claimed areas without build permission
         if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging)
         {
-            String noBuildReason = instance.allowBuild(player, entity.getLocation(), Material.ITEM_FRAME);
+            Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
+            if (claim == null) return;
+
+            playerData.lastClaim = claim;
+            Supplier<String> noBuildReason = claim.checkPermission(player, ClaimPermission.Build, event);
             if (noBuildReason != null)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason);
+                GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
                 event.setCancelled(true);
                 return;
             }
