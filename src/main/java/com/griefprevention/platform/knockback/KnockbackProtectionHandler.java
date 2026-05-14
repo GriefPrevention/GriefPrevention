@@ -45,8 +45,8 @@ public abstract class KnockbackProtectionHandler implements Listener
     }
 
     /**
-     * Handle player-caused knockback against other players. Uses PVP rules to determine
-     * if knockback should be allowed.
+     * Handle player-caused knockback against other players. Applies GP PvP protections
+     * (safe zones, fresh spawn immunity) when GP PvP rules are enabled for the world.
      *
      * @param event the knockback event
      * @param attacker the {@link Player} who caused the knockback
@@ -79,12 +79,10 @@ public abstract class KnockbackProtectionHandler implements Listener
             }
         }
 
-        // If PVP rules don't apply to this world, prevent knockback.
-        // In PvE worlds, players shouldn't be able to push each other
-        // around (unless in a trusted claim, see previous checks).
+        // If GP PvP rules don't apply, GriefPrevention doesn't manage PvP in this world.
+        // Allow knockback without further GP PvP checks (safe zones, fresh spawn, etc.).
         if (!instance.pvpRulesApply(defender.getWorld()))
         {
-            event.setCancelled(true);
             return;
         }
 
