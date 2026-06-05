@@ -496,6 +496,10 @@ public class BlockEventHandler implements Listener
         // Check for double chests placed just outside the claim boundary
         if (block.getBlockData() instanceof Chest chest)
         {
+
+            // Only split chests if the newly placed chest actually formed a double chest
+            if (chest.getType() == Chest.Type.SINGLE) return;
+
             for (BlockFace face : HORIZONTAL_DIRECTIONS)
             {
                 Block relative = block.getRelative(face);
