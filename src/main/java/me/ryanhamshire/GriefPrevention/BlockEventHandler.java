@@ -50,6 +50,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockBurnEvent;
 import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.block.BlockFertilizeEvent;
 import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockFromToEvent;
@@ -132,7 +133,8 @@ public class BlockEventHandler implements Listener
         {
             GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
             breakEvent.setCancelled(true);
-            return;
+            if (block.getBlockData() instanceof Chest)
+                resendChest(player, block, breakEvent);
         }
     }
 
@@ -219,9 +221,18 @@ public class BlockEventHandler implements Listener
             {
                 GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
                 placeEvent.setCancelled(true);
+                if (placeEvent.getBlock().getBlockData() instanceof Chest)
+                    resendChest(player, placeEvent.getBlock(), placeEvent);
                 return;
             }
         }
+
+        Block block = placeEvent.getBlock();
+        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+        Claim claim = this.dataStore.getClaimAt(block.getLocation(), true, playerData.lastClaim);
+
+        denyConnectingDoubleChestsAcrossClaimBoundary(claim, block, player, placeEvent);
+
     }
 
     private boolean doesAllowFireProximityInWorld(World world)
@@ -294,6 +305,8 @@ public class BlockEventHandler implements Listener
             }
             GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
             placeEvent.setCancelled(true);
+            if (block.getBlockData() instanceof Chest)
+                resendChest(player, block, placeEvent);
             return;
         }
 
@@ -302,8 +315,9 @@ public class BlockEventHandler implements Listener
         Claim claim = this.dataStore.getClaimAt(block.getLocation(), true, playerData.lastClaim);
 
         //If block is a chest, don't allow a DoubleChest to form across a claim boundary
-        denyConnectingDoubleChestsAcrossClaimBoundary(claim, block, player);
-        
+        denyConnectingDoubleChestsAcrossClaimBoundary(claim, block, player, placeEvent);
+        if (placeEvent.isCancelled()) return;
+
         if (claim != null)
         {
             playerData.lastClaim = claim;
@@ -487,46 +501,113 @@ public class BlockEventHandler implements Listener
             BlockFace.SOUTH,
             BlockFace.WEST
     };
-    private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player)
+    private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player, BlockPlaceEvent placeEvent)
     {
-        UUID claimOwner = null;
-        if (claim != null)
-            claimOwner = claim.getOwnerID();
+        if (!(block.getBlockData() instanceof Chest chest)) return;
 
-        // Check for double chests placed just outside the claim boundary
-        if (block.getBlockData() instanceof Chest chest)
+        for (BlockFace face : HORIZONTAL_DIRECTIONS)
         {
+            Block relative = block.getRelative(face);
+            if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
 
-            // Only split chests if the newly placed chest actually formed a double chest
-            if (chest.getType() == Chest.Type.SINGLE) return;
+            // Normal chests and trapped chests must not connect to each other.
+            if (block.getType() != relative.getType()) continue;
 
-            for (BlockFace face : HORIZONTAL_DIRECTIONS)
+            Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
+
+            // Chests outside claims should connect, and chests in claims owned by the same owner should connect.
+            if (sameClaimOwner(claim, relativeClaim)) continue;
+
+            // If the adjacent chest is already part of a double chest, don't touch it.
+            // This preserves valid double chests fully inside a claim.
+            if (relativeChest.getType() != Chest.Type.SINGLE) continue;
+
+            // This covers the "clicked the ground" case:
+            // the placed chest may still be SINGLE in this event, but it can still connect
+            // to the protected single chest after placement.
+            if (chestsCouldConnect(chest, relativeChest, face))
             {
-                Block relative = block.getRelative(face);
-                if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
+                placeEvent.setCancelled(true);
+                resendChest(player, block, placeEvent);
+                return;
+            }
 
-                // Check if relative chest is not a single chest, so being already a double chest, skip
-                if (relativeChest.getType() != Chest.Type.SINGLE) continue;
-
-                Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
-                UUID relativeClaimOwner = relativeClaim == null ? null : relativeClaim.getOwnerID();
-
-                // Chests outside claims should connect (both null)
-                // and chests inside the same claim should connect (equal)
-                if (Objects.equals(claimOwner, relativeClaimOwner)) break;
-
-                // Change both chests to singular chests
+            // Fallback for cases where the placed chest already became part of a double chest.
+            if (chest.getType() != Chest.Type.SINGLE)
+            {
                 chest.setType(Chest.Type.SINGLE);
                 block.setBlockData(chest);
 
                 relativeChest.setType(Chest.Type.SINGLE);
                 relative.setBlockData(relativeChest);
 
-                // Resend relative chest block to prevent visual bug
                 player.sendBlockChange(relative.getLocation(), relativeChest);
                 break;
             }
         }
+    }
+
+    private void resendChest(Player player, Block block, BlockEvent blockEvent)
+    {
+
+        if(blockEvent instanceof BlockBreakEvent)
+            player.sendBlockChange(block.getLocation(), block.getBlockData());
+
+        else if(blockEvent instanceof BlockPlaceEvent placeEvent)
+            player.sendBlockChange(block.getLocation(), getReplacedBlockData(block, placeEvent));
+
+        for (BlockFace face : HORIZONTAL_DIRECTIONS)
+        {
+            Block relative = block.getRelative(face);
+            if (relative.getBlockData() instanceof Chest)
+                player.sendBlockChange(relative.getLocation(), relative.getBlockData());
+        }
+
+        Bukkit.getScheduler().runTask(GriefPrevention.instance, () ->
+        {
+            player.sendBlockChange(block.getLocation(), block.getBlockData());
+
+            for (BlockFace face : HORIZONTAL_DIRECTIONS)
+            {
+                Block relative = block.getRelative(face);
+                if (relative.getBlockData() instanceof Chest)
+                    player.sendBlockChange(relative.getLocation(), relative.getBlockData());
+            }
+        });
+    }
+
+
+    private BlockData getReplacedBlockData(Block placedBlock, BlockPlaceEvent placeEvent)
+    {
+        if (placeEvent instanceof BlockMultiPlaceEvent multiPlaceEvent)
+        {
+            for (BlockState replacedState : multiPlaceEvent.getReplacedBlockStates())
+            {
+                if (replacedState.getBlock().equals(placedBlock))
+                    return replacedState.getBlockData();
+            }
+        }
+
+        return placeEvent.getBlockReplacedState().getBlockData();
+    }
+
+    private boolean sameClaimOwner(Claim first, Claim second)
+    {
+        // Important: wilderness and admin claims must not be treated as the same
+        // just because both may have a null owner ID.
+        if (first == null || second == null)
+            return first == second;
+
+        return Objects.equals(first.getOwnerID(), second.getOwnerID());
+    }
+
+    private boolean chestsCouldConnect(Chest chest, Chest relativeChest, BlockFace relativeFace)
+    {
+        // Chests only connect if they face the same direction.
+        if (chest.getFacing() != relativeChest.getFacing()) return false;
+
+        // They connect side-by-side, not front-to-back.
+        return relativeFace != chest.getFacing() && relativeFace != chest.getFacing().getOppositeFace();
     }
 
     // Prevent pistons pushing blocks into or out of claims.
