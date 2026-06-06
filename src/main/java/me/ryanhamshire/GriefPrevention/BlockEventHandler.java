@@ -505,6 +505,9 @@ public class BlockEventHandler implements Listener
                 Block relative = block.getRelative(face);
                 if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
 
+                // Check if relative chest is not a single chest, so being already a double chest, skip
+                if (relativeChest.getType() != Chest.Type.SINGLE) continue;
+
                 Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
                 UUID relativeClaimOwner = relativeClaim == null ? null : relativeClaim.getOwnerID();
 
