@@ -501,11 +501,13 @@ public class BlockEventHandler implements Listener
         if (connectedFace != null) {
             Block connectedBlock = block.getRelative(connectedFace);
 
-            if (connectedBlock.getBlockData() instanceof Chest && block.getType() == connectedBlock.getType()) {
+            if (connectedBlock.getBlockData() instanceof Chest &&
+                    block.getType() == connectedBlock.getType()) {
+
                 Claim connectedClaim = this.dataStore.getClaimAt(connectedBlock.getLocation(), true, claim);
 
                 // If vanilla connected to an allowed side, do not interfere.
-                // This preserves Minecraft's natural priority, including when both sides are allowed.
+                // This preserves Minecraft's natural behavior.
                 if (sameClaimOwner(claim, connectedClaim)) return;
 
                 // Vanilla connected to a side that should not be allowed.
@@ -514,6 +516,7 @@ public class BlockEventHandler implements Listener
         }
 
         // Look for another valid side that can be used instead.
+        // Important: "valid" here means both claim-allowed and naturally connectable.
         BlockFace allowedFace = findSingleChestConnectionFace(claim, block, chest, connectedFace, true);
         BlockFace deniedFace = findSingleChestConnectionFace(claim, block, chest, connectedFace, false);
 
@@ -521,7 +524,7 @@ public class BlockEventHandler implements Listener
         // there is no claim-boundary problem. Leave vanilla behavior untouched.
         if (!connectedToDeniedSide && deniedFace == null) return;
 
-        // If there is an allowed side and also a denied side, connect only to the allowed side.
+        // If there is an allowed and naturally valid side, connect only to that side.
         if (allowedFace != null) {
             if (connectedToDeniedSide) {
                 // Undo the invalid vanilla connection before making the valid one.
@@ -534,18 +537,27 @@ public class BlockEventHandler implements Listener
                     oldConnectedBlock.setBlockData(oldConnectedChest);
                     player.sendBlockChange(oldConnectedBlock.getLocation(), oldConnectedChest);
                 }
+
+                // Also reset the placed chest before reconnecting it to the allowed side.
+                chest.setType(Chest.Type.SINGLE);
+                block.setBlockData(chest);
             }
 
             Block allowedBlock = block.getRelative(allowedFace);
 
-            // Reconnect the placed chest to the allowed neighbor.
-            if (allowedBlock.getBlockData() instanceof Chest allowedChest)
+            // Reconnect the placed chest to the allowed neighbor only if this is still
+            // a valid natural double-chest connection.
+            if (allowedBlock.getBlockData() instanceof Chest allowedChest &&
+                    block.getType() == allowedBlock.getType() &&
+                    canNaturallyConnectChests(chest, allowedChest, allowedFace)) {
+
                 connectDoubleChest(chest, block, allowedChest, allowedBlock, allowedFace, player);
+            }
 
             return;
         }
 
-        // If vanilla connected to a denied side and there is no allowed side,
+        // If vanilla connected to a denied side and there is no allowed natural side,
         // split the cross-claim double chest.
         if (connectedToDeniedSide) {
             Block connectedBlock = block.getRelative(connectedFace);
@@ -564,20 +576,23 @@ public class BlockEventHandler implements Listener
     }
 
     // Finds a neighboring single chest that matches the allowed/denied claim rule.
+    // This also checks whether the two chests could naturally connect in Minecraft.
     private @Nullable BlockFace findSingleChestConnectionFace(Claim claim, Block block, Chest chest,
                                                               @Nullable BlockFace ignoredFace, boolean allowed) {
 
         for (BlockFace face : HORIZONTAL_DIRECTIONS) {
             // Skip the side already handled from vanilla connection.
             if (face == ignoredFace) continue;
-            // Chests only connect on their left or right side.
-            if (!isValidChestConnectionFace(chest, face)) continue;
 
             Block relative = block.getRelative(face);
             if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
 
             if (block.getType() != relative.getType()) continue;
             if (relativeChest.getType() != Chest.Type.SINGLE) continue;
+
+            // Do not treat claim permission as enough to force a connection.
+            // The neighboring chest must also be naturally connectable.
+            if (!canNaturallyConnectChests(chest, relativeChest, face)) continue;
 
             Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
             boolean sameOwner = sameClaimOwner(claim, relativeClaim);
@@ -590,6 +605,18 @@ public class BlockEventHandler implements Listener
         return null;
     }
 
+    // Checks whether two chests could naturally form a double chest.
+    // This prevents the plugin from rotating an existing neighboring chest.
+    private boolean canNaturallyConnectChests(Chest placedChest, Chest relativeChest, BlockFace relativeFace) {
+        // Minecraft only forms a normal double chest when both chests face the same direction.
+        if (placedChest.getFacing() != relativeChest.getFacing()) return false;
+
+        // The placed chest must be able to connect on the relative side,
+        // and the relative chest must be able to connect back on the opposite side.
+        return isValidChestConnectionFace(placedChest, relativeFace) &&
+                isValidChestConnectionFace(relativeChest, relativeFace.getOppositeFace());
+    }
+
     // Checks whether the neighbor is on a side where this chest can form a double chest.
     private boolean isValidChestConnectionFace(Chest chest, BlockFace face) {
         BlockFace facing = chest.getFacing();
@@ -598,11 +625,18 @@ public class BlockEventHandler implements Listener
                 face == rotateCounterClockwise(facing);
     }
 
-    // Forces two allowed single chests to become one double chest.
+    // Connects two allowed single chests to become one double chest.
+    // This method no longer changes the facing of the neighboring chest.
     private void connectDoubleChest(Chest placedChest, Block placedBlock, Chest relativeChest, Block relativeBlock,
                                     BlockFace relativeFace, Player player) {
 
         BlockFace facing = placedChest.getFacing();
+
+        // Safety check: never force-rotate an existing chest.
+        if (relativeChest.getFacing() != facing) return;
+
+        // Safety check: only connect if this would be a natural double chest.
+        if (!canNaturallyConnectChests(placedChest, relativeChest, relativeFace)) return;
 
         // Calculate the correct LEFT/RIGHT type for both chest blocks.
         Chest.Type placedType = getChestTypeForConnection(facing, relativeFace);
@@ -613,11 +647,10 @@ public class BlockEventHandler implements Listener
         placedChest.setType(placedType);
         placedBlock.setBlockData(placedChest);
 
-        relativeChest.setFacing(facing);
         relativeChest.setType(relativeType);
         relativeBlock.setBlockData(relativeChest);
 
-        // Resend relative chest block to prevent visual bug.
+        // Resend relative chest block to prevent visual desync.
         player.sendBlockChange(relativeBlock.getLocation(), relativeChest);
     }
 
