@@ -503,6 +503,9 @@ public class BlockEventHandler implements Listener
                 // Chests outside claims should connect, and chests in claims owned by the same owner should connect.
                 if (sameClaimOwner(claim, relativeClaim)) break;
 
+                // Ignore existing double chests; only adjacent single chests are handled here.
+                if (relativeChest.getType() != Chest.Type.SINGLE) continue;
+
                 // Change both chests to singular chests
                 chest.setType(Chest.Type.SINGLE);
                 block.setBlockData(chest);
