@@ -18,10 +18,10 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.protection.ProtectionHelper;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
-import com.griefprevention.protection.ProtectionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -488,18 +488,21 @@ public class BlockEventHandler implements Listener
             BlockFace.WEST
     };
 
-    // Custom check for chest connections across claim boundaries.
-    private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player) {
+    private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player)
+    {
         // Only apply this logic to placed chests.
         if (!(block.getBlockData() instanceof Chest chest)) return;
 
         // Only interfere when Minecraft already connected this chest to a side
         // that should not be allowed by the claim ownership rule.
         BlockFace connectedFace = getConnectedFace(chest);
+
         if (connectedFace == null) return;
 
         Block connectedBlock = block.getRelative(connectedFace);
+
         if (!(connectedBlock.getBlockData() instanceof Chest connectedChest)) return;
+
         if (block.getType() != connectedBlock.getType()) return;
 
         Claim connectedClaim = this.dataStore.getClaimAt(connectedBlock.getLocation(), true, claim);
@@ -518,7 +521,9 @@ public class BlockEventHandler implements Listener
         if (allowedFace == null) return;
 
         Block allowedBlock = block.getRelative(allowedFace);
+
         if (!(allowedBlock.getBlockData() instanceof Chest allowedChest)) return;
+
         if (block.getType() != allowedBlock.getType()) return;
 
         connectDoubleChest(chest, block, allowedChest, allowedBlock, allowedFace, player);
@@ -526,14 +531,19 @@ public class BlockEventHandler implements Listener
 
     // Finds a neighboring single chest that is allowed and naturally connectable.
     private @Nullable BlockFace findAllowedSingleChestConnectionFace(Claim claim, Block block, Chest chest,
-                                                                     @Nullable BlockFace ignoredFace) {
-        for (BlockFace face : HORIZONTAL_DIRECTIONS) {
+                                                                     @Nullable BlockFace ignoredFace)
+    {
+        for (BlockFace face : HORIZONTAL_DIRECTIONS)
+        {
             // Skip the side already handled from vanilla connection.
             if (face == ignoredFace) continue;
 
             Block relative = block.getRelative(face);
+
             if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
+
             if (block.getType() != relative.getType()) continue;
+
             if (relativeChest.getType() != Chest.Type.SINGLE) continue;
 
             // Do not treat claim permission as enough to force a connection.
@@ -541,6 +551,7 @@ public class BlockEventHandler implements Listener
             if (cannotNaturallyConnectChests(chest, relativeChest, face)) continue;
 
             Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
+
             if (sameClaimOwner(claim, relativeClaim)) return face;
         }
         return null;
@@ -548,7 +559,8 @@ public class BlockEventHandler implements Listener
 
     // Splits a double chest back into two single chests.
     private void splitDoubleChest(Block placedBlock, Chest placedChest, Block connectedBlock, Chest connectedChest,
-                                  Player player) {
+                                  Player player)
+    {
         placedChest.setType(Chest.Type.SINGLE);
         placedBlock.setBlockData(placedChest);
 
@@ -561,7 +573,8 @@ public class BlockEventHandler implements Listener
 
     // Checks whether two chests could naturally form a double chest.
     // This prevents the plugin from rotating an existing neighboring chest.
-    private boolean cannotNaturallyConnectChests(Chest placedChest, Chest relativeChest, BlockFace relativeFace) {
+    private boolean cannotNaturallyConnectChests(Chest placedChest, Chest relativeChest, BlockFace relativeFace)
+    {
         // Minecraft only forms a normal double chest when both chests face the same direction.
         if (placedChest.getFacing() != relativeChest.getFacing()) return true;
 
@@ -572,7 +585,8 @@ public class BlockEventHandler implements Listener
     }
 
     // Checks whether the neighbor is on a side where this chest cannot form a double chest.
-    private boolean isInvalidChestConnectionFace(Chest chest, BlockFace face) {
+    private boolean isInvalidChestConnectionFace(Chest chest, BlockFace face)
+    {
         BlockFace facing = chest.getFacing();
         return face != rotateClockwise(facing) && face != rotateCounterClockwise(facing);
     }
@@ -580,7 +594,8 @@ public class BlockEventHandler implements Listener
     // Connects two allowed single chests to become one double chest.
     // This method never changes the facing of the neighboring chest.
     private void connectDoubleChest(Chest placedChest, Block placedBlock, Chest relativeChest, Block relativeBlock,
-                                    BlockFace relativeFace, Player player) {
+                                    BlockFace relativeFace, Player player)
+    {
         // Safety check: only connect if this would be a natural double chest.
         if (cannotNaturallyConnectChests(placedChest, relativeChest, relativeFace)) return;
 
@@ -604,21 +619,24 @@ public class BlockEventHandler implements Listener
     }
 
     // Returns the side where the chest is currently connected.
-    private @Nullable BlockFace getConnectedFace(Chest chest) {
+    private @Nullable BlockFace getConnectedFace(Chest chest)
+    {
         if (chest.getType() == Chest.Type.LEFT) return rotateClockwise(chest.getFacing());
         if (chest.getType() == Chest.Type.RIGHT) return rotateCounterClockwise(chest.getFacing());
         return null;
     }
 
     // Converts a connected side into the correct chest half type.
-    private Chest.Type getChestTypeForConnection(BlockFace facing, BlockFace connectedFace) {
+    private Chest.Type getChestTypeForConnection(BlockFace facing, BlockFace connectedFace)
+    {
         if (connectedFace == rotateClockwise(facing)) return Chest.Type.LEFT;
         if (connectedFace == rotateCounterClockwise(facing)) return Chest.Type.RIGHT;
         return Chest.Type.SINGLE;
     }
 
     // Rotates a horizontal direction clockwise.
-    private BlockFace rotateClockwise(BlockFace face) {
+    private BlockFace rotateClockwise(BlockFace face)
+    {
         if (face == BlockFace.NORTH) return BlockFace.EAST;
         if (face == BlockFace.EAST) return BlockFace.SOUTH;
         if (face == BlockFace.SOUTH) return BlockFace.WEST;
@@ -627,7 +645,8 @@ public class BlockEventHandler implements Listener
     }
 
     // Rotates a horizontal direction counter-clockwise.
-    private BlockFace rotateCounterClockwise(BlockFace face) {
+    private BlockFace rotateCounterClockwise(BlockFace face)
+    {
         if (face == BlockFace.NORTH) return BlockFace.WEST;
         if (face == BlockFace.WEST) return BlockFace.SOUTH;
         if (face == BlockFace.SOUTH) return BlockFace.EAST;
@@ -636,10 +655,12 @@ public class BlockEventHandler implements Listener
     }
 
     // Compares claim ownership while keeping wilderness and admin claims separate.
-    private boolean sameClaimOwner(@Nullable Claim first, @Nullable Claim second) {
+    private boolean sameClaimOwner(@Nullable Claim first, @Nullable Claim second)
+    {
         // Important: wilderness and admin claims must not be treated as the same
         // just because both may have a null owner ID.
         if (first == null || second == null) return first == second;
+
         return Objects.equals(first.getOwnerID(), second.getOwnerID());
     }
 
