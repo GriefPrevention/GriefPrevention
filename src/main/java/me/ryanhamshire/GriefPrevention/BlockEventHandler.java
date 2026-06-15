@@ -496,13 +496,10 @@ public class BlockEventHandler implements Listener
         // Only interfere when Minecraft already connected this chest to a side
         // that should not be allowed by the claim ownership rule.
         BlockFace connectedFace = getConnectedFace(chest);
-
         if (connectedFace == null) return;
 
         Block connectedBlock = block.getRelative(connectedFace);
-
         if (!(connectedBlock.getBlockData() instanceof Chest connectedChest)) return;
-
         if (block.getType() != connectedBlock.getType()) return;
 
         Claim connectedClaim = this.dataStore.getClaimAt(connectedBlock.getLocation(), true, claim);
@@ -521,9 +518,7 @@ public class BlockEventHandler implements Listener
         if (allowedFace == null) return;
 
         Block allowedBlock = block.getRelative(allowedFace);
-
         if (!(allowedBlock.getBlockData() instanceof Chest allowedChest)) return;
-
         if (block.getType() != allowedBlock.getType()) return;
 
         connectDoubleChest(chest, block, allowedChest, allowedBlock, allowedFace, player);
@@ -539,11 +534,8 @@ public class BlockEventHandler implements Listener
             if (face == ignoredFace) continue;
 
             Block relative = block.getRelative(face);
-
             if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
-
             if (block.getType() != relative.getType()) continue;
-
             if (relativeChest.getType() != Chest.Type.SINGLE) continue;
 
             // Do not treat claim permission as enough to force a connection.
@@ -551,7 +543,6 @@ public class BlockEventHandler implements Listener
             if (cannotNaturallyConnectChests(chest, relativeChest, face)) continue;
 
             Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
-
             if (sameClaimOwner(claim, relativeClaim)) return face;
         }
         return null;
@@ -660,7 +651,6 @@ public class BlockEventHandler implements Listener
         // Important: wilderness and admin claims must not be treated as the same
         // just because both may have a null owner ID.
         if (first == null || second == null) return first == second;
-
         return Objects.equals(first.getOwnerID(), second.getOwnerID());
     }
 
