@@ -481,13 +481,6 @@ public class BlockEventHandler implements Listener
         }
     }
 
-    private static final BlockFace[] HORIZONTAL_DIRECTIONS = new BlockFace[] {
-            BlockFace.NORTH,
-            BlockFace.EAST,
-            BlockFace.SOUTH,
-            BlockFace.WEST
-    };
-
     private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player)
     {
         // Only apply this logic to placed chests.
@@ -529,7 +522,8 @@ public class BlockEventHandler implements Listener
         connectDoubleChest(chest, block, allowedChest, allowedBlock, allowedFace, player);
     }
 
-    // Finds a neighboring single chest that is allowed and naturally connectable.
+    // Checks whether the opposite side of the denied connection has an allowed,
+    // naturally connectable single chest.
     private @Nullable BlockFace findAllowedSingleChestConnectionFace(Claim claim, Block block, Chest chest,
                                                                      BlockFace deniedFace)
     {
