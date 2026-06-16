@@ -758,6 +758,13 @@ class PlayerEventHandler implements Listener
                     return;
                 }
             }
+
+            for (Claim claim : playerData.getClaims())
+            {
+                if (!claim.getOwnerName().equals(player.getName())) {
+                    claim.setOwnerName(player.getName());
+                }
+            }
         }
 
         //create a thread to load ignore information
