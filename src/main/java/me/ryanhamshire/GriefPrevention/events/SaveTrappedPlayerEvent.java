@@ -26,7 +26,8 @@ public class SaveTrappedPlayerEvent extends ClaimEvent implements Cancellable
     @Deprecated
     public SaveTrappedPlayerEvent(@NotNull Claim claim)
     {
-        this(null, claim);
+        super(claim);
+        this.player = null;
     }
 
     /**
@@ -35,7 +36,7 @@ public class SaveTrappedPlayerEvent extends ClaimEvent implements Cancellable
      * @param player {@link Player} to be rescued
      * @param claim {@link Claim} the user is to be rescued from
      */
-    public SaveTrappedPlayerEvent(@Nullable Player player, @NotNull Claim claim)
+    public SaveTrappedPlayerEvent(@NotNull Player player, @NotNull Claim claim)
     {
         super(claim);
         this.player = player;
