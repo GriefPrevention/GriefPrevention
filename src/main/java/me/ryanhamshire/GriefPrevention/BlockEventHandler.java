@@ -504,9 +504,14 @@ public class BlockEventHandler implements Listener
 
         Claim connectedClaim = this.dataStore.getClaimAt(connectedBlock.getLocation(), true, claim);
 
-        // If vanilla connected to an allowed side, do not interfere.
-        // This preserves Minecraft's natural behavior.
         if (sameClaimOwner(claim, connectedClaim)) return;
+
+        // Avoid fallback chest connections when sneaking
+        if (player.isSneaking())
+        {
+            splitDoubleChest(block, chest, connectedBlock, connectedChest, player);
+            return;
+        }
 
         // Vanilla connected to a side that should not be allowed. Look for another
         // allowed side that Minecraft could naturally connect to instead.
@@ -526,26 +531,26 @@ public class BlockEventHandler implements Listener
 
     // Finds a neighboring single chest that is allowed and naturally connectable.
     private @Nullable BlockFace findAllowedSingleChestConnectionFace(Claim claim, Block block, Chest chest,
-                                                                     @Nullable BlockFace ignoredFace)
+                                                                     BlockFace deniedFace)
     {
-        for (BlockFace face : HORIZONTAL_DIRECTIONS)
-        {
-            // Skip the side already handled from vanilla connection.
-            if (face == ignoredFace) continue;
+        // A normal double chest can only connect on the left/right axis.
+        // Since vanilla already connected one side and that side was denied,
+        // the only remaining possible vanilla-style alternative is the opposite side.
+        BlockFace face = deniedFace.getOppositeFace();
 
-            Block relative = block.getRelative(face);
-            if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
-            if (block.getType() != relative.getType()) continue;
-            if (relativeChest.getType() != Chest.Type.SINGLE) continue;
+        Block relative = block.getRelative(face);
+        if (!(relative.getBlockData() instanceof Chest relativeChest)) return null;
+        if (block.getType() != relative.getType()) return null;
+        if (relativeChest.getType() != Chest.Type.SINGLE) return null;
 
-            // Do not treat claim permission as enough to force a connection.
-            // The neighboring chest must also be naturally connectable.
-            if (cannotNaturallyConnectChests(chest, relativeChest, face)) continue;
+        // Do not treat claim permission as enough to force a connection.
+        // The neighboring chest must also be naturally connectable.
+        if (cannotNaturallyConnectChests(chest, relativeChest, face)) return null;
 
-            Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
-            if (sameClaimOwner(claim, relativeClaim)) return face;
-        }
-        return null;
+        Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
+        if (!sameClaimOwner(claim, relativeClaim)) return null;
+
+        return face;
     }
 
     // Splits a double chest back into two single chests.
@@ -650,7 +655,9 @@ public class BlockEventHandler implements Listener
     {
         // Important: wilderness and admin claims must not be treated as the same
         // just because both may have a null owner ID.
-        if (first == null || second == null) return first == second;
+        if (first == null || second == null)
+            return first == second;
+
         return Objects.equals(first.getOwnerID(), second.getOwnerID());
     }
 
