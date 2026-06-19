@@ -18,7 +18,7 @@ public class SaveTrappedPlayerEvent extends ClaimEvent implements Cancellable
     private @Nullable Location destination = null;
 
     /**
-     * Construct a new {@code ClaimChangeEvent}.
+     * Construct a new {@code SaveTrappedPlayerEvent}.
      *
      * @param player {@link Player} to be rescued
      * @param claim {@link Claim} the user is to be rescued from
