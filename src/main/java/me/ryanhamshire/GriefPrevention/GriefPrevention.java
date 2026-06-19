@@ -1440,7 +1440,6 @@ public class GriefPrevention extends JavaPlugin
                     else
                     {
                         claim.dropPermission(idToDrop);
-                        claim.managers.remove(idToDrop);
                     }
 
                     //save changes
@@ -1467,7 +1466,7 @@ public class GriefPrevention extends JavaPlugin
             //otherwise, apply changes to only this claim
             else if (claim.checkPermission(player, ClaimPermission.Manage, null) != null)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoManageTrust, claim.getOwnerName());
                 return true;
             }
             else
@@ -2455,7 +2454,7 @@ public class GriefPrevention extends JavaPlugin
             //check permission here
             if (claim.checkPermission(player, ClaimPermission.Manage, null) != null)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoPermissionTrust, claim.getOwnerName());
+                GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoManageTrust, claim.getOwnerName());
                 return;
             }
 

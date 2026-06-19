@@ -31,7 +31,7 @@ public enum ClaimPermission
      * ClaimPermission that allows users to grant ClaimPermissions. Grants {@link #Build}, {@link #Container}, and {@link #Access}.
      * Command: /permissiontrust or /managetrust
      */
-    Manage(Messages.NoPermissionTrust),
+    Manage(Messages.NoManageTrust),
     /**
      * ClaimPermission used for building checks. Grants {@link #Container} and {@link #Access}.
      * Command: /trust
