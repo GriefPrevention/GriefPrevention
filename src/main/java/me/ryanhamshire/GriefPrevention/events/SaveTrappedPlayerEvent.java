@@ -2,6 +2,7 @@ package me.ryanhamshire.GriefPrevention.events;
 
 import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -13,16 +14,42 @@ import org.jetbrains.annotations.Nullable;
 public class SaveTrappedPlayerEvent extends ClaimEvent implements Cancellable
 {
 
+    private final @Nullable Player player;
     private @Nullable Location destination = null;
 
     /**
-     * Construct a new {@code ClaimChangeEvent}.
+     * Construct a new {@code SaveTrappedPlayerEvent}.
      *
      * @param claim {@link Claim} the user is to be rescued from
+     * @deprecated use {@link #SaveTrappedPlayerEvent(Player, Claim)}
      */
+    @Deprecated
     public SaveTrappedPlayerEvent(@NotNull Claim claim)
     {
         super(claim);
+        this.player = null;
+    }
+
+    /**
+     * Construct a new {@code SaveTrappedPlayerEvent}.
+     *
+     * @param player {@link Player} to be rescued
+     * @param claim {@link Claim} the user is to be rescued from
+     */
+    public SaveTrappedPlayerEvent(@NotNull Player player, @NotNull Claim claim)
+    {
+        super(claim);
+        this.player = player;
+    }
+
+    /**
+     * Get the player to be rescued.
+     *
+     * @return the {@code Player}, or {@code null} if constructed without one
+     */
+    public @Nullable Player getPlayer()
+    {
+        return player;
     }
 
     /**
