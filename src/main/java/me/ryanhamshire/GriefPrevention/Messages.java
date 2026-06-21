@@ -37,7 +37,7 @@ public enum Messages
     ClearPermsOwnerOnly("Only the claim owner can clear all permissions."),
     UntrustIndividualAllClaims("Revoked {0}'s access to ALL your claims.  To set permissions for a single claim, stand inside it.", "0: untrusted player"),
     UntrustEveryoneAllClaims("Cleared permissions in ALL your claims.  To set permissions for a single claim, stand inside it."),
-    NoPermissionTrust("You don't have {0}'s permission to manage permissions here.", "0: claim owner's name"),
+    NoManageTrust("You don't have {0}'s permission to manage permissions here.", "0: claim owner's name"),
     ClearPermissionsOneClaim("Cleared permissions in this claim.  To set permission for ALL your claims, stand outside them."),
     UntrustIndividualSingleClaim("Revoked {0}'s access to this claim.  To set permissions for a ALL your claims, stand outside them.", "0: untrusted player"),
     AdminClaimsMode("Administrative claims mode active.  Any claims created will be free and editable by other administrators."),
