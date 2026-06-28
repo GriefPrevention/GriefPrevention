@@ -433,9 +433,10 @@ public abstract class DataStore
     //adds a claim to the datastore, making it an effective claim
     synchronized void addClaim(Claim newClaim, boolean writeToStorage)
     {
-        //subdivisions are added under their parent, not directly to the hash map for direct search
+        //subdivisions are added under their parent; assignClaimID also registers them in claimIDMap
         if (newClaim.parent != null)
         {
+            this.assignClaimID(newClaim);
             if (!newClaim.parent.children.contains(newClaim))
             {
                 newClaim.parent.children.add(newClaim);
@@ -589,6 +590,11 @@ public abstract class DataStore
             claim.id = this.nextClaimID;
             this.incrementNextClaimID();
         }
+        // Keep claimIDMap in sync so getClaim(id) and API use work for all claims (including subdivisions).
+        if (claim.id != null && claim.id != -1)
+        {
+            this.claimIDMap.put(claim.id, claim);
+        }
     }
 
     abstract void writeClaimToStorage(Claim claim);
@@ -719,8 +725,13 @@ public abstract class DataStore
     synchronized public Claim getClaimAt(Location location, boolean ignoreHeight, boolean ignoreSubclaims, Claim cachedClaim)
     {
         //check cachedClaim guess first.  if it's in the datastore and the location is inside it, we're done
+        // For 3D claims, also verify Y coordinate matches
         if (cachedClaim != null && cachedClaim.inDataStore && cachedClaim.contains(location, ignoreHeight, !ignoreSubclaims))
-            return cachedClaim;
+        {
+            final boolean cachedAcceptsY = !cachedClaim.is3D() || cachedClaim.containsY(location.getBlockY());
+            if (cachedAcceptsY)
+                return cachedClaim;
+        }
 
         //find a top level claim
         Long chunkID = getChunkHash(location);
@@ -736,13 +747,58 @@ public abstract class DataStore
 
                 //when we find a top level claim, if the location is in one of its subdivisions,
                 //return the SUBDIVISION, not the top level claim
+                // For 3D subdivisions, prefer the most specific (smallest Y-range) that contains the location
+                Claim bestChild = null;
                 for (int j = 0; j < claim.children.size(); j++)
                 {
-                    Claim subdivision = claim.children.get(j);
-                    if (subdivision.inDataStore && subdivision.contains(location, ignoreHeight, false))
-                        return subdivision;
+                    Claim child = claim.children.get(j);
+                    if (!child.inDataStore) continue;
+                    
+                    // For 3D subdivisions, check Y containment
+                    boolean childIgnoreHeight = child.is3D() ? false : ignoreHeight;
+                    if (!child.contains(location, childIgnoreHeight, false)) continue;
+                    
+                    // For 3D claims, verify Y coordinate
+                    if (child.is3D() && !child.containsY(location.getBlockY())) continue;
+                    
+                    if (bestChild == null)
+                    {
+                        bestChild = child;
+                    }
+                    else
+                    {
+                        // Prefer 3D claims over 2D claims, and smaller claims over larger ones
+                        boolean bestIs3D = bestChild.is3D();
+                        boolean currIs3D = child.is3D();
+                        
+                        if (bestIs3D && currIs3D)
+                        {
+                            // Both 3D: prefer smaller Y-range, then smaller area
+                            int bestYRange = bestChild.getGreaterBoundaryCorner().getBlockY()
+                                    - bestChild.getLesserBoundaryCorner().getBlockY();
+                            int currYRange = child.getGreaterBoundaryCorner().getBlockY()
+                                    - child.getLesserBoundaryCorner().getBlockY();
+                            if (currYRange < bestYRange
+                                    || (currYRange == bestYRange && child.getArea() < bestChild.getArea()))
+                            {
+                                bestChild = child;
+                            }
+                        }
+                        else if (!bestIs3D && currIs3D)
+                        {
+                            bestChild = child; // prefer 3D over 2D if both match
+                        }
+                        else if (!bestIs3D && !currIs3D)
+                        {
+                            if (child.getArea() < bestChild.getArea())
+                            {
+                                bestChild = child;
+                            }
+                        }
+                    }
                 }
-
+                
+                if (bestChild != null) return bestChild;
                 return claim;
             }
         }
@@ -843,7 +899,16 @@ public abstract class DataStore
      */
     synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer)
     {
-        return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, false);
+        return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, false, false);
+    }
+
+    /**
+     * Creates a claim with optional 3D subdivision support.
+     * @param is3D if true, creates a 3D subdivision that preserves exact Y boundaries
+     */
+    synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer, boolean dryRun, boolean is3D)
+    {
+        return createClaimInternal(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, dryRun, is3D);
     }
 
     //creates a claim.
@@ -858,6 +923,12 @@ public abstract class DataStore
     //does NOT check minimum claim size constraints
     //does NOT visualize the new claim for any players
     synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer, boolean dryRun)
+    {
+        return createClaimInternal(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, dryRun, false);
+    }
+
+    //internal implementation that supports is3D parameter
+    synchronized private CreateClaimResult createClaimInternal(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer, boolean dryRun, boolean is3D)
     {
         CreateClaimResult result = new CreateClaimResult();
 
@@ -911,7 +982,11 @@ public abstract class DataStore
                 result.claim = parent;
                 return result;
             }
-            smally = sanitizeClaimDepth(parent, smally);
+            // For 3D subdivisions, preserve exact Y boundaries; for 2D subdivisions, sanitize depth
+            if (!is3D)
+            {
+                smally = sanitizeClaimDepth(parent, smally);
+            }
         }
 
         //claims can't be made outside the world border
@@ -940,6 +1015,12 @@ public abstract class DataStore
                 id);
 
         newClaim.parent = parent;
+        
+        // Set is3D flag for 3D subdivisions
+        if (is3D && parent != null)
+        {
+            newClaim.set3D(true);
+        }
 
         //ensure this new claim won't overlap any existing claims
         ArrayList<Claim> claimsToCheck;
@@ -1094,6 +1175,7 @@ public abstract class DataStore
 
     /**
      * Helper method for sanitizing and setting claim depth. Saves affected claims.
+     * Note: 3D subdivisions are skipped as they have explicit Y boundaries.
      *
      * @param claim the claim
      * @param newDepth the new depth
@@ -1103,11 +1185,19 @@ public abstract class DataStore
 
         final int depth = sanitizeClaimDepth(claim, newDepth);
 
-        Stream.concat(Stream.of(claim), claim.children.stream()).forEach(localClaim -> {
-            localClaim.lesserBoundaryCorner.setY(depth);
-            localClaim.greaterBoundaryCorner.setY(Math.max(localClaim.greaterBoundaryCorner.getBlockY(), depth));
-            this.saveClaim(localClaim);
-        });
+        // Update parent claim
+        claim.lesserBoundaryCorner.setY(depth);
+        claim.greaterBoundaryCorner.setY(Math.max(claim.greaterBoundaryCorner.getBlockY(), depth));
+        this.saveClaim(claim);
+
+        // Update children, but skip 3D subdivisions as they have explicit Y boundaries
+        for (Claim child : claim.children)
+        {
+            if (child.is3D()) continue;
+            child.lesserBoundaryCorner.setY(depth);
+            child.greaterBoundaryCorner.setY(Math.max(child.greaterBoundaryCorner.getBlockY(), depth));
+            this.saveClaim(child);
+        }
     }
 
     //deletes all claims owned by a player
@@ -1133,7 +1223,8 @@ public abstract class DataStore
     synchronized public CreateClaimResult resizeClaim(Claim claim, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2, Player resizingPlayer)
     {
         //try to create this new claim, ignoring the original when checking for overlap
-        CreateClaimResult result = this.createClaim(claim.getLesserBoundaryCorner().getWorld(), newx1, newx2, newy1, newy2, newz1, newz2, claim.ownerID, claim.parent, claim.id, resizingPlayer, true);
+        // Pass the claim's is3D flag to preserve 3D behavior during resize
+        CreateClaimResult result = this.createClaim(claim.getLesserBoundaryCorner().getWorld(), newx1, newx2, newy1, newy2, newz1, newz2, claim.ownerID, claim.parent, claim.id, resizingPlayer, true, claim.is3D());
 
         //if succeeded
         if (result.succeeded)
@@ -1142,9 +1233,15 @@ public abstract class DataStore
             // copy the boundary from the claim created in the dry run of createClaim() to our existing claim
             claim.lesserBoundaryCorner = result.claim.lesserBoundaryCorner;
             claim.greaterBoundaryCorner = result.claim.greaterBoundaryCorner;
-            // Sanitize claim depth, expanding parent down to the lowest subdivision and subdivisions down to parent.
-            // Also saves affected claims.
-            setNewDepth(claim, claim.getLesserBoundaryCorner().getBlockY());
+            // For non-3D claims, sanitize claim depth. For 3D claims, just save.
+            if (!claim.is3D())
+            {
+                setNewDepth(claim, claim.getLesserBoundaryCorner().getBlockY());
+            }
+            else
+            {
+                this.saveClaim(claim);
+            }
             result.claim = claim;
             addToChunkClaimMap(claim); // add the new boundary to the chunk cache
         }

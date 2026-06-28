@@ -23,5 +23,6 @@ public enum ShovelMode
 {
     Basic,
     Admin,
-    Subdivide
+    Subdivide,
+    Subdivide3D
 }
