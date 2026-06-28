@@ -20,6 +20,9 @@ package me.ryanhamshire.GriefPrevention;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.griefprevention.api.claimcommand.ClaimCommandContext;
+import com.griefprevention.api.claimcommand.ClaimCommandExtensionRegistry;
+import com.griefprevention.api.claimcommand.ClaimCommandMode;
 import com.griefprevention.commands.ClaimCommand;
 import com.griefprevention.metrics.MetricsHandler;
 import com.griefprevention.platform.knockback.KnockbackProtectionListener;
@@ -87,12 +90,18 @@ public class GriefPrevention extends JavaPlugin
 {
     //for convenience, a reference to the instance of this plugin
     public static GriefPrevention instance;
+    private final ClaimCommandExtensionRegistry claimCommandExtensionRegistry = new ClaimCommandExtensionRegistry();
 
     //for logging to the console and log file
     private static Logger log;
 
     //this handles data storage, like player and region data
     public DataStore dataStore;
+
+    public @NotNull ClaimCommandExtensionRegistry getClaimCommandExtensionRegistry()
+    {
+        return claimCommandExtensionRegistry;
+    }
 
     // Event handlers with common functionality
     EntityEventHandler entityEventHandler;
@@ -1609,34 +1618,19 @@ public class GriefPrevention extends JavaPlugin
         //adminclaims
         else if (cmd.getName().equalsIgnoreCase("adminclaims") && player != null)
         {
-            PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-            playerData.shovelMode = ShovelMode.Admin;
-            GriefPrevention.sendMessage(player, TextMode.Success, Messages.AdminClaimsMode);
-
-            return true;
+            return activateClaimCommandMode(player, cmd, commandLabel, "admin");
         }
 
         //basicclaims
         else if (cmd.getName().equalsIgnoreCase("basicclaims") && player != null)
         {
-            PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-            playerData.shovelMode = ShovelMode.Basic;
-            playerData.claimSubdividing = null;
-            GriefPrevention.sendMessage(player, TextMode.Success, Messages.BasicClaimsMode);
-
-            return true;
+            return activateClaimCommandMode(player, cmd, commandLabel, "basic");
         }
 
         //subdivideclaims
         else if (cmd.getName().equalsIgnoreCase("subdivideclaims") && player != null)
         {
-            PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-            playerData.shovelMode = ShovelMode.Subdivide;
-            playerData.claimSubdividing = null;
-            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SubdivisionMode);
-            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SubdivisionVideo2, DataStore.SUBDIVISION_VIDEO_URL);
-
-            return true;
+            return activateClaimCommandMode(player, cmd, commandLabel, "subdivide");
         }
 
         //deleteclaim
@@ -2767,6 +2761,22 @@ public class GriefPrevention extends JavaPlugin
             PvPImmunityValidationTask task = new PvPImmunityValidationTask(player);
             this.getServer().getScheduler().scheduleSyncDelayedTask(this, task, 1200L);
         }
+    }
+
+    private boolean activateClaimCommandMode(
+            @NotNull Player player,
+            @NotNull Command command,
+            @NotNull String label,
+            @NotNull String modeName)
+    {
+        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+        ClaimCommandMode mode = this.claimCommandExtensionRegistry.getMode(modeName);
+        if (mode == null)
+        {
+            return false;
+        }
+
+        return mode.onCommand(new ClaimCommandContext(this, player, playerData, command, label), new String[0]);
     }
 
     static boolean isInventoryEmpty(Player player)

@@ -1,5 +1,9 @@
 package com.griefprevention.commands;
 
+import com.griefprevention.api.claimcommand.ClaimCommandContext;
+import com.griefprevention.api.claimcommand.ClaimCommandExtensionRegistry;
+import com.griefprevention.api.claimcommand.ClaimCommandMode;
+import com.griefprevention.api.claimcommand.ClaimCommandSubcommand;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.AutoExtendClaimTask;
@@ -19,7 +23,10 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class ClaimCommand extends CommandHandler
@@ -27,6 +34,7 @@ public class ClaimCommand extends CommandHandler
     public ClaimCommand(@NotNull GriefPrevention plugin)
     {
         super(plugin, "claim");
+        registerBuiltInModes();
     }
 
     @Override
@@ -39,14 +47,19 @@ public class ClaimCommand extends CommandHandler
         if (!(sender instanceof Player player))
             return false;
 
+        PlayerData playerData = plugin.dataStore.getPlayerData(player.getUniqueId());
+        ClaimCommandContext context = new ClaimCommandContext(plugin, player, playerData, command, label);
+        if (dispatchExtension(context, args))
+        {
+            return true;
+        }
+
         World world = player.getWorld();
         if (!plugin.claimsEnabledForWorld(world))
         {
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.ClaimsDisabledWorld);
             return true;
         }
-
-        PlayerData playerData = plugin.dataStore.getPlayerData(player.getUniqueId());
 
         //if he's at the claim count per player limit already and doesn't have permission to bypass, display an error message
         if (plugin.config_claims_maxClaimsPerPlayer > 0 &&
@@ -224,9 +237,229 @@ public class ClaimCommand extends CommandHandler
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args)
     {
-        if (args.length != 1)
+        if (!(sender instanceof Player player))
+        {
             return List.of();
-        return TabCompletions.integer(args, 3, false);
+        }
+
+        PlayerData playerData = plugin.dataStore.getPlayerData(player.getUniqueId());
+        ClaimCommandContext context = new ClaimCommandContext(plugin, player, playerData, command, alias);
+
+        if (args.length >= 1)
+        {
+            String root = args[0];
+            if (equalsIgnoreCase(root, "mode"))
+            {
+                return completeModes(context, args);
+            }
+
+            ClaimCommandSubcommand subcommand = plugin.getClaimCommandExtensionRegistry().getSubcommand(root);
+            if (subcommand != null)
+            {
+                return subcommand.onTabComplete(context, trimArgs(args, 1));
+            }
+        }
+
+        if (args.length == 1)
+        {
+            return completeFirstArgument(args);
+        }
+
+        return List.of();
+    }
+
+    private boolean dispatchExtension(@NotNull ClaimCommandContext context, @NotNull String[] args)
+    {
+        if (args.length == 0)
+        {
+            return false;
+        }
+
+        if (equalsIgnoreCase(args[0], "mode"))
+        {
+            return dispatchMode(context, trimArgs(args, 1));
+        }
+
+        ClaimCommandSubcommand subcommand = plugin.getClaimCommandExtensionRegistry().getSubcommand(args[0]);
+        if (subcommand == null)
+        {
+            return false;
+        }
+
+        return subcommand.onCommand(context, trimArgs(args, 1));
+    }
+
+    private boolean dispatchMode(@NotNull ClaimCommandContext context, @NotNull String[] args)
+    {
+        List<ClaimCommandMode> modes = plugin.getClaimCommandExtensionRegistry().getModes();
+        if (args.length == 0)
+        {
+            if (modes.isEmpty())
+            {
+                context.getPlayer().sendMessage("/claim mode <name>");
+                return true;
+            }
+
+            String modeList = String.join(", ", modes.stream().map(ClaimCommandMode::getName).toList());
+            context.getPlayer().sendMessage("/claim mode <name>  Available: " + modeList);
+            return true;
+        }
+
+        ClaimCommandMode mode = plugin.getClaimCommandExtensionRegistry().getMode(args[0]);
+        if (mode == null)
+        {
+            String modeList = String.join(", ", modes.stream().map(ClaimCommandMode::getName).toList());
+            context.getPlayer().sendMessage("/claim mode <name>  Available: " + modeList);
+            return true;
+        }
+
+        return mode.onCommand(context, trimArgs(args, 1));
+    }
+
+    private @NotNull List<String> completeModes(@NotNull ClaimCommandContext context, @NotNull String[] args)
+    {
+        ClaimCommandExtensionRegistry registry = plugin.getClaimCommandExtensionRegistry();
+        if (args.length == 2)
+        {
+            String prefix = args[1].toLowerCase(Locale.ROOT);
+            List<String> completions = new ArrayList<>();
+            for (ClaimCommandMode mode : registry.getModes())
+            {
+                if (prefix.isEmpty() || mode.getName().toLowerCase(Locale.ROOT).startsWith(prefix))
+                {
+                    completions.add(mode.getName());
+                }
+            }
+            completions.sort(String.CASE_INSENSITIVE_ORDER);
+            return completions;
+        }
+
+        if (args.length > 2)
+        {
+            ClaimCommandMode mode = registry.getMode(args[1]);
+            if (mode != null)
+            {
+                return mode.onTabComplete(context, trimArgs(args, 2));
+            }
+        }
+
+        return List.of();
+    }
+
+    private @NotNull List<String> completeFirstArgument(@NotNull String[] args)
+    {
+        String prefix = args[0].toLowerCase(Locale.ROOT);
+        ArrayList<String> completions = new ArrayList<>(TabCompletions.integer(args, 3, false));
+
+        if ("mode".startsWith(prefix))
+        {
+            completions.add("mode");
+        }
+
+        for (ClaimCommandSubcommand subcommand : plugin.getClaimCommandExtensionRegistry().getSubcommands())
+        {
+            if (prefix.isEmpty() || subcommand.getName().toLowerCase(Locale.ROOT).startsWith(prefix))
+            {
+                completions.add(subcommand.getName());
+            }
+        }
+
+        completions.sort(String.CASE_INSENSITIVE_ORDER);
+        ArrayList<String> unique = new ArrayList<>(completions.size());
+        for (String completion : completions)
+        {
+            if (unique.isEmpty() || !completion.equalsIgnoreCase(unique.getLast()))
+            {
+                unique.add(completion);
+            }
+        }
+        return unique;
+    }
+
+    private void registerBuiltInModes()
+    {
+        ClaimCommandExtensionRegistry registry = plugin.getClaimCommandExtensionRegistry();
+        registry.registerMode(new ClaimCommandMode()
+        {
+            @Override
+            public @NotNull String getName()
+            {
+                return "basic";
+            }
+
+            @Override
+            public boolean onCommand(@NotNull ClaimCommandContext context, @NotNull String[] args)
+            {
+                PlayerData playerData = context.getPlayerData();
+                playerData.shovelMode = ShovelMode.Basic;
+                playerData.claimSubdividing = null;
+                GriefPrevention.sendMessage(context.getPlayer(), TextMode.Success, Messages.BasicClaimsMode);
+                return true;
+            }
+        });
+        registry.registerMode(new ClaimCommandMode()
+        {
+            @Override
+            public @NotNull String getName()
+            {
+                return "admin";
+            }
+
+            @Override
+            public boolean onCommand(@NotNull ClaimCommandContext context, @NotNull String[] args)
+            {
+                Player player = context.getPlayer();
+                if (!player.hasPermission("griefprevention.adminclaims"))
+                {
+                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.NoPermissionForCommand);
+                    return true;
+                }
+
+                context.getPlayerData().shovelMode = ShovelMode.Admin;
+                GriefPrevention.sendMessage(player, TextMode.Success, Messages.AdminClaimsMode);
+                return true;
+            }
+        });
+        registry.registerMode(new ClaimCommandMode()
+        {
+            @Override
+            public @NotNull String getName()
+            {
+                return "subdivide";
+            }
+
+            @Override
+            public @NotNull List<String> getAliases()
+            {
+                return List.of("subdivision");
+            }
+
+            @Override
+            public boolean onCommand(@NotNull ClaimCommandContext context, @NotNull String[] args)
+            {
+                PlayerData playerData = context.getPlayerData();
+                playerData.shovelMode = ShovelMode.Subdivide;
+                playerData.claimSubdividing = null;
+                GriefPrevention.sendMessage(context.getPlayer(), TextMode.Instr, Messages.SubdivisionMode);
+                GriefPrevention.sendMessage(context.getPlayer(), TextMode.Instr, Messages.SubdivisionVideo2, DataStore.SUBDIVISION_VIDEO_URL);
+                return true;
+            }
+        });
+    }
+
+    private static boolean equalsIgnoreCase(@Nullable String left, @Nullable String right)
+    {
+        return left != null && left.equalsIgnoreCase(right);
+    }
+
+    private static @NotNull String[] trimArgs(@NotNull String[] args, int count)
+    {
+        if (count >= args.length)
+        {
+            return new String[0];
+        }
+
+        return Arrays.copyOfRange(args, count, args.length);
     }
 
 }
