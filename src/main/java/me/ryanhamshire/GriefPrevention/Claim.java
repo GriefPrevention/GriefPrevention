@@ -18,12 +18,15 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.api.claim.ClaimGeometry;
+import com.griefprevention.api.claim.ClaimMetadataContainer;
 import me.ryanhamshire.GriefPrevention.events.ClaimPermissionCheckEvent;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -93,6 +96,8 @@ public class Claim
 
     //following a siege, buttons/levers are unlocked temporarily.  this represents that state
     public boolean doorsOpen = false;
+
+    private final ClaimMetadataContainer metadata = new ClaimMetadataContainer();
 
     //whether or not this is an administrative claim
     //administrative claims are created and maintained by players with the griefprevention.adminclaims permission.
@@ -194,6 +199,7 @@ public class Claim
         this.inheritNothing = claim.inheritNothing;
         this.children = new ArrayList<>(claim.children);
         this.doorsOpen = claim.doorsOpen;
+        this.metadata.setAll(claim.metadata);
     }
 
     //measurements.  all measurements are in blocks
@@ -692,25 +698,87 @@ public class Claim
         return this.ownerID;
     }
 
+    /**
+     * Get persistent namespaced metadata attached to this claim.
+     *
+     * @return the metadata container
+     */
+    public @NotNull ClaimMetadataContainer getMetadata()
+    {
+        return metadata;
+    }
+
+    /**
+     * Resolve the claim geometry key from metadata.
+     *
+     * @return the geometry key, or the built-in default key if unset or invalid
+     */
+    public @NotNull NamespacedKey getGeometryKey()
+    {
+        Object value = metadata.get(ClaimGeometry.METADATA_KEY);
+        if (value instanceof NamespacedKey key)
+        {
+            return key;
+        }
+
+        if (value instanceof String keyString)
+        {
+            NamespacedKey parsed = NamespacedKey.fromString(keyString);
+            if (parsed != null)
+            {
+                return parsed;
+            }
+        }
+
+        return GriefPrevention.instance.getClaimGeometryRegistry().getDefaultGeometry().getKey();
+    }
+
+    /**
+     * Set the claim geometry key.
+     *
+     * @param geometryKey the geometry key, or {@code null} to clear it and use the default geometry
+     */
+    public void setGeometryKey(@Nullable NamespacedKey geometryKey)
+    {
+        metadata.set(ClaimGeometry.METADATA_KEY, geometryKey != null ? geometryKey.toString() : null);
+    }
+
+    /**
+     * Get the resolved geometry for this claim.
+     *
+     * @return the geometry implementation
+     */
+    public @NotNull ClaimGeometry getGeometry()
+    {
+        return GriefPrevention.instance.getClaimGeometryRegistry().resolve(getGeometryKey());
+    }
+
+    /**
+     * Get the bounds used for claim lookups and chunk indexing.
+     *
+     * @return the lookup bounds
+     */
+    public @NotNull BoundingBox getLookupBounds()
+    {
+        return getGeometry().getLookupBounds(this);
+    }
+
+    /**
+     * Get the bounds used for claim visualization.
+     *
+     * @return the visualization bounds
+     */
+    public @NotNull BoundingBox getVisualizationBounds()
+    {
+        return getGeometry().getVisualizationBounds(this);
+    }
+
     //whether or not a location is in a claim
     //ignoreHeight = true means location UNDER the claim will return TRUE
     //excludeSubdivisions = true means that locations inside subdivisions of the claim will return FALSE
     public boolean contains(Location location, boolean ignoreHeight, boolean excludeSubdivisions)
     {
-        //not in the same world implies false
-        if (!Objects.equals(location.getWorld(), this.lesserBoundaryCorner.getWorld())) return false;
-
-        BoundingBox boundingBox = new BoundingBox(this);
-        int x = location.getBlockX();
-        int z = location.getBlockZ();
-
-        // If we're ignoring height, use 2D containment check.
-        if (ignoreHeight && !boundingBox.contains2d(x, z))
-        {
-            return false;
-        }
-        // Otherwise use full containment check.
-        else if (!ignoreHeight && !boundingBox.contains(x, location.getBlockY(), z))
+        if (!getGeometry().contains(this, location, ignoreHeight))
         {
             return false;
         }
@@ -746,9 +814,7 @@ public class Claim
     //used internally to prevent overlaps when creating claims
     boolean overlaps(Claim otherClaim)
     {
-        if (!Objects.equals(this.lesserBoundaryCorner.getWorld(), otherClaim.getLesserBoundaryCorner().getWorld())) return false;
-
-        return new BoundingBox(this).intersects(new BoundingBox(otherClaim));
+        return getGeometry().overlaps(this, otherClaim);
     }
 
     @Deprecated(since = "17.0.0", forRemoval = true)
@@ -787,9 +853,10 @@ public class Claim
     {
         ArrayList<Chunk> chunks = new ArrayList<>();
 
+        BoundingBox lookupBounds = this.getLookupBounds();
         World world = this.getLesserBoundaryCorner().getWorld();
-        Chunk lesserChunk = this.getLesserBoundaryCorner().getChunk();
-        Chunk greaterChunk = this.getGreaterBoundaryCorner().getChunk();
+        Chunk lesserChunk = world.getChunkAt(lookupBounds.getMinX() >> 4, lookupBounds.getMinZ() >> 4);
+        Chunk greaterChunk = world.getChunkAt(lookupBounds.getMaxX() >> 4, lookupBounds.getMaxZ() >> 4);
 
         for (int x = lesserChunk.getX(); x <= greaterChunk.getX(); x++)
         {
@@ -804,6 +871,6 @@ public class Claim
 
     ArrayList<Long> getChunkHashes()
     {
-        return DataStore.getChunkHashes(this);
+        return getGeometry().getChunkHashes(this);
     }
 }

@@ -20,6 +20,7 @@ package me.ryanhamshire.GriefPrevention;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.griefprevention.api.claim.ClaimGeometryRegistry;
 import com.griefprevention.commands.ClaimCommand;
 import com.griefprevention.metrics.MetricsHandler;
 import com.griefprevention.platform.knockback.KnockbackProtectionListener;
@@ -87,12 +88,18 @@ public class GriefPrevention extends JavaPlugin
 {
     //for convenience, a reference to the instance of this plugin
     public static GriefPrevention instance;
+    private final ClaimGeometryRegistry claimGeometryRegistry = new ClaimGeometryRegistry();
 
     //for logging to the console and log file
     private static Logger log;
 
     //this handles data storage, like player and region data
     public DataStore dataStore;
+
+    public @NotNull ClaimGeometryRegistry getClaimGeometryRegistry()
+    {
+        return claimGeometryRegistry;
+    }
 
     // Event handlers with common functionality
     EntityEventHandler entityEventHandler;
@@ -1224,7 +1231,7 @@ public class GriefPrevention extends JavaPlugin
         else if (cmd.getName().equalsIgnoreCase("transferclaim") && player != null)
         {
             //which claim is the user in?
-            Claim claim = this.dataStore.getClaimAt(player.getLocation(), true, null);
+            Claim claim = getTrustTargetClaim(player);
             if (claim == null)
             {
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.TransferClaimMissing);
@@ -1274,7 +1281,7 @@ public class GriefPrevention extends JavaPlugin
         //trustlist
         else if (cmd.getName().equalsIgnoreCase("trustlist") && player != null)
         {
-            Claim claim = this.dataStore.getClaimAt(player.getLocation(), true, null);
+            Claim claim = getTrustTargetClaim(player);
 
             //if no claim here, error message
             if (claim == null)
@@ -1363,7 +1370,7 @@ public class GriefPrevention extends JavaPlugin
             if (args.length != 1) return false;
 
             //determine which claim the player is standing in
-            Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+            Claim claim = getTrustTargetClaim(player);
 
             //determine whether a single player or clearing permissions entirely
             boolean clearPermissions = false;
@@ -2355,7 +2362,7 @@ public class GriefPrevention extends JavaPlugin
         PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
 
         //which claim is being abandoned?
-        Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+        Claim claim = getTrustTargetClaim(player);
         if (claim == null)
         {
             GriefPrevention.sendMessage(player, TextMode.Instr, Messages.AbandonClaimMissing);
@@ -2402,7 +2409,7 @@ public class GriefPrevention extends JavaPlugin
     private void handleTrustCommand(Player player, ClaimPermission permissionLevel, String recipientName)
     {
         //determine which claim the player is standing in
-        Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
+        Claim claim = getTrustTargetClaim(player);
 
         //validate player or group argument
         String permission = null;
@@ -2538,6 +2545,12 @@ public class GriefPrevention extends JavaPlugin
         }
 
         GriefPrevention.sendMessage(player, TextMode.Success, Messages.GrantPermissionConfirmation, recipientName, permissionDescription, location);
+    }
+
+    private @Nullable Claim getTrustTargetClaim(@NotNull Player player)
+    {
+        // Strict exact-Y claim targeting, matching master branch behavior for stacked claims.
+        return this.dataStore.getClaimAt(player.getLocation(), false, null);
     }
 
     //helper method to resolve a player by name

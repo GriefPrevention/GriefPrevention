@@ -21,8 +21,10 @@ package me.ryanhamshire.GriefPrevention;
 import com.google.common.io.Files;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.BufferedReader;
@@ -526,6 +528,22 @@ public class FlatFileDataStore extends DataStore
         claim.modifiedDate = new Date(lastModifiedDate);
         claim.id = claimID;
 
+        ConfigurationSection metadataSection = yaml.getConfigurationSection("Metadata");
+        if (metadataSection != null)
+        {
+            for (String keyString : metadataSection.getKeys(false))
+            {
+                NamespacedKey key = NamespacedKey.fromString(keyString);
+                if (key == null)
+                {
+                    GriefPrevention.AddLogEntry("Skipping invalid claim metadata key " + keyString + " in claim " + claimID + ".");
+                    continue;
+                }
+
+                claim.getMetadata().set(key, metadataSection.get(keyString));
+            }
+        }
+
         return claim;
     }
 
@@ -562,6 +580,11 @@ public class FlatFileDataStore extends DataStore
         yaml.set("Parent Claim ID", parentID);
 
         yaml.set("inheritNothing", claim.getSubclaimRestrictions());
+
+        for (Map.Entry<NamespacedKey, Object> entry : claim.getMetadata().asMap().entrySet())
+        {
+            yaml.set("Metadata." + entry.getKey(), entry.getValue());
+        }
 
         return yaml.saveToString();
     }
