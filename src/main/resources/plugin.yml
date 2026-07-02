@@ -39,8 +39,8 @@ commands:
       aliases: at
       permission: griefprevention.claims
     permissiontrust:
-      description: Grants a player permission to grant his level of permission to others.
-      usage: /<command> <player>.  Permits a player to share his permission level with others.
+      description: Grants a player permission to grant their level of permission to others.
+      usage: /<command> <player>.  Permits a player to share their permission level with others.
       aliases: pt
       permission: griefprevention.claims
     subdivideclaims:
