@@ -21,8 +21,6 @@ public final class ChestProtectionHandler
         // Only apply this logic to placed chests.
         if (!(block.getBlockData() instanceof Chest chest)) return;
 
-        // Only interfere when Minecraft already connected this chest to a side
-        // that should not be allowed by the claim ownership rule.
         BlockFace connectedFace = getConnectedFace(chest);
         if (connectedFace == null) return;
 
@@ -34,20 +32,14 @@ public final class ChestProtectionHandler
 
         if (ProtectionHelper.sameClaimOwner(claim, connectedClaim)) return;
 
-        // Avoid fallback chest connections when sneaking
-        if (player.isSneaking())
-        {
-            splitDoubleChest(block, chest, connectedBlock, connectedChest, player);
-            return;
-        }
-
-        // Vanilla connected to a side that should not be allowed. Look for another
-        // allowed side that Minecraft could naturally connect to instead.
-        BlockFace allowedFace = findAllowedSingleChestConnectionFace(dataStore, claim, block, chest, connectedFace);
-
-        // Always undo the invalid vanilla connection first.
+        // Split the disallowed connection.
         splitDoubleChest(block, chest, connectedBlock, connectedChest, player);
 
+        // Chests placed while sneaking only attempt connection on the clicked chest.
+        if (player.isSneaking()) return;
+        
+        // Look for another allowed side that Minecraft could naturally connect to instead.
+        BlockFace allowedFace = findAllowedSingleChestConnectionFace(dataStore, claim, block, chest, connectedFace);
         if (allowedFace == null) return;
 
         Block allowedBlock = block.getRelative(allowedFace);
