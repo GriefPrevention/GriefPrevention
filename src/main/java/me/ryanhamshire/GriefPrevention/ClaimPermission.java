@@ -29,7 +29,7 @@ public enum ClaimPermission
     Edit(Messages.OnlyOwnersModifyClaims),
     /**
      * ClaimPermission that allows users to grant ClaimPermissions. Grants {@link #Build}, {@link #Container}, and {@link #Access}.
-     * Command: /permissiontrust or /managetrust
+     * Command: /managetrust or /permissiontrust
      */
     Manage(Messages.NoManageTrust),
     /**

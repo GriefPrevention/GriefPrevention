@@ -1561,7 +1561,7 @@ public class GriefPrevention extends JavaPlugin
         }
 
         //permissiontrust <player>
-        else if (cmd.getName().equalsIgnoreCase("permissiontrust") && player != null)
+        else if (cmd.getName().equalsIgnoreCase("managetrust") && player != null)
         {
             //requires exactly one parameter, the other player's name
             if (args.length != 1) return false;
