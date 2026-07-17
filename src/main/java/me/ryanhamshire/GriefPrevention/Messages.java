@@ -68,7 +68,7 @@ public enum Messages
     BuildPermission("build"),
     ContainersPermission("access containers and animals"),
     AccessPermission("use buttons and levers"),
-    PermissionsPermission("manage permissions"),
+    ManagePermission("manage permissions"),
     LocationCurrentClaim("in this claim"),
     LocationAllClaims("in all your claims"),
     PvPImmunityStart("You're protected from attack by other players as long as your inventory is empty."),

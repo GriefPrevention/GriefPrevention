@@ -180,7 +180,6 @@ public class Claim
         this.greaterBoundaryCorner = claim.greaterBoundaryCorner.clone();
         this.id = claim.id;
         this.ownerID = claim.ownerID;
-        this.managers = new ArrayList<>(claim.managers);
         this.playerIDToClaimPermissionMap = new HashMap<>(claim.playerIDToClaimPermissionMap);
         this.inDataStore = false; //since it's a copy of a claim, not in datastore!
         this.areExplosivesAllowed = claim.areExplosivesAllowed;
