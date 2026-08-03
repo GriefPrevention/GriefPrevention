@@ -986,36 +986,47 @@ class PlayerEventHandler implements Listener
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoDrop);
             event.setCancelled(true);
 
-            //A cancelled drop is returned to the main inventory by the server, but if that
-            //inventory is full and the stack was dropped from an armor or offhand slot, the
-            //item is silently deleted instead of being returned (see GriefPrevention/GriefPrevention#2619).
-            if (mainInventoryIsFull(player))
+            //A cancelled drop is returned to the main inventory by the server, but only if a
+            //main slot is free or can absorb the stack into an existing one. If neither is true
+            //the item is silently deleted (see GriefPrevention/GriefPrevention#2619), so restore it
+            //ourselves — but only then, since restoring on top of a successful server reversal
+            //would duplicate the stack.
+            ItemStack dropped = event.getItemDrop().getItemStack();
+            if (!mainInventoryAccepts(player, dropped))
             {
-                returnDroppedItem(player, event.getItemDrop().getItemStack());
+                returnDroppedItem(player, dropped);
             }
         }
     }
 
-    //returns whether any of the player's 36 main (non-equipment) inventory slots are empty
-    private static boolean mainInventoryIsFull(Player player)
+    //whether the main can place the dropped stack in one of its 36 slots: a free slot, or an
+    //existing stack of the same material with room to merge (mirrors the server's cancel-reversal)
+    private static boolean mainInventoryAccepts(Player player, ItemStack dropped)
     {
         for (int i = 0; i < 36; i++)
         {
             ItemStack item = player.getInventory().getItem(i);
-            if (item == null || item.getType() == Material.AIR) return false;
+            if (item == null || item.getType() == Material.AIR) return true;
+            if (item.isSimilar(dropped) && item.getAmount() < item.getMaxStackSize()) return true;
         }
-        return true;
+        return false;
     }
 
-    //returns a dropped stack to the equipable/offhand slot it was dropped from, falling back
-    //to dropping it at the player's feet so it can never be permanently deleted
+    //returns a dropped stack to the equipment slot it was dropped from, merging back into a
+    //partial stack, falling back to the offhand and then to the player's feet so it can never
+    //be permanently deleted
     private static void returnDroppedItem(Player player, ItemStack dropped)
     {
         org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
         EquipmentSlot slot = equipmentSlotFor(dropped.getType());
-        if (inventory.getItem(slot) == null)
+        ItemStack current = inventory.getItem(slot);
+        if (current == null)
         {
             inventory.setItem(slot, dropped);
+        }
+        else if (current.isSimilar(dropped) && current.getAmount() + dropped.getAmount() <= current.getMaxStackSize())
+        {
+            current.setAmount(current.getAmount() + dropped.getAmount());
         }
         else if (inventory.getItem(EquipmentSlot.OFF_HAND) == null)
         {
