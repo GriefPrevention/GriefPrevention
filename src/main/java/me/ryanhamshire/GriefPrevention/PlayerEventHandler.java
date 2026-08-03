@@ -985,7 +985,56 @@ class PlayerEventHandler implements Listener
         {
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoDrop);
             event.setCancelled(true);
+
+            //A cancelled drop is returned to the main inventory by the server, but if that
+            //inventory is full and the stack was dropped from an armor or offhand slot, the
+            //item is silently deleted instead of being returned (see GriefPrevention/GriefPrevention#2619).
+            if (mainInventoryIsFull(player))
+            {
+                returnDroppedItem(player, event.getItemDrop().getItemStack());
+            }
         }
+    }
+
+    //returns whether any of the player's 36 main (non-equipment) inventory slots are empty
+    private static boolean mainInventoryIsFull(Player player)
+    {
+        for (int i = 0; i < 36; i++)
+        {
+            ItemStack item = player.getInventory().getItem(i);
+            if (item == null || item.getType() == Material.AIR) return false;
+        }
+        return true;
+    }
+
+    //returns a dropped stack to the equipable/offhand slot it was dropped from, falling back
+    //to dropping it at the player's feet so it can never be permanently deleted
+    private static void returnDroppedItem(Player player, ItemStack dropped)
+    {
+        org.bukkit.inventory.PlayerInventory inventory = player.getInventory();
+        EquipmentSlot slot = equipmentSlotFor(dropped.getType());
+        if (inventory.getItem(slot) == null)
+        {
+            inventory.setItem(slot, dropped);
+        }
+        else if (inventory.getItem(EquipmentSlot.OFF_HAND) == null)
+        {
+            inventory.setItem(EquipmentSlot.OFF_HAND, dropped);
+        }
+        else
+        {
+            player.getWorld().dropItem(player.getLocation(), dropped);
+        }
+    }
+
+    private static EquipmentSlot equipmentSlotFor(Material type)
+    {
+        String name = type.name();
+        if (name.endsWith("_HELMET")) return EquipmentSlot.HEAD;
+        if (name.endsWith("_CHESTPLATE")) return EquipmentSlot.CHEST;
+        if (name.endsWith("_LEGGINGS")) return EquipmentSlot.LEGS;
+        if (name.endsWith("_BOOTS")) return EquipmentSlot.FEET;
+        return EquipmentSlot.OFF_HAND;
     }
 
     //when a player teleports via a portal
