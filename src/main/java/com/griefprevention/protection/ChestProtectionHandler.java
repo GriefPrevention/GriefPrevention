@@ -66,7 +66,7 @@ public final class ChestProtectionHandler
 
         // Do not treat claim permission as enough to force a connection.
         // The neighboring chest must also be naturally connectable.
-        if (cannotNaturallyConnectChests(chest, relativeChest, face)) return null;
+        if (!canNaturallyConnectChests(chest, relativeChest, face)) return null;
 
         Claim relativeClaim = dataStore.getClaimAt(relative.getLocation(), true, claim);
         if (!ProtectionHelper.sameClaimOwner(claim, relativeClaim)) return null;
@@ -90,22 +90,22 @@ public final class ChestProtectionHandler
 
     // Checks whether two chests could naturally form a double chest.
     // This prevents the plugin from rotating an existing neighboring chest.
-    private static boolean cannotNaturallyConnectChests(Chest placedChest, Chest relativeChest, BlockFace relativeFace)
+    private static boolean canNaturallyConnectChests(Chest placedChest, Chest relativeChest, BlockFace relativeFace)
     {
         // Minecraft only forms a normal double chest when both chests face the same direction.
-        if (placedChest.getFacing() != relativeChest.getFacing()) return true;
+        if (placedChest.getFacing() != relativeChest.getFacing()) return false;
 
         // The placed chest must be able to connect on the relative side,
         // and the relative chest must be able to connect back on the opposite side.
-        return isInvalidChestConnectionFace(placedChest, relativeFace) ||
-                isInvalidChestConnectionFace(relativeChest, relativeFace.getOppositeFace());
+        return isValidChestConnectionFace(placedChest, relativeFace) &&
+                isValidChestConnectionFace(relativeChest, relativeFace.getOppositeFace());
     }
 
-    // Checks whether the neighbor is on a side where this chest cannot form a double chest.
-    private static boolean isInvalidChestConnectionFace(Chest chest, BlockFace face)
+    // Checks whether the neighbor is on a side where this chest can form a double chest.
+    private static boolean isValidChestConnectionFace(Chest chest, BlockFace face)
     {
         BlockFace facing = chest.getFacing();
-        return face != rotateClockwise(facing) && face != rotateCounterClockwise(facing);
+        return face == rotateClockwise(facing) || face == rotateCounterClockwise(facing);
     }
 
     // Connects two allowed single chests to become one double chest.
@@ -114,7 +114,7 @@ public final class ChestProtectionHandler
                                            BlockFace relativeFace, Player player)
     {
         // Safety check: only connect if this would be a natural double chest.
-        if (cannotNaturallyConnectChests(placedChest, relativeChest, relativeFace)) return;
+        if (!canNaturallyConnectChests(placedChest, relativeChest, relativeFace)) return;
 
         BlockFace facing = placedChest.getFacing();
 
