@@ -60,6 +60,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
@@ -983,9 +986,98 @@ class PlayerEventHandler implements Listener
         //if in combat, don't let him drop it
         if (!instance.config_pvp_allowCombatItemDrop && playerData.inPvpCombat() && !player.isDead())
         {
+            ItemStack dropped = event.getItemDrop().getItemStack();
+
+            //A cancelled drop is returned to the main inventory by the server, but only if a main
+            //slot is free or can absorb the stack into an existing one. Main-hand drops are always
+            //safe: the server splits the stack out of the selected hotbar slot, so cancelling puts
+            //it right back. A drop from the cursor or an armor or offhand slot has no main slot to
+            //return to and would be silently deleted when the main inventory is full (see
+            //GriefPrevention/GriefPrevention#2619, PaperMC/Paper#7726). The inventory click handler
+            //below blocks those drops at the click, so anything still reaching here (a leftover
+            //cursor drop on inventory close, or a hack client) falls like vanilla rather than
+            //being destroyed.
+            if (instance.getItemInHand(player, EquipmentSlot.HAND).getType() != Material.AIR && !mainInventoryAccepts(player, dropped))
+            {
+                return;
+            }
+
             GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoDrop);
             event.setCancelled(true);
         }
+    }
+
+    //when a player drops an item from a slot or off their cursor in an inventory window
+    @EventHandler(priority = EventPriority.LOWEST)
+    void onInventoryClick(InventoryClickEvent event)
+    {
+        //only the "drop" actions move an item out of a slot or off the cursor into the world
+        switch (event.getAction())
+        {
+            case DROP_ONE_SLOT:
+            case DROP_ALL_SLOT:
+            case DROP_ONE_CURSOR:
+            case DROP_ALL_CURSOR:
+                break;
+            default:
+                return;
+        }
+
+        //players only; anything else has no combat state
+        if (!(event.getWhoClicked() instanceof Player)) return;
+        Player player = (Player) event.getWhoClicked();
+
+        //if in combat, don't let him drop it
+        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+        if (instance.config_pvp_allowCombatItemDrop || !playerData.inPvpCombat() || player.isDead()) return;
+
+        //Block the click rather than the resulting PlayerDropItemEvent. A cancelled drop is
+        //returned to the main inventory by the server, but an item dropped from the cursor or an
+        //armor or offhand slot has no main slot to return to and is silently deleted when the main
+        //inventory is full (see GriefPrevention/GriefPrevention#2619, PaperMC/Paper#7726). The
+        //click is never applied, so the item simply stays where it is.
+        GriefPrevention.sendMessage(player, TextMode.Err, Messages.PvPNoDrop);
+        event.setCancelled(true);
+    }
+
+    //when a player closes an inventory window with an item on their cursor, the server drops that
+    //item onto the ground. During PvP combat that drop is blocked, and a cursor item with no room
+    //to return to in the main inventory would be silently deleted. Put the cursor item into the
+    //inventory instead, so only the portion that cannot fit stays on the cursor and is dropped
+    //(and that leftover is covered by the safety net in onPlayerDropItem).
+    @EventHandler(priority = EventPriority.LOWEST)
+    void onInventoryClose(InventoryCloseEvent event)
+    {
+        //players only; anything else has no combat state
+        if (!(event.getPlayer() instanceof Player)) return;
+        Player player = (Player) event.getPlayer();
+
+        //if the server already dropped the cursor item, there is nothing left to save
+        ItemStack cursor = player.getItemOnCursor();
+        if (cursor == null || cursor.getType() == Material.AIR) return;
+
+        //only during PvP combat with item drops disabled
+        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
+        if (instance.config_pvp_allowCombatItemDrop || !playerData.inPvpCombat() || player.isDead()) return;
+
+        //place the cursor item into the main inventory; only the portion that cannot fit stays on
+        //the cursor and is dropped by the server
+        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(cursor);
+        player.setItemOnCursor(leftover.isEmpty() ? new ItemStack(Material.AIR) : leftover.values().iterator().next());
+    }
+
+    //whether the main inventory can place the dropped stack in one of its 36 slots: a free slot,
+    //or an existing stack of the same material with room to merge (mirrors the server's
+    //cancel-reversal, which only ever returns a cancelled drop to the main inventory)
+    private static boolean mainInventoryAccepts(Player player, ItemStack dropped)
+    {
+        for (int i = 0; i < 36; i++)
+        {
+            ItemStack item = player.getInventory().getItem(i);
+            if (item == null || item.getType() == Material.AIR) return true;
+            if (item.isSimilar(dropped) && item.getAmount() < item.getMaxStackSize()) return true;
+        }
+        return false;
     }
 
     //when a player teleports via a portal
