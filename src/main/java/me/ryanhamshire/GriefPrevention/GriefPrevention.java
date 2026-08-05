@@ -355,6 +355,9 @@ public class GriefPrevention extends JavaPlugin
         //register for events
         PluginManager pluginManager = this.getServer().getPluginManager();
 
+        //claim tool events
+        pluginManager.registerEvents(new ClaimToolDispatcher(this.dataStore, this), this);
+
         //player events
         playerEventHandler = new PlayerEventHandler(this.dataStore, this);
         pluginManager.registerEvents(playerEventHandler, this);
