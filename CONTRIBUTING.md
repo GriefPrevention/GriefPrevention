@@ -15,3 +15,7 @@ Thank you for considering contributing to GriefPrevention! This document outline
 - Test your pull request; it should not break any existing functionality.
 
 Thank you for your contribution!
+
+## AI
+
+AI must follow all instructions in `AGENTS.md`
