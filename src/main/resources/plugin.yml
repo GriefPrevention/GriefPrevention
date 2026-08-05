@@ -20,7 +20,7 @@ commands:
       permission: griefprevention.abandonallclaims
     trust:
       description: Grants a player full access to your claim(s).
-      usage: /<command> <player>  Grants a player permission to build.  See also /untrust, /containertrust, /accesstrust, and /permissiontrust.
+      usage: /<command> <player>  Grants a player permission to build.  See also /untrust, /containertrust, /accesstrust, and /managetrust.
       aliases: tr
       permission: griefprevention.claims
     untrust:
@@ -38,10 +38,10 @@ commands:
       usage: /<command> <player>.  Grants a player access to your bed, buttons, and levers.
       aliases: at
       permission: griefprevention.claims
-    permissiontrust:
+    managetrust:
       description: Grants a player permission to manage the claim trustlist.
       usage: /<command> <player>.  Permits a player to /trust and /untrust players in the claim.
-      aliases: [pt, managetrust]
+      aliases: [permissiontrust]
       permission: griefprevention.claims
     subdivideclaims:
       description: Switches the shovel tool to subdivision mode, used to subdivide your claims.
