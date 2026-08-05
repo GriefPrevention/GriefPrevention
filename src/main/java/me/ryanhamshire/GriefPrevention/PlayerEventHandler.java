@@ -1926,6 +1926,7 @@ class PlayerEventHandler implements Listener
 
                 //figure out what the coords of his new claim would be
                 int newx1, newx2, newz1, newz2, newy1, newy2;
+                Claim resizingClaim = playerData.claimResizing;
                 if (playerData.lastShovelLocation.getBlockX() == playerData.claimResizing.getLesserBoundaryCorner().getBlockX())
                 {
                     newx1 = clickedBlock.getX();
@@ -1948,8 +1949,29 @@ class PlayerEventHandler implements Listener
                     newz2 = clickedBlock.getZ();
                 }
 
-                newy1 = playerData.claimResizing.getLesserBoundaryCorner().getBlockY();
-                newy2 = clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                if (instance.getClaimGeometryRegistry().getDefaultGeometry().getKey().equals(resizingClaim.getGeometryKey()))
+                {
+                    newy1 = resizingClaim.getLesserBoundaryCorner().getBlockY();
+                    newy2 = clickedBlock.getY() - instance.config_claims_claimsExtendIntoGroundDistance;
+                }
+                else
+                {
+                    int currentMinY = resizingClaim.getLesserBoundaryCorner().getBlockY();
+                    int currentMaxY = resizingClaim.getGreaterBoundaryCorner().getBlockY();
+                    int startY = playerData.lastShovelLocation.getBlockY();
+
+                    // Move whichever vertical boundary is closest to the corner the player started from.
+                    if (Math.abs(startY - currentMinY) <= Math.abs(startY - currentMaxY))
+                    {
+                        newy1 = clickedBlock.getY();
+                        newy2 = currentMaxY;
+                    }
+                    else
+                    {
+                        newy1 = currentMinY;
+                        newy2 = clickedBlock.getY();
+                    }
+                }
 
                 this.dataStore.resizeClaimWithChecks(player, playerData, newx1, newx2, newy1, newy2, newz1, newz2);
 

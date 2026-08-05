@@ -20,6 +20,8 @@ package me.ryanhamshire.GriefPrevention;
 
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
+import com.griefprevention.api.claim.ClaimCreationCustomizer;
+import com.griefprevention.api.claim.ClaimGeometry;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
@@ -38,6 +40,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -734,14 +737,9 @@ public abstract class DataStore
                 // If ignoring subclaims, claim is a match.
                 if (ignoreSubclaims) return claim;
 
-                //when we find a top level claim, if the location is in one of its subdivisions,
-                //return the SUBDIVISION, not the top level claim
-                for (int j = 0; j < claim.children.size(); j++)
-                {
-                    Claim subdivision = claim.children.get(j);
-                    if (subdivision.inDataStore && subdivision.contains(location, ignoreHeight, false))
-                        return subdivision;
-                }
+                // For stacked/overlapping subdivisions, prefer the most specific matching subdivision.
+                Claim subdivision = getBestSubdivisionMatch(claim, location, ignoreHeight);
+                if (subdivision != null) return subdivision;
 
                 return claim;
             }
@@ -749,6 +747,59 @@ public abstract class DataStore
 
         //if no claim found, return null
         return null;
+    }
+
+    private @Nullable Claim getBestSubdivisionMatch(
+            @NotNull Claim topLevelClaim,
+            @NotNull Location location,
+            boolean ignoreHeight)
+    {
+        Claim best = null;
+        for (Claim subdivision : topLevelClaim.children)
+        {
+            if (!subdivision.inDataStore || !subdivision.contains(location, ignoreHeight, false))
+            {
+                continue;
+            }
+
+            best = chooseMoreSpecificSubdivision(best, subdivision, location);
+        }
+
+        return best;
+    }
+
+    private @NotNull Claim chooseMoreSpecificSubdivision(
+            @Nullable Claim current,
+            @NotNull Claim candidate,
+            @NotNull Location location)
+    {
+        if (current == null)
+        {
+            return candidate;
+        }
+
+        boolean currentExact = current.contains(location, false, false);
+        boolean candidateExact = candidate.contains(location, false, false);
+        if (candidateExact != currentExact)
+        {
+            return candidateExact ? candidate : current;
+        }
+
+        int currentArea = current.getArea();
+        int candidateArea = candidate.getArea();
+        if (candidateArea != currentArea)
+        {
+            return candidateArea < currentArea ? candidate : current;
+        }
+
+        int currentSpan = Math.max(0, current.getLookupBounds().getMaxY() - current.getLookupBounds().getMinY());
+        int candidateSpan = Math.max(0, candidate.getLookupBounds().getMaxY() - candidate.getLookupBounds().getMinY());
+        if (candidateSpan != currentSpan)
+        {
+            return candidateSpan < currentSpan ? candidate : current;
+        }
+
+        return current;
     }
 
     //finds a claim by ID
@@ -817,15 +868,20 @@ public abstract class DataStore
     }
 
     public static ArrayList<Long> getChunkHashes(Claim claim) {
-        return getChunkHashes(claim.getLesserBoundaryCorner(), claim.getGreaterBoundaryCorner());
+        return getChunkHashes(claim.getLookupBounds());
     }
 
     public static ArrayList<Long> getChunkHashes(Location min, Location max) {
+        return getChunkHashes(new BoundingBox(min, max));
+    }
+
+    public static ArrayList<Long> getChunkHashes(@NotNull BoundingBox bounds)
+    {
         ArrayList<Long> hashes = new ArrayList<>();
-        int smallX = min.getBlockX() >> 4;
-        int smallZ = min.getBlockZ() >> 4;
-        int largeX = max.getBlockX() >> 4;
-        int largeZ = max.getBlockZ() >> 4;
+        int smallX = bounds.getMinX() >> 4;
+        int smallZ = bounds.getMinZ() >> 4;
+        int largeX = bounds.getMaxX() >> 4;
+        int largeZ = bounds.getMaxZ() >> 4;
 
         for (int x = smallX; x <= largeX; x++)
         {
@@ -843,7 +899,7 @@ public abstract class DataStore
      */
     synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer)
     {
-        return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, false);
+        return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, false, null);
     }
 
     //creates a claim.
@@ -858,6 +914,29 @@ public abstract class DataStore
     //does NOT check minimum claim size constraints
     //does NOT visualize the new claim for any players
     synchronized public CreateClaimResult createClaim(World world, int x1, int x2, int y1, int y2, int z1, int z2, UUID ownerID, Claim parent, Long id, Player creatingPlayer, boolean dryRun)
+    {
+        return createClaim(world, x1, x2, y1, y2, z1, z2, ownerID, parent, id, creatingPlayer, dryRun, null);
+    }
+
+    /**
+     * Creates a claim and allows addons to customize it before validation.
+     *
+     * @param customizer optional claim customizer applied before parent and overlap checks
+     */
+    synchronized public CreateClaimResult createClaim(
+            World world,
+            int x1,
+            int x2,
+            int y1,
+            int y2,
+            int z1,
+            int z2,
+            UUID ownerID,
+            Claim parent,
+            Long id,
+            Player creatingPlayer,
+            boolean dryRun,
+            ClaimCreationCustomizer customizer)
     {
         CreateClaimResult result = new CreateClaimResult();
 
@@ -901,32 +980,14 @@ public abstract class DataStore
             bigz = z1;
         }
 
-        if (parent != null)
-        {
-            Location lesser = parent.getLesserBoundaryCorner();
-            Location greater = parent.getGreaterBoundaryCorner();
-            if (smallx < lesser.getX() || smallz < lesser.getZ() || bigx > greater.getX() || bigz > greater.getZ())
-            {
-                result.succeeded = false;
-                result.claim = parent;
-                return result;
-            }
-            smally = sanitizeClaimDepth(parent, smally);
-        }
-
-        //claims can't be made outside the world border
-        final Location smallerBoundaryCorner = new Location(world, smallx, smally, smallz);
-        final Location greaterBoundaryCorner = new Location(world, bigx, bigy, bigz);
-        if(!world.getWorldBorder().isInside(smallerBoundaryCorner) || !world.getWorldBorder().isInside(greaterBoundaryCorner)){
-            result.succeeded = false;
-            return result;
-        }
-
         //creative mode claims always go to bedrock
         if (GriefPrevention.instance.config_claims_worldModes.get(world) == ClaimsMode.Creative)
         {
             smally = world.getMinHeight();
         }
+
+        Location smallerBoundaryCorner = new Location(world, smallx, smally, smallz);
+        Location greaterBoundaryCorner = new Location(world, bigx, bigy, bigz);
 
         //create a new claim instance (but don't save it, yet)
         Claim newClaim = new Claim(
@@ -940,6 +1001,38 @@ public abstract class DataStore
                 id);
 
         newClaim.parent = parent;
+
+        if (customizer != null)
+        {
+            customizer.customize(newClaim);
+        }
+
+        if (parent != null)
+        {
+            if (GriefPrevention.instance.getClaimGeometryRegistry().getDefaultGeometry().getKey().equals(newClaim.getGeometryKey()))
+            {
+                int sanitizedDepth = sanitizeClaimDepth(parent, newClaim.getLesserBoundaryCorner().getBlockY());
+                newClaim.lesserBoundaryCorner.setY(sanitizedDepth);
+                newClaim.greaterBoundaryCorner.setY(Math.max(newClaim.getGreaterBoundaryCorner().getBlockY(), sanitizedDepth));
+            }
+
+            ClaimGeometry parentGeometry = parent.getGeometry();
+            if (!parentGeometry.contains(parent, newClaim.getLookupBounds(), true))
+            {
+                result.succeeded = false;
+                result.claim = parent;
+                return result;
+            }
+        }
+
+        //claims can't be made outside the world border
+        BoundingBox lookupBounds = newClaim.getLookupBounds();
+        final Location lookupMinCorner = new Location(world, lookupBounds.getMinX(), lookupBounds.getMinY(), lookupBounds.getMinZ());
+        final Location lookupMaxCorner = new Location(world, lookupBounds.getMaxX(), lookupBounds.getMaxY(), lookupBounds.getMaxZ());
+        if(!world.getWorldBorder().isInside(lookupMinCorner) || !world.getWorldBorder().isInside(lookupMaxCorner)){
+            result.succeeded = false;
+            return result;
+        }
 
         //ensure this new claim won't overlap any existing claims
         ArrayList<Claim> claimsToCheck;
@@ -1075,11 +1168,18 @@ public abstract class DataStore
     private int sanitizeClaimDepth(Claim claim, int newDepth) {
         if (claim.parent != null) claim = claim.parent;
 
-        // Get the old depth including the depth of the lowest subdivision.
-        int oldDepth = Math.min(
-                claim.getLesserBoundaryCorner().getBlockY(),
-                claim.children.stream().mapToInt(child -> child.getLesserBoundaryCorner().getBlockY())
-                        .min().orElse(Integer.MAX_VALUE));
+        int oldDepth = claim.getLesserBoundaryCorner().getBlockY();
+        if (usesDefaultDepthPolicy(claim))
+        {
+            // Legacy rectangular claims share depth with rectangular subdivisions only.
+            oldDepth = Math.min(
+                    oldDepth,
+                    claim.children.stream()
+                            .filter(this::usesDefaultDepthPolicy)
+                            .mapToInt(child -> child.getLesserBoundaryCorner().getBlockY())
+                            .min()
+                            .orElse(Integer.MAX_VALUE));
+        }
 
         // Use the lowest of the old and new depths.
         newDepth = Math.min(newDepth, oldDepth);
@@ -1103,11 +1203,18 @@ public abstract class DataStore
 
         final int depth = sanitizeClaimDepth(claim, newDepth);
 
-        Stream.concat(Stream.of(claim), claim.children.stream()).forEach(localClaim -> {
-            localClaim.lesserBoundaryCorner.setY(depth);
-            localClaim.greaterBoundaryCorner.setY(Math.max(localClaim.greaterBoundaryCorner.getBlockY(), depth));
-            this.saveClaim(localClaim);
-        });
+        Stream.concat(Stream.of(claim), claim.children.stream())
+                .filter(this::usesDefaultDepthPolicy)
+                .forEach(localClaim -> {
+                    localClaim.lesserBoundaryCorner.setY(depth);
+                    localClaim.greaterBoundaryCorner.setY(Math.max(localClaim.greaterBoundaryCorner.getBlockY(), depth));
+                    this.saveClaim(localClaim);
+                });
+    }
+
+    private boolean usesDefaultDepthPolicy(@NotNull Claim claim)
+    {
+        return GriefPrevention.instance.getClaimGeometryRegistry().getDefaultGeometry().getKey().equals(claim.getGeometryKey());
     }
 
     //deletes all claims owned by a player
@@ -1133,7 +1240,25 @@ public abstract class DataStore
     synchronized public CreateClaimResult resizeClaim(Claim claim, int newx1, int newx2, int newy1, int newy2, int newz1, int newz2, Player resizingPlayer)
     {
         //try to create this new claim, ignoring the original when checking for overlap
-        CreateClaimResult result = this.createClaim(claim.getLesserBoundaryCorner().getWorld(), newx1, newx2, newy1, newy2, newz1, newz2, claim.ownerID, claim.parent, claim.id, resizingPlayer, true);
+        CreateClaimResult result = this.createClaim(
+                claim.getLesserBoundaryCorner().getWorld(),
+                newx1,
+                newx2,
+                newy1,
+                newy2,
+                newz1,
+                newz2,
+                claim.ownerID,
+                claim.parent,
+                claim.id,
+                resizingPlayer,
+                true,
+                resized -> {
+                    // Preserve geometry/metadata during resize dry-run so parent-depth and overlap checks
+                    // use the claim's actual behavior (not default rectangular assumptions).
+                    resized.setGeometryKey(claim.getGeometryKey());
+                    resized.getMetadata().setAll(claim.getMetadata());
+                });
 
         //if succeeded
         if (result.succeeded)
@@ -1142,9 +1267,17 @@ public abstract class DataStore
             // copy the boundary from the claim created in the dry run of createClaim() to our existing claim
             claim.lesserBoundaryCorner = result.claim.lesserBoundaryCorner;
             claim.greaterBoundaryCorner = result.claim.greaterBoundaryCorner;
-            // Sanitize claim depth, expanding parent down to the lowest subdivision and subdivisions down to parent.
-            // Also saves affected claims.
-            setNewDepth(claim, claim.getLesserBoundaryCorner().getBlockY());
+            if (GriefPrevention.instance.getClaimGeometryRegistry().getDefaultGeometry().getKey().equals(claim.getGeometryKey()))
+            {
+                // Legacy rectangular claims share a common depth between parent and subdivisions.
+                // Sanitize and propagate that depth across the claim tree.
+                setNewDepth(claim, claim.getLesserBoundaryCorner().getBlockY());
+            }
+            else
+            {
+                // Non-default geometries own their vertical bounds.
+                this.saveClaim(claim);
+            }
             result.claim = claim;
             addToChunkClaimMap(claim); // add the new boundary to the chunk cache
         }

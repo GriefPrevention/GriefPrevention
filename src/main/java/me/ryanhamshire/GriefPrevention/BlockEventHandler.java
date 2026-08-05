@@ -591,7 +591,7 @@ public class BlockEventHandler implements Listener
         if (pistonClaim != null)
         {
             // If blocks are all inside the same claim as the piston, allow.
-            if (new BoundingBox(pistonClaim).contains(movedBlocks)) return;
+            if (pistonClaim.getLookupBounds().contains(movedBlocks)) return;
 
             /*
              * In claims-only mode, all moved blocks must be inside of the owning claim.
@@ -658,7 +658,7 @@ public class BlockEventHandler implements Listener
 
         for (Claim claim : chunkClaims)
         {
-            BoundingBox claimBoundingBox = new BoundingBox(claim);
+            BoundingBox claimBoundingBox = claim.getLookupBounds();
 
             // Ensure claim intersects with block bounding box.
             if (!claimBoundingBox.intersects(boundingBox)) continue;
