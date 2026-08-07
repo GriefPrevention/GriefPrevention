@@ -7,12 +7,13 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.HorseInventory;
 import org.bukkit.inventory.ItemStack;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -26,17 +27,28 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("null")
-class PlayerInteractEntityEventHandlerTest
+public class PlayerInteractEntityEventHandlerTest
 {
-    @BeforeEach
-    void beforeEach()
+    private static final UUID PLAYER_ID = UUID.fromString("fc70e25f-f8da-4f33-bb9c-ff0db586cd30");
+
+    @BeforeAll
+    static void beforeAll()
     {
         Server server = ServerMocks.newServer();
         Bukkit.setServer(server);
+
+        // Force initialization of InventoryType before tests run.
+        // In 1.21.10+, InventoryType depends on MenuType which requires registry lookups.
+        // Initializing here ensures this happens with proper mocks, not mid-stubbing.
+        InventoryType.values();
+
+        // Touch class to load material list.
+        //noinspection ResultOfMethodCallIgnored
+        PlayerEventHandler.class.getName();
     }
 
-    @AfterEach
-    void afterEach()
+    @AfterAll
+    static void afterAll()
     {
         GriefPrevention.instance = null;
         ServerMocks.unsetBukkitServer();
@@ -45,10 +57,9 @@ class PlayerInteractEntityEventHandlerTest
     @Test
     void interactingWithUntamedHorseDoesNotRepairOrClearThirdPartyInventory()
     {
-        UUID playerId = UUID.fromString("fc70e25f-f8da-4f33-bb9c-ff0db586cd30");
         DataStore dataStore = mock(DataStore.class);
         when(dataStore.loadBannedWords()).thenReturn(Collections.emptyList());
-        when(dataStore.getPlayerData(playerId)).thenReturn(new PlayerData());
+        when(dataStore.getPlayerData(PLAYER_ID)).thenReturn(new PlayerData());
 
         GriefPrevention plugin = mock(GriefPrevention.class);
         plugin.dataStore = dataStore;
@@ -57,14 +68,15 @@ class PlayerInteractEntityEventHandlerTest
         plugin.config_claims_commandsRequiringAccessTrust = new ArrayList<>();
         plugin.config_spam_monitorSlashCommands = new ArrayList<>();
         plugin.config_eavesdrop_whisperCommands = new ArrayList<>();
-        when(plugin.getLogger()).thenReturn(mock(Logger.class));
+        Logger logger = mock(Logger.class);
+        when(plugin.getLogger()).thenReturn(logger);
         GriefPrevention.instance = plugin;
 
         World world = mock(World.class);
         when(plugin.claimsEnabledForWorld(world)).thenReturn(true);
 
         Player player = mock(Player.class);
-        when(player.getUniqueId()).thenReturn(playerId);
+        when(player.getUniqueId()).thenReturn(PLAYER_ID);
         when(plugin.getItemInHand(player, EquipmentSlot.HAND)).thenReturn(new ItemStack(Material.AIR));
 
         HorseInventory inventory = mock(HorseInventory.class);
