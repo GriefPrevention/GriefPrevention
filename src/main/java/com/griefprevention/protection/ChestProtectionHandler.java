@@ -49,6 +49,48 @@ public final class ChestProtectionHandler
         connectDoubleChest(chest, block, allowedChest, allowedBlock, allowedFace, player);
     }
 
+    // Returns the side where the chest is currently connected.
+    private static @Nullable BlockFace getConnectedFace(Chest chest)
+    {
+        if (chest.getType() == Chest.Type.LEFT) return rotateClockwise(chest.getFacing());
+        if (chest.getType() == Chest.Type.RIGHT) return rotateCounterClockwise(chest.getFacing());
+        return null;
+    }
+
+    // Rotates a horizontal direction clockwise.
+    private static BlockFace rotateClockwise(BlockFace face)
+    {
+        if (face == BlockFace.NORTH) return BlockFace.EAST;
+        if (face == BlockFace.EAST) return BlockFace.SOUTH;
+        if (face == BlockFace.SOUTH) return BlockFace.WEST;
+        if (face == BlockFace.WEST) return BlockFace.NORTH;
+        return face;
+    }
+
+    // Rotates a horizontal direction counter-clockwise.
+    private static BlockFace rotateCounterClockwise(BlockFace face)
+    {
+        if (face == BlockFace.NORTH) return BlockFace.WEST;
+        if (face == BlockFace.WEST) return BlockFace.SOUTH;
+        if (face == BlockFace.SOUTH) return BlockFace.EAST;
+        if (face == BlockFace.EAST) return BlockFace.NORTH;
+        return face;
+    }
+
+    // Splits a double chest back into two single chests.
+    private static void splitDoubleChest(Block placedBlock, Chest placedChest, Block connectedBlock, Chest connectedChest,
+                                         Player player)
+    {
+        placedChest.setType(Chest.Type.SINGLE);
+        placedBlock.setBlockData(placedChest);
+
+        connectedChest.setType(Chest.Type.SINGLE);
+        connectedBlock.setBlockData(connectedChest);
+
+        player.sendBlockChange(placedBlock.getLocation(), placedChest);
+        player.sendBlockChange(connectedBlock.getLocation(), connectedChest);
+    }
+
     // Checks whether the opposite side of the denied connection has an allowed,
     // naturally connectable single chest.
     private static @Nullable BlockFace findAllowedSingleChestConnectionFace(DataStore dataStore, Claim claim, Block block,
@@ -72,20 +114,6 @@ public final class ChestProtectionHandler
         if (!ProtectionHelper.sameClaimOwner(claim, relativeClaim)) return null;
 
         return face;
-    }
-
-    // Splits a double chest back into two single chests.
-    private static void splitDoubleChest(Block placedBlock, Chest placedChest, Block connectedBlock, Chest connectedChest,
-                                         Player player)
-    {
-        placedChest.setType(Chest.Type.SINGLE);
-        placedBlock.setBlockData(placedChest);
-
-        connectedChest.setType(Chest.Type.SINGLE);
-        connectedBlock.setBlockData(connectedChest);
-
-        player.sendBlockChange(placedBlock.getLocation(), placedChest);
-        player.sendBlockChange(connectedBlock.getLocation(), connectedChest);
     }
 
     // Checks whether two chests could naturally form a double chest.
@@ -135,13 +163,6 @@ public final class ChestProtectionHandler
         player.sendBlockChange(relativeBlock.getLocation(), relativeChest);
     }
 
-    // Returns the side where the chest is currently connected.
-    private static @Nullable BlockFace getConnectedFace(Chest chest)
-    {
-        if (chest.getType() == Chest.Type.LEFT) return rotateClockwise(chest.getFacing());
-        if (chest.getType() == Chest.Type.RIGHT) return rotateCounterClockwise(chest.getFacing());
-        return null;
-    }
 
     // Converts a connected side into the correct chest half type.
     private static Chest.Type getChestTypeForConnection(BlockFace facing, BlockFace connectedFace)
@@ -151,23 +172,4 @@ public final class ChestProtectionHandler
         return Chest.Type.SINGLE;
     }
 
-    // Rotates a horizontal direction clockwise.
-    private static BlockFace rotateClockwise(BlockFace face)
-    {
-        if (face == BlockFace.NORTH) return BlockFace.EAST;
-        if (face == BlockFace.EAST) return BlockFace.SOUTH;
-        if (face == BlockFace.SOUTH) return BlockFace.WEST;
-        if (face == BlockFace.WEST) return BlockFace.NORTH;
-        return face;
-    }
-
-    // Rotates a horizontal direction counter-clockwise.
-    private static BlockFace rotateCounterClockwise(BlockFace face)
-    {
-        if (face == BlockFace.NORTH) return BlockFace.WEST;
-        if (face == BlockFace.WEST) return BlockFace.SOUTH;
-        if (face == BlockFace.SOUTH) return BlockFace.EAST;
-        if (face == BlockFace.EAST) return BlockFace.NORTH;
-        return face;
-    }
 }
