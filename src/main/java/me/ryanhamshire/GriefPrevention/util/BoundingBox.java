@@ -176,13 +176,19 @@ public class BoundingBox implements Cloneable
 
     /**
      * Construct a new bounding box representing the given claim.
+     * Delegates to {@link Claim#getBoundingBox()} so claim-specific logic (3D vs 2D, addon overrides) lives on Claim.
      *
      * @param claim the claim
      */
     public BoundingBox(@NotNull Claim claim)
     {
-        this(claim.getLesserBoundaryCorner(), claim.getGreaterBoundaryCorner(), false);
-        this.maxY = Objects.requireNonNull(claim.getLesserBoundaryCorner().getWorld()).getMaxHeight();
+        BoundingBox from = claim.getBoundingBox();
+        this.minX = from.minX;
+        this.minY = from.minY;
+        this.minZ = from.minZ;
+        this.maxX = from.maxX;
+        this.maxY = from.maxY;
+        this.maxZ = from.maxZ;
     }
 
     /**

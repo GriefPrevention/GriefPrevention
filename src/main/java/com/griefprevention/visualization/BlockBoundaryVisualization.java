@@ -55,6 +55,12 @@ public abstract class BlockBoundaryVisualization extends BoundaryVisualization
                 visualizeFrom.add(displayZoneRadius, displayZoneRadius, displayZoneRadius));
     }
 
+    /** Distance between individual side elements along edges. Used by subclasses for custom draw logic (e.g. 3D). */
+    protected final int getStep()
+    {
+        return step;
+    }
+
     @Override
     protected void apply(@NotNull Player player, @NotNull PlayerData playerData) {
         super.apply(player, playerData);
