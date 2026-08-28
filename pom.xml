@@ -21,6 +21,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Default empty argument line to prevent Surefire config causing crashes if no other JVM args are set. -->
+        <argLine/>
     </properties>
 
     <issueManagement>
