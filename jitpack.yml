@@ -1,4 +1,4 @@
 before_install:
-  - sdk install java 21.0.3-tem
-  - sdk use java 21.0.3-tem
+  - sdk install java 25-ms
+  - sdk use java 25-ms
   - mvn wrapper:wrapper -Dmaven=3.6.3
