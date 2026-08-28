@@ -51,6 +51,7 @@ import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Mule;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.SulfurCube;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.entity.minecart.PoweredMinecart;
@@ -1252,8 +1253,8 @@ class PlayerEventHandler implements Listener
             }
         }
 
-        //don't allow interaction with item frames or armor stands in claimed areas without build permission
-        if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging)
+        //don't allow interaction with item frames, armor stands, or sulfur cubes in claimed areas without build permission
+        if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging || entity instanceof SulfurCube)
         {
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
             if (claim == null) return;
