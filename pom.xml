@@ -105,7 +105,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <!-- Add Mockito agent and retain existing JVM args, if any. Experimental required for JDK 25-->
-                    <argLine>>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Dnet.bytebuddy.experimental=true</argLine>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Dnet.bytebuddy.experimental=true</argLine>
                     <!-- GitHub Actions offers 2 cores for Linux. -->
                     <forkCount>2</forkCount>
                     <!--
