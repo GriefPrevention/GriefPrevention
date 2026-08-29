@@ -21,8 +21,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- Default empty argument line to prevent Surefire config causing crashes if no other JVM args are set. -->
-        <argLine/>
     </properties>
 
     <issueManagement>
@@ -119,7 +117,7 @@
                     <version>3.1.2</version>
                     <!-- Needed for JDK 25 currently-->
                     <configuration>
-                        <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar} -Xshare:off -Dnet.bytebuddy.experimental=true</argLine>
+                        <argLine>-Xshare:off -Dnet.bytebuddy.experimental=true</argLine>
                     </configuration>
                 </plugin>
                 <plugin>
