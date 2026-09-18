@@ -599,9 +599,16 @@ public class EntityDamageHandler implements Listener
         // If the area is not claimed, do not handle.
         if (claim == null) return false;
 
-        // If attacker isn't a player, cancel.
+        // If attacker isn't a player, cancel unless an armor stand is shot by a dispenser in the same claim.
         if (attacker == null)
         {
+            if (entityType == EntityType.ARMOR_STAND
+                    && event.damager() instanceof Projectile projectile
+                    && EntityEventHandler.isBlockSourceInClaim(projectile.getShooter(), claim))
+            {
+                return false;
+            }
+
             event.setCancelled(true);
             return true;
         }
