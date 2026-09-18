@@ -599,10 +599,11 @@ public class EntityDamageHandler implements Listener
         // If the area is not claimed, do not handle.
         if (claim == null) return false;
 
-        // If attacker isn't a player, cancel unless an armor stand is shot by a dispenser in the same claim.
+        // If attacker isn't a player, cancel unless a dispenser in the claim fired the projectile.
+        // Villagers are excluded; killing a claimed villager is grief rather than a farm.
         if (attacker == null)
         {
-            if (entityType == EntityType.ARMOR_STAND
+            if (entityType != EntityType.VILLAGER
                     && event.damager() instanceof Projectile projectile
                     && EntityEventHandler.isBlockSourceInClaim(projectile.getShooter(), claim))
             {

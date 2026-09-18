@@ -1135,7 +1135,7 @@ public class BlockEventHandler implements Listener
 
     //Stop projectiles from destroying blocks that don't fire a proper event
     @EventHandler(ignoreCancelled = true)
-    void chorusFlower(ProjectileHitEvent event)
+    public void chorusFlower(ProjectileHitEvent event)
     {
         //don't track in worlds where claims are not enabled
         if (!GriefPrevention.instance.claimsEnabledForWorld(event.getEntity().getWorld())) return;
