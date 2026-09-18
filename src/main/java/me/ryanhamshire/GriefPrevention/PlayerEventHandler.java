@@ -1163,7 +1163,7 @@ class PlayerEventHandler implements Listener
         Player player = event.getPlayer();
         PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
 
-        Claim claim = this.dataStore.getClaimAt(player.getLocation(), false, playerData.lastClaim);
+        Claim claim = this.dataStore.getClaimAt(event.getRaid().getLocation(), false, playerData.lastClaim);
         if (claim == null)
             return;
 
