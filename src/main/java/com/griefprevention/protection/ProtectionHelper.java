@@ -19,6 +19,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -105,4 +106,14 @@ public final class ProtectionHelper
         return cancel;
     }
 
+    // Compares claim ownership while keeping wilderness and admin claims separate.
+    public static boolean sameClaimOwner(@Nullable Claim first, @Nullable Claim second)
+    {
+        // Important: wilderness and admin claims must not be treated as the same
+        // just because both may have a null owner ID.
+        if (first == null || second == null)
+            return first == second;
+
+        return Objects.equals(first.getOwnerID(), second.getOwnerID());
+    }
 }
