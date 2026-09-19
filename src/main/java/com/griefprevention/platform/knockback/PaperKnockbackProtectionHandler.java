@@ -61,6 +61,12 @@ public class PaperKnockbackProtectionHandler extends KnockbackProtectionHandler
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onEntityPushedByEntityAttack(@NotNull EntityPushedByEntityAttackEvent event)
     {
+        // EntityKnockbackByEntityEvent extends this event, and the whole hierarchy shares the
+        // single HandlerList declared by EntityKnockbackEvent, so both listeners in this class
+        // are invoked for every EntityKnockbackByEntityEvent. Let the more specific handler
+        // above own those instead of processing them twice.
+        if (event instanceof EntityKnockbackByEntityEvent) return;
+
         Entity pusher = event.getPushedBy();
 
         Player attacker;
