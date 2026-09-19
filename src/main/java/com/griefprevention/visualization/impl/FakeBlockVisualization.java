@@ -10,7 +10,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Lightable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -41,32 +40,14 @@ public class FakeBlockVisualization extends BlockBoundaryVisualization
     @Override
     protected @NotNull Consumer<@NotNull IntVector> addCornerElements(@NotNull Boundary boundary)
     {
-        return addBlockElement(switch (boundary.type())
-        {
-            case SUBDIVISION -> Material.IRON_BLOCK.createBlockData();
-            case INITIALIZE_ZONE -> Material.DIAMOND_BLOCK.createBlockData();
-            case CONFLICT_ZONE -> {
-                BlockData fakeData = Material.REDSTONE_ORE.createBlockData();
-                ((Lightable) fakeData).setLit(true);
-                yield fakeData;
-            }
-            default -> Material.GLOWSTONE.createBlockData();
-        });
+        return addBlockElement(boundary.type().getBlockRenderer().createCornerBlockData(boundary));
     }
 
 
     @Override
     protected @NotNull Consumer<@NotNull IntVector> addSideElements(@NotNull Boundary boundary)
     {
-        // Determine BlockData from boundary type to cache for reuse in function.
-        return addBlockElement(switch (boundary.type())
-        {
-            case ADMIN_CLAIM -> Material.PUMPKIN.createBlockData();
-            case SUBDIVISION -> Material.WHITE_WOOL.createBlockData();
-            case INITIALIZE_ZONE -> Material.DIAMOND_BLOCK.createBlockData();
-            case CONFLICT_ZONE -> Material.NETHERRACK.createBlockData();
-            default -> Material.GOLD_BLOCK.createBlockData();
-        });
+        return addBlockElement(boundary.type().getBlockRenderer().createSideBlockData(boundary));
     }
 
     /**
