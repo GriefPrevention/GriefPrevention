@@ -320,7 +320,8 @@ public class EntityDamageHandler implements Listener
             @Nullable Player attacker,
             @NotNull Player damaged)
     {
-        if (!(event.damager() instanceof AreaEffectCloud)) return false;
+        if (!(event.damager() instanceof AreaEffectCloud cloud)) return false;
+        if (!(cloud.getSource() instanceof Player)) return false;
 
         PlayerData damagedData = dataStore.getPlayerData(damaged.getUniqueId());
 
