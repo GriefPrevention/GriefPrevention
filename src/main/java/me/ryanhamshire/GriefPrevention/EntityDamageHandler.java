@@ -35,6 +35,7 @@ import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.persistence.PersistentDataType;
@@ -98,6 +99,28 @@ public class EntityDamageHandler implements Listener
         else
             event.getEntity().getPersistentDataContainer().remove(LURED_BY_PLAYER);
 
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    public void onEntityTargetLivingEntity(@NotNull EntityTargetLivingEntityEvent event)
+    {
+        if (event.getReason() != EntityTargetEvent.TargetReason.OWNER_ATTACKED_TARGET) return;
+        if (!(event.getEntity() instanceof Tameable tameable) || !tameable.isTamed()) return;
+        if (!(tameable.getOwner() instanceof Player owner)) return;
+
+        LivingEntity target = event.getTarget();
+        if (!(target instanceof Creature) || !instance.config_claims_protectCreatures || isHostile(target)) return;
+        if (target instanceof Horse && !instance.config_claims_protectHorses) return;
+        if (target instanceof Donkey && !instance.config_claims_protectDonkeys) return;
+        if (target instanceof Mule && !instance.config_claims_protectDonkeys) return;
+        if (target instanceof Llama && !instance.config_claims_protectLlamas) return;
+        if (!instance.claimsEnabledForWorld(target.getWorld())) return;
+
+        Claim claim = this.dataStore.getClaimAt(target.getLocation(), false, null);
+        if (claim == null) return;
+
+        if (claim.checkPermission(owner, ClaimPermission.Container, event) != null)
+            event.setCancelled(true);
     }
 
     //when an entity is damaged
