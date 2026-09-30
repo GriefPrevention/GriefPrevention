@@ -1907,12 +1907,10 @@ public class GriefPrevention extends JavaPlugin
                 return true;
             }
 
-            // If player has /ignoreclaims on, continue
-            // If admin claim, fail if this user is not an admin
-            // If not an admin claim, fail if this user is not the owner
-            if (!playerData.ignoreClaims && (claim.isAdminClaim() ? !player.hasPermission("griefprevention.adminclaims") : !player.getUniqueId().equals(claim.parent.ownerID)))
+            Supplier<String> errorMessage = claim.checkPermission(player, ClaimPermission.Edit, null);
+            if (errorMessage != null)
             {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.OnlyOwnersModifyClaims, claim.getOwnerName());
+                GriefPrevention.sendMessage(player, TextMode.Err, errorMessage.get());
                 return true;
             }
 
@@ -3168,6 +3166,11 @@ public class GriefPrevention extends JavaPlugin
             else
             {
                 errorMessage = claim.checkPermission(player, permissionLevel, null);
+                // Editors of a subdivision have owner-level control over its trust list.
+                if (errorMessage != null && claim.parent != null)
+                {
+                    errorMessage = claim.checkPermission(player, ClaimPermission.Edit, null);
+                }
             }
 
             //error message for trying to grant a permission the player doesn't have
