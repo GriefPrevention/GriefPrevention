@@ -104,6 +104,7 @@ public class EntityDamageHandler implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onEntityTargetLivingEntity(@NotNull EntityTargetLivingEntityEvent event)
     {
+        if (!instance.claimsEnabledForWorld(event.getEntity().getWorld())) return;
         if (event.getReason() != EntityTargetEvent.TargetReason.OWNER_ATTACKED_TARGET) return;
         if (!(event.getEntity() instanceof Tameable tameable) || !tameable.isTamed()) return;
         if (!(tameable.getOwner() instanceof Player petOwner)) return;
@@ -114,7 +115,6 @@ public class EntityDamageHandler implements Listener
         if (target instanceof Donkey && !instance.config_claims_protectDonkeys) return;
         if (target instanceof Mule && !instance.config_claims_protectDonkeys) return;
         if (target instanceof Llama && !instance.config_claims_protectLlamas) return;
-        if (!instance.claimsEnabledForWorld(target.getWorld())) return;
 
         Claim claim = this.dataStore.getClaimAt(target.getLocation(), false, null);
         if (claim == null) return;
