@@ -106,7 +106,7 @@ public class EntityDamageHandler implements Listener
     {
         if (event.getReason() != EntityTargetEvent.TargetReason.OWNER_ATTACKED_TARGET) return;
         if (!(event.getEntity() instanceof Tameable tameable) || !tameable.isTamed()) return;
-        if (!(tameable.getOwner() instanceof Player owner)) return;
+        if (!(tameable.getOwner() instanceof Player petOwner)) return;
 
         LivingEntity target = event.getTarget();
         if (!(target instanceof Creature) || !instance.config_claims_protectCreatures || isHostile(target)) return;
@@ -119,7 +119,7 @@ public class EntityDamageHandler implements Listener
         Claim claim = this.dataStore.getClaimAt(target.getLocation(), false, null);
         if (claim == null) return;
 
-        if (claim.checkPermission(owner, ClaimPermission.Container, event) != null)
+        if (claim.checkPermission(petOwner, ClaimPermission.Container, event) != null)
             event.setCancelled(true);
     }
 
