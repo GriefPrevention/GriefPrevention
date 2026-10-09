@@ -400,7 +400,7 @@ public abstract class DataStore
 
     synchronized public void changeClaimOwner(Claim claim, UUID newOwnerID)
     {
-        tryChangeClaimOwner(claim, newOwnerID);
+        tryChangeClaimOwner(claim, newOwnerID); //added to preserve existing API
     }
 
     synchronized boolean tryChangeClaimOwner(Claim claim, UUID newOwnerID)
