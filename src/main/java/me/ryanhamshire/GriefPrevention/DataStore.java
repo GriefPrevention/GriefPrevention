@@ -400,6 +400,11 @@ public abstract class DataStore
 
     synchronized public void changeClaimOwner(Claim claim, UUID newOwnerID)
     {
+        tryChangeClaimOwner(claim, newOwnerID); //added to preserve existing API
+    }
+
+    synchronized boolean tryChangeClaimOwner(Claim claim, UUID newOwnerID)
+    {
         //if it's a subdivision, throw an exception
         if (claim.parent != null)
         {
@@ -420,7 +425,7 @@ public abstract class DataStore
         Bukkit.getPluginManager().callEvent(event);
 
         //return if event is cancelled
-        if (event.isCancelled()) return;
+        if (event.isCancelled()) return false;
 
         //determine new owner
         PlayerData newOwnerData = null;
@@ -444,6 +449,8 @@ public abstract class DataStore
         {
             newOwnerData.getClaims().add(claim);
         }
+
+        return true;
     }
 
     //adds a claim to the datastore, making it an effective claim
