@@ -1,6 +1,9 @@
-package me.ryanhamshire.GriefPrevention;
+package com.griefprevention;
 
 import com.griefprevention.test.ServerMocks;
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.DataStore;
+import me.ryanhamshire.GriefPrevention.PlayerData;
 import me.ryanhamshire.GriefPrevention.events.ClaimTransferEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -55,13 +58,13 @@ public class DataStoreTest
         doReturn(newOwnerData).when(dataStore).getPlayerData(newOwner);
 
         listenToTransfer(false);
-        assertTrue(dataStore.tryChangeClaimOwner(claim, newOwner));
+        assertTrue(dataStore.changeClaimOwner(claim, newOwner));
         assertEquals(newOwner, claim.getOwnerID());
         assertTrue(newOwnerData.getClaims().contains(claim));
 
         claim = adminClaim();
         listenToTransfer(true);
-        assertFalse(dataStore.tryChangeClaimOwner(claim, newOwner));
+        assertFalse(dataStore.changeClaimOwner(claim, newOwner));
         assertNull(claim.getOwnerID());
     }
 

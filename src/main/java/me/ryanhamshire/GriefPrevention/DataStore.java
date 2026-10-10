@@ -382,12 +382,7 @@ public abstract class DataStore
         }
     }
 
-    synchronized public void changeClaimOwner(Claim claim, UUID newOwnerID)
-    {
-        tryChangeClaimOwner(claim, newOwnerID);
-    }
-
-    synchronized boolean tryChangeClaimOwner(Claim claim, UUID newOwnerID)
+    synchronized public boolean changeClaimOwner(Claim claim, UUID newOwnerID)
     {
         //if it's a subdivision, throw an exception
         if (claim.parent != null)
