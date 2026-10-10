@@ -148,7 +148,6 @@ public class DatabaseDataStore extends DataStore
 
             int groupBonusBlocks = results.getInt("bonusblocks");
 
-            this.permissionToBonusBlocksMap.put(groupName, groupBonusBlocks);
         }
 
         //load next claim number into memory
@@ -570,32 +569,6 @@ public class DatabaseDataStore extends DataStore
         catch (SQLException e)
         {
             GriefPrevention.AddLogEntry("Unable to set next claim ID to " + nextID + ".  Details:");
-            GriefPrevention.AddLogEntry(e.getMessage());
-        }
-    }
-
-    //updates the database with a group's bonus blocks
-    @Override
-    synchronized void saveGroupBonusBlocks(String groupName, int currentValue)
-    {
-        //group bonus blocks are stored in the player data table, with player name = $groupName
-        try (PreparedStatement deleteStmnt = this.databaseConnection.prepareStatement(SQL_DELETE_GROUP_DATA);
-             PreparedStatement insertStmnt = this.databaseConnection.prepareStatement(SQL_INSERT_PLAYER_DATA))
-        {
-            SimpleDateFormat sqlFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String dateString = sqlFormat.format(new Date());
-            deleteStmnt.setString(1, '$' + groupName);
-            deleteStmnt.executeUpdate();
-
-            insertStmnt.setString(1, '$' + groupName);
-            insertStmnt.setString(2, dateString);
-            insertStmnt.setInt(3, 0);
-            insertStmnt.setInt(4, currentValue);
-            insertStmnt.executeUpdate();
-        }
-        catch (SQLException e)
-        {
-            GriefPrevention.AddLogEntry("Unable to save data for group " + groupName + ".  Details:");
             GriefPrevention.AddLogEntry(e.getMessage());
         }
     }

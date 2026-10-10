@@ -289,15 +289,6 @@ public class GriefPrevention extends JavaPlugin
             {
                 DatabaseDataStore databaseStore = new DatabaseDataStore(this.databaseUrl, this.databaseUserName, this.databasePassword);
 
-                if (FlatFileDataStore.hasData())
-                {
-                    GriefPrevention.AddLogEntry("There appears to be some data on the hard drive.  Migrating those data to the database...");
-                    FlatFileDataStore flatFileStore = new FlatFileDataStore();
-                    this.dataStore = flatFileStore;
-                    flatFileStore.migrateData(databaseStore);
-                    GriefPrevention.AddLogEntry("Data migration process complete.");
-                }
-
                 this.dataStore = databaseStore;
             }
             catch (Exception e)
@@ -1847,8 +1838,8 @@ public class GriefPrevention extends JavaPlugin
             Vector<Claim> claims = playerData.getClaims();
             GriefPrevention.sendMessage(player, TextMode.Instr, Messages.StartBlockMath,
                     String.valueOf(playerData.getAccruedClaimBlocks()),
-                    String.valueOf((playerData.getBonusClaimBlocks() + this.dataStore.getGroupBonusBlocks(otherPlayer.getUniqueId()))),
-                    String.valueOf((playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks() + this.dataStore.getGroupBonusBlocks(otherPlayer.getUniqueId()))));
+                    String.valueOf((playerData.getBonusClaimBlocks())),
+                    String.valueOf((playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks())));
             if (!claims.isEmpty())
             {
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.ClaimsListHeader);
@@ -1937,10 +1928,10 @@ public class GriefPrevention extends JavaPlugin
             return true;
         }
 
-        //adjustbonusclaimblocks <player> <amount> or [<permission>] amount
+        //adjustbonusclaimblocks <player> <amount>
         else if (cmd.getName().equalsIgnoreCase("adjustbonusclaimblocks"))
         {
-            //requires exactly two parameters, the other player or group's name and the adjustment
+            //requires exactly two parameters, the other player's name and the adjustment
             if (args.length != 2) return false;
 
             //parse the adjustment amount
@@ -1952,19 +1943,6 @@ public class GriefPrevention extends JavaPlugin
             catch (NumberFormatException numberFormatException)
             {
                 return false;  //causes usage to be displayed
-            }
-
-            //if granting blocks to all players with a specific permission
-            if (args[0].startsWith("[") && args[0].endsWith("]"))
-            {
-                String permissionIdentifier = args[0].substring(1, args[0].length() - 1);
-                int newTotal = this.dataStore.adjustGroupBonusBlocks(permissionIdentifier, adjustment);
-
-                GriefPrevention.sendMessage(player, TextMode.Success, Messages.AdjustGroupBlocksSuccess, permissionIdentifier, String.valueOf(adjustment), String.valueOf(newTotal));
-                if (player != null)
-                    GriefPrevention.AddLogEntry(player.getName() + " adjusted " + permissionIdentifier + "'s bonus claim blocks by " + adjustment + ".");
-
-                return true;
             }
 
             //otherwise, find the specified player

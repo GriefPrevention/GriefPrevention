@@ -39,7 +39,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -84,42 +83,6 @@ public class FlatFileDataStore extends DataStore
             this.setSchemaVersion(DataStore.latestSchemaVersion);
         }
 
-        //load group data into memory
-        File[] files = playerDataFolder.listFiles();
-        for (File file : files)
-        {
-            if (!file.isFile()) continue;  //avoids folders
-
-            //all group data files start with a dollar sign.  ignoring the rest, which are player data files.
-            if (!file.getName().startsWith("$")) continue;
-
-            String groupName = file.getName().substring(1);
-            if (groupName == null || groupName.isEmpty()) continue;  //defensive coding, avoid unlikely cases
-
-            BufferedReader inStream = null;
-            try
-            {
-                inStream = new BufferedReader(new FileReader(file.getAbsolutePath()));
-                String line = inStream.readLine();
-
-                int groupBonusBlocks = Integer.parseInt(line);
-
-                this.permissionToBonusBlocksMap.put(groupName, groupBonusBlocks);
-            }
-            catch (Exception e)
-            {
-                StringWriter errors = new StringWriter();
-                e.printStackTrace(new PrintWriter(errors));
-                GriefPrevention.AddLogEntry(errors.toString(), CustomLogEntryTypes.Exception);
-            }
-
-            try
-            {
-                if (inStream != null) inStream.close();
-            }
-            catch (IOException exception) {}
-        }
-
         //load next claim number from file
         File nextClaimIdFile = new File(nextClaimIdFilePath);
         if (nextClaimIdFile.exists())
@@ -144,64 +107,9 @@ public class FlatFileDataStore extends DataStore
             catch (IOException exception) {}
         }
 
-        //if converting up from schema version 0, rename player data files using UUIDs instead of player names
-        //get a list of all the files in the claims data folder
-        if (this.getSchemaVersion() == 0)
-        {
-            files = playerDataFolder.listFiles();
-            ArrayList<String> namesToConvert = new ArrayList<>();
-            for (File playerFile : files)
-            {
-                namesToConvert.add(playerFile.getName());
-            }
-
-            //resolve and cache as many as possible through various means
-            try
-            {
-                UUIDFetcher fetcher = new UUIDFetcher(namesToConvert);
-                fetcher.call();
-            }
-            catch (Exception e)
-            {
-                GriefPrevention.AddLogEntry("Failed to resolve a batch of names to UUIDs.  Details:" + e.getMessage());
-                e.printStackTrace();
-            }
-
-            //rename files
-            for (File playerFile : files)
-            {
-                String currentFilename = playerFile.getName();
-
-                //if corrected casing and a record already exists using the correct casing, skip this one
-                String correctedCasing = UUIDFetcher.correctedNames.get(currentFilename);
-                if (correctedCasing != null && !currentFilename.equals(correctedCasing))
-                {
-                    File correctedCasingFile = new File(playerDataFolder.getPath() + File.separator + correctedCasing);
-                    if (correctedCasingFile.exists())
-                    {
-                        continue;
-                    }
-                }
-
-                //try to convert player name to UUID
-                UUID playerID = null;
-                try
-                {
-                    playerID = UUIDFetcher.getUUIDOf(currentFilename);
-
-                    //if successful, rename the file using the UUID
-                    if (playerID != null)
-                    {
-                        playerFile.renameTo(new File(playerDataFolder, playerID.toString()));
-                    }
-                }
-                catch (Exception ex) { }
-            }
-        }
-
         //load claims data into memory
         //get a list of all the files in the claims data folder
-        files = claimDataFolder.listFiles();
+        File[] files = claimDataFolder.listFiles();
 
         if (this.getSchemaVersion() <= 1)
         {
@@ -630,19 +538,6 @@ public class FlatFileDataStore extends DataStore
 
 
                     iterator.next();
-                    //first line is last login timestamp //RoboMWM - not using this anymore
-//
-//    				//convert that to a date and store it
-//    				DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
-//    				try
-//    				{
-//    					playerData.setLastLogin(dateFormat.parse(lastLoginTimestampString));
-//    				}
-//    				catch(ParseException parseException)
-//    				{
-//    					GriefPrevention.AddLogEntry("Unable to load last login for \"" + playerFile.getName() + "\".");
-//    					playerData.setLastLogin(null);
-//    				}
 
                     //second line is accrued claim blocks
                     String accruedBlocksString = iterator.next();
@@ -761,112 +656,6 @@ public class FlatFileDataStore extends DataStore
             if (outStream != null) outStream.close();
         }
         catch (IOException exception) {}
-    }
-
-    //grants a group (players with a specific permission) bonus claim blocks as long as they're still members of the group
-    @Override
-    synchronized void saveGroupBonusBlocks(String groupName, int currentValue)
-    {
-        //write changes to file to ensure they don't get lost
-        BufferedWriter outStream = null;
-        try
-        {
-            //open the group's file
-            File groupDataFile = new File(playerDataFolderPath + File.separator + "$" + groupName);
-            groupDataFile.createNewFile();
-            outStream = new BufferedWriter(new FileWriter(groupDataFile));
-
-            //first line is number of bonus blocks
-            outStream.write(String.valueOf(currentValue));
-            outStream.newLine();
-        }
-
-        //if any problem, log it
-        catch (Exception e)
-        {
-            GriefPrevention.AddLogEntry("Unexpected exception saving data for group \"" + groupName + "\": " + e.getMessage());
-        }
-
-        try
-        {
-            //close the file
-            if (outStream != null)
-            {
-                outStream.close();
-            }
-        }
-        catch (IOException exception) {}
-    }
-
-    synchronized void migrateData(DatabaseDataStore databaseStore)
-    {
-        //migrate claims
-        for (Claim claim : this.claims)
-        {
-            databaseStore.addClaim(claim, true);
-            for (Claim child : claim.children)
-            {
-                databaseStore.addClaim(child, true);
-            }
-        }
-
-        //migrate groups
-        for (Map.Entry<String, Integer> groupEntry : this.permissionToBonusBlocksMap.entrySet())
-        {
-            databaseStore.saveGroupBonusBlocks(groupEntry.getKey(), groupEntry.getValue());
-        }
-
-        //migrate players
-        File playerDataFolder = new File(playerDataFolderPath);
-        File[] files = playerDataFolder.listFiles();
-        for (File file : files)
-        {
-            if (!file.isFile()) continue;  //avoids folders
-            if (file.isHidden()) continue; //avoid hidden files, which are likely not created by GriefPrevention
-
-            //all group data files start with a dollar sign.  ignoring those, already handled above
-            if (file.getName().startsWith("$")) continue;
-
-            //ignore special files
-            if (file.getName().startsWith("_")) continue;
-            if (file.getName().endsWith(".ignore")) continue;
-
-            UUID playerID = UUID.fromString(file.getName());
-            databaseStore.savePlayerData(playerID, this.getPlayerData(playerID));
-            this.clearCachedPlayerData(playerID);
-        }
-
-        //migrate next claim ID
-        if (this.nextClaimID > databaseStore.nextClaimID)
-        {
-            databaseStore.setNextClaimID(this.nextClaimID);
-        }
-
-        //rename player and claim data folders so the migration won't run again
-        int i = 0;
-        File claimsBackupFolder;
-        File playersBackupFolder;
-        do
-        {
-            String claimsFolderBackupPath = claimDataFolderPath;
-            if (i > 0) claimsFolderBackupPath += String.valueOf(i);
-            claimsBackupFolder = new File(claimsFolderBackupPath);
-
-            String playersFolderBackupPath = playerDataFolderPath;
-            if (i > 0) playersFolderBackupPath += String.valueOf(i);
-            playersBackupFolder = new File(playersFolderBackupPath);
-            i++;
-        } while (claimsBackupFolder.exists() || playersBackupFolder.exists());
-
-        File claimsFolder = new File(claimDataFolderPath);
-        File playersFolder = new File(playerDataFolderPath);
-
-        claimsFolder.renameTo(claimsBackupFolder);
-        playersFolder.renameTo(playersBackupFolder);
-
-        GriefPrevention.AddLogEntry("Backed your file system data up to " + claimsBackupFolder.getName() + " and " + playersBackupFolder.getName() + ".");
-        GriefPrevention.AddLogEntry("If your migration encountered any problems, you can restore those data with a quick copy/paste.");
-        GriefPrevention.AddLogEntry("When you're satisfied that all your data have been safely migrated, consider deleting those folders.");
     }
 
     @Override
