@@ -1,5 +1,6 @@
-package me.ryanhamshire.GriefPrevention;
+package com.griefprevention;
 
+import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.Location;
 import org.junit.jupiter.api.Test;
 
