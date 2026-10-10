@@ -315,13 +315,6 @@ public class Claim
         return level.isGrantedBy(this.playerIDToClaimPermissionMap.get(uuid.toString()));
     }
 
-    @Deprecated
-    public boolean hasExplicitPermission(@NotNull Player player, @NotNull ClaimPermission level)
-    {
-        // Check explicit ClaimPermission for UUID
-        return this.hasExplicitPermission(player.getUniqueId(), level);
-    }
-
     /**
      * Check whether a Player has a certain level of trust.
      *
@@ -435,7 +428,7 @@ public class Claim
         // Look for explicit individual permission.
         if (player != null)
         {
-            if (this.hasExplicitPermission(player, permission)) return null;
+            if (this.hasExplicitPermission(player.getUniqueId(), permission)) return null;
         }
         else
         {
