@@ -2393,43 +2393,24 @@ public class GriefPrevention extends JavaPlugin
         //determine which claim the player is standing in
         Claim claim = this.dataStore.getClaimAt(player.getLocation(), true /*ignore height*/, null);
 
-        //validate player or group argument
-        String permission = null;
+        //validate player
         OfflinePlayer otherPlayer = null;
         UUID recipientID = null;
-        if (recipientName.startsWith("[") && recipientName.endsWith("]"))
+        otherPlayer = this.resolvePlayerByName(recipientName);
+        
+        if (otherPlayer == null && !recipientName.equals("public") && !recipientName.equals("all"))
         {
-            permission = recipientName.substring(1, recipientName.length() - 1);
-            if (permission == null || permission.isEmpty())
-            {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.InvalidPermissionID);
-                return;
-            }
+            GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
+            return;
+        }
+        else if (otherPlayer != null)
+        {
+            recipientName = otherPlayer.getName();
+            recipientID = otherPlayer.getUniqueId();
         }
         else
         {
-            otherPlayer = this.resolvePlayerByName(recipientName);
-            boolean isPermissionFormat = recipientName.contains(".");
-            if (otherPlayer == null && !recipientName.equals("public") && !recipientName.equals("all") && !isPermissionFormat)
-            {
-                GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
-                return;
-            }
-
-            if (otherPlayer == null && isPermissionFormat)
-            {
-                //player does not exist and argument has a period so this is a permission instead
-                permission = recipientName;
-            }
-            else if (otherPlayer != null)
-            {
-                recipientName = otherPlayer.getName();
-                recipientID = otherPlayer.getUniqueId();
-            }
-            else
-            {
-                recipientName = "public";
-            }
+            recipientName = "public";
         }
 
         //determine which claims should be modified
@@ -2459,13 +2440,7 @@ public class GriefPrevention extends JavaPlugin
         }
 
         String identifierToAdd = recipientName;
-        if (permission != null)
-        {
-            identifierToAdd = "[" + permission + "]";
-            //replace recipientName as well so the success message clearly signals a permission
-            recipientName = identifierToAdd;
-        }
-        else if (recipientID != null)
+        if (recipientID != null)
         {
             identifierToAdd = recipientID.toString();
         }
