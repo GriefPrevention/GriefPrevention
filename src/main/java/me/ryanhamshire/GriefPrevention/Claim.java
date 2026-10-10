@@ -176,7 +176,7 @@ public class Claim
     //produces a copy of a claim.
     public Claim(Claim claim) {
         this.modifiedDate = claim.modifiedDate;
-        this.lesserBoundaryCorner = claim.greaterBoundaryCorner.clone();
+        this.lesserBoundaryCorner = claim.lesserBoundaryCorner.clone();
         this.greaterBoundaryCorner = claim.greaterBoundaryCorner.clone();
         this.id = claim.id;
         this.ownerID = claim.ownerID;
