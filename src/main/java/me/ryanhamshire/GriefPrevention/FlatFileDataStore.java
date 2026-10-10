@@ -144,64 +144,9 @@ public class FlatFileDataStore extends DataStore
             catch (IOException exception) {}
         }
 
-        //if converting up from schema version 0, rename player data files using UUIDs instead of player names
-        //get a list of all the files in the claims data folder
-        if (this.getSchemaVersion() == 0)
-        {
-            files = playerDataFolder.listFiles();
-            ArrayList<String> namesToConvert = new ArrayList<>();
-            for (File playerFile : files)
-            {
-                namesToConvert.add(playerFile.getName());
-            }
-
-            //resolve and cache as many as possible through various means
-            try
-            {
-                UUIDFetcher fetcher = new UUIDFetcher(namesToConvert);
-                fetcher.call();
-            }
-            catch (Exception e)
-            {
-                GriefPrevention.AddLogEntry("Failed to resolve a batch of names to UUIDs.  Details:" + e.getMessage());
-                e.printStackTrace();
-            }
-
-            //rename files
-            for (File playerFile : files)
-            {
-                String currentFilename = playerFile.getName();
-
-                //if corrected casing and a record already exists using the correct casing, skip this one
-                String correctedCasing = UUIDFetcher.correctedNames.get(currentFilename);
-                if (correctedCasing != null && !currentFilename.equals(correctedCasing))
-                {
-                    File correctedCasingFile = new File(playerDataFolder.getPath() + File.separator + correctedCasing);
-                    if (correctedCasingFile.exists())
-                    {
-                        continue;
-                    }
-                }
-
-                //try to convert player name to UUID
-                UUID playerID = null;
-                try
-                {
-                    playerID = UUIDFetcher.getUUIDOf(currentFilename);
-
-                    //if successful, rename the file using the UUID
-                    if (playerID != null)
-                    {
-                        playerFile.renameTo(new File(playerDataFolder, playerID.toString()));
-                    }
-                }
-                catch (Exception ex) { }
-            }
-        }
-
         //load claims data into memory
         //get a list of all the files in the claims data folder
-        files = claimDataFolder.listFiles();
+        File[] files = claimDataFolder.listFiles();
 
         if (this.getSchemaVersion() <= 1)
         {
