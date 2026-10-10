@@ -1356,7 +1356,7 @@ public class GriefPrevention extends JavaPlugin
             return true;
         }
 
-        //untrust <player> or untrust [<group>]
+        //untrust <player>
         else if (cmd.getName().equalsIgnoreCase("untrust") && player != null)
         {
             //requires exactly one parameter, the other player's name
@@ -1382,28 +1382,18 @@ public class GriefPrevention extends JavaPlugin
             }
             else
             {
-                //validate player argument or group argument
-                if (!args[0].startsWith("[") || !args[0].endsWith("]"))
+                //validate player argument
+                otherPlayer = this.resolvePlayerByName(args[0]);
+                if (!clearPermissions && otherPlayer == null && !args[0].equals("public"))
                 {
-                    otherPlayer = this.resolvePlayerByName(args[0]);
-                    if (!clearPermissions && otherPlayer == null && !args[0].equals("public"))
-                    {
-                        //bracket any permissions - at this point it must be a permission without brackets
-                        if (args[0].contains("."))
-                        {
-                            args[0] = "[" + args[0] + "]";
-                        }
-                        else
-                        {
-                            GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
-                            return true;
-                        }
-                    }
-
-                    //correct to proper casing
-                    if (otherPlayer != null)
-                        args[0] = otherPlayer.getName();
+                    GriefPrevention.sendMessage(player, TextMode.Err, Messages.PlayerNotFound2);
+                    return true;
                 }
+
+                //correct to proper casing
+                if (otherPlayer != null)
+                    args[0] = otherPlayer.getName();
+
             }
 
             //if no claim here, apply changes to all his claims
