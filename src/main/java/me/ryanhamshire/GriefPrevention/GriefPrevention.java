@@ -289,15 +289,6 @@ public class GriefPrevention extends JavaPlugin
             {
                 DatabaseDataStore databaseStore = new DatabaseDataStore(this.databaseUrl, this.databaseUserName, this.databasePassword);
 
-                if (FlatFileDataStore.hasData())
-                {
-                    GriefPrevention.AddLogEntry("There appears to be some data on the hard drive.  Migrating those data to the database...");
-                    FlatFileDataStore flatFileStore = new FlatFileDataStore();
-                    this.dataStore = flatFileStore;
-                    flatFileStore.migrateData(databaseStore);
-                    GriefPrevention.AddLogEntry("Data migration process complete.");
-                }
-
                 this.dataStore = databaseStore;
             }
             catch (Exception e)
