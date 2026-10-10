@@ -1135,7 +1135,7 @@ public class BlockEventHandler implements Listener
 
     //Stop projectiles from destroying blocks that don't fire a proper event
     @EventHandler(ignoreCancelled = true)
-    private void chorusFlower(ProjectileHitEvent event)
+    public void chorusFlower(ProjectileHitEvent event)
     {
         //don't track in worlds where claims are not enabled
         if (!GriefPrevention.instance.claimsEnabledForWorld(event.getEntity().getWorld())) return;
@@ -1158,6 +1158,10 @@ public class BlockEventHandler implements Listener
 
         if (shooter == null)
         {
+            // Allow dispensers in the same claim. EntityChangeBlockEvent does not fire if the hit is cancelled.
+            if (EntityEventHandler.isBlockSourceInClaim(projectile.getShooter(), claim))
+                return;
+
             event.setCancelled(true);
             return;
         }

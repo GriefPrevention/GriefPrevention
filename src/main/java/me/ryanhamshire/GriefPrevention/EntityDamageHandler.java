@@ -599,9 +599,15 @@ public class EntityDamageHandler implements Listener
         // If the area is not claimed, do not handle.
         if (claim == null) return false;
 
-        // If attacker isn't a player, cancel.
+        // If attacker isn't a player, cancel unless a dispenser in the claim fired the projectile.
         if (attacker == null)
         {
+            if (event.damager() instanceof Projectile projectile
+                    && EntityEventHandler.isBlockSourceInClaim(projectile.getShooter(), claim))
+            {
+                return false;
+            }
+
             event.setCancelled(true);
             return true;
         }
@@ -674,6 +680,15 @@ public class EntityDamageHandler implements Listener
         // If damaged by anything other than a player, cancel the event.
         if (attacker == null)
         {
+            // A dispenser in the claim may hurt the claim's own mobs, as it would in vanilla.
+            // Tamed pets are excluded; they belong to a player rather than to the claim.
+            if (!(event.damaged() instanceof Tameable tameable && tameable.isTamed())
+                    && arrow != null
+                    && EntityEventHandler.isBlockSourceInClaim(arrow.getShooter(), claim))
+            {
+                return false;
+            }
+
             event.setCancelled(true);
             // Always remove projectiles shot by non-players.
             if (arrow != null) arrow.remove();
