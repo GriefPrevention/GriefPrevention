@@ -2302,7 +2302,7 @@ public class GriefPrevention extends JavaPlugin
 
     private String trustEntryToPlayerName(String entry)
     {
-        if (entry.startsWith("[") || entry.equals("public"))
+        if (entry.equals("public"))
         {
             return entry;
         }
