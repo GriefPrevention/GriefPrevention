@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -115,5 +117,19 @@ public class BlockEventHandlerTest
         }
 
         verify(event, never()).setCancelled(true);
+    }
+
+    @Test
+    void verifyTntWarningCooldownIsPerPlayerAndClaim()
+    {
+        BlockEventHandler handler = new BlockEventHandler(null);
+        Claim firstClaim = mock(Claim.class);
+        Claim secondClaim = mock(Claim.class);
+        UUID secondPlayerID = UUID.fromString("bd2bb5ee-6186-44ca-80a8-41efef962e3c");
+
+        assertTrue(handler.shouldShowTntWarning(PLAYER_UUID, firstClaim));
+        assertFalse(handler.shouldShowTntWarning(PLAYER_UUID, firstClaim));
+        assertTrue(handler.shouldShowTntWarning(PLAYER_UUID, secondClaim));
+        assertTrue(handler.shouldShowTntWarning(secondPlayerID, firstClaim));
     }
 }

@@ -18,6 +18,8 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
@@ -78,6 +80,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
@@ -88,6 +91,9 @@ public class BlockEventHandler implements Listener
     private final DataStore dataStore;
 
     private final Set<Material> trashBlocks;
+    private final Cache<TntWarningContext, Boolean> tntWarningCooldowns = CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build();
 
     //constructor
     public BlockEventHandler(DataStore dataStore)
@@ -303,7 +309,10 @@ public class BlockEventHandler implements Listener
             playerData.lastClaim = claim;
 
             //warn about TNT not destroying claimed blocks
-            if (block.getType() == Material.TNT && !claim.areExplosivesAllowed && playerData.siegeData == null)
+            if (block.getType() == Material.TNT &&
+                    !claim.areExplosivesAllowed &&
+                    playerData.siegeData == null &&
+                    this.shouldShowTntWarning(player.getUniqueId(), claim))
             {
                 GriefPrevention.sendMessage(player, TextMode.Warn, Messages.NoTNTDamageClaims);
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.ClaimExplosivesAdvertisement);
@@ -484,6 +493,17 @@ public class BlockEventHandler implements Listener
             }
         }
     }
+
+    boolean shouldShowTntWarning(UUID playerID, Claim claim)
+    {
+        TntWarningContext context = new TntWarningContext(playerID, claim);
+        if (this.tntWarningCooldowns.getIfPresent(context) != null) return false;
+
+        this.tntWarningCooldowns.put(context, true);
+        return true;
+    }
+
+    private record TntWarningContext(UUID playerID, Claim claim) {}
 
     static boolean isActiveBlock(Block block)
     {
