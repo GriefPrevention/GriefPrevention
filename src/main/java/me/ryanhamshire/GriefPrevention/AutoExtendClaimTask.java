@@ -41,9 +41,9 @@ public class AutoExtendClaimTask implements Runnable
 
         int lowestLootableTile = lesserCorner.getBlockY();
         ArrayList<ChunkSnapshot> snapshots = new ArrayList<>();
-        for (int chunkX = lesserCorner.getBlockX() / 16; chunkX <= greaterCorner.getBlockX() / 16; chunkX++)
+        for (int chunkX = lesserCorner.getBlockX() >> 4; chunkX <= greaterCorner.getBlockX() >> 4; chunkX++)
         {
-            for (int chunkZ = lesserCorner.getBlockZ() / 16; chunkZ <= greaterCorner.getBlockZ() / 16; chunkZ++)
+            for (int chunkZ = lesserCorner.getBlockZ() >> 4; chunkZ <= greaterCorner.getBlockZ() >> 4; chunkZ++)
             {
                 if (world.isChunkLoaded(chunkX, chunkZ))
                 {
