@@ -1484,6 +1484,26 @@ class PlayerEventHandler implements Listener
         event.setCancelled(true);
     }
 
+    private boolean handleEntityBucketPlace(PlayerInteractEvent event, Player player, Block clickedBlock, Material clickedBlockType)
+    {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || clickedBlock == null || event.getItem() == null) return false;
+
+        // Only sulfur cube per #2627 for now; helper is intentionally narrow and can be generified to other
+        // entity buckets (axolotl, fish, etc.) if needed — see PR discussion on 2630.
+        if (event.getItem().getType() != Material.SULFUR_CUBE_BUCKET) return false;
+
+        if (!instance.claimsEnabledForWorld(player.getWorld())) return true;
+
+        Block placeBlock = clickedBlock.getRelative(event.getBlockFace());
+        Supplier<String> noBuildReason = ProtectionHelper.checkPermission(player, placeBlock.getLocation(), ClaimPermission.Build, event);
+        if (noBuildReason != null)
+        {
+            GriefPrevention.sendMessage(player, TextMode.Err, noBuildReason.get());
+            event.setCancelled(true);
+        }
+        return true;
+    }
+
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.LOW)
     void onPlayerInteract(PlayerInteractEvent event)
@@ -1506,6 +1526,8 @@ class PlayerEventHandler implements Listener
         }
 
         PlayerData playerData = null;
+
+        if (handleEntityBucketPlace(event, player, clickedBlock, clickedBlockType)) return;
 
         //Turtle eggs
         if (action == Action.PHYSICAL)
