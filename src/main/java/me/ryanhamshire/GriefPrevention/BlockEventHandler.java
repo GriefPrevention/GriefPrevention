@@ -91,7 +91,7 @@ public class BlockEventHandler implements Listener
     private final DataStore dataStore;
 
     private final Set<Material> trashBlocks;
-    private final Cache<TntWarningContext, Boolean> tntWarningCooldowns = CacheBuilder.newBuilder()
+    private final Cache<UUID, Boolean> tntWarningCooldowns = CacheBuilder.newBuilder()
             .expireAfterWrite(1, TimeUnit.MINUTES)
             .build();
 
@@ -312,8 +312,9 @@ public class BlockEventHandler implements Listener
             if (block.getType() == Material.TNT &&
                     !claim.areExplosivesAllowed &&
                     playerData.siegeData == null &&
-                    this.shouldShowTntWarning(player.getUniqueId(), claim))
+                    this.tntWarningCooldowns.getIfPresent(player.getUniqueId()) == null)
             {
+                this.tntWarningCooldowns.put(player.getUniqueId(), true);
                 GriefPrevention.sendMessage(player, TextMode.Warn, Messages.NoTNTDamageClaims);
                 GriefPrevention.sendMessage(player, TextMode.Instr, Messages.ClaimExplosivesAdvertisement);
             }
@@ -493,17 +494,6 @@ public class BlockEventHandler implements Listener
             }
         }
     }
-
-    boolean shouldShowTntWarning(UUID playerID, Claim claim)
-    {
-        TntWarningContext context = new TntWarningContext(playerID, claim);
-        if (this.tntWarningCooldowns.getIfPresent(context) != null) return false;
-
-        this.tntWarningCooldowns.put(context, true);
-        return true;
-    }
-
-    private record TntWarningContext(UUID playerID, Claim claim) {}
 
     static boolean isActiveBlock(Block block)
     {
