@@ -719,7 +719,7 @@ public abstract class DataStore
 
     //returns a read-only access point for the list of all land claims
     //if you need to make changes, use provided methods like .deleteClaim() and .createClaim().
-    //this will ensure primary memory (RAM) and secondary memory (disk, database) stay in sync
+    //this will ensure primary memory (RAM) and secondary memory (disk) stay in sync
     public Collection<Claim> getClaims()
     {
         return Collections.unmodifiableCollection(this.claims);
