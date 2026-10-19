@@ -35,13 +35,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 
 //manages data stored in the file system
 public class FlatFileDataStore extends DataStore
@@ -60,20 +58,12 @@ public class FlatFileDataStore extends DataStore
     void initialize() throws Exception
     {
         //ensure data folders exist
-        boolean newDataStore = false;
         File playerDataFolder = new File(playerDataFolderPath);
         File claimDataFolder = new File(claimDataFolderPath);
         if (!playerDataFolder.exists() || !claimDataFolder.exists())
         {
-            newDataStore = true;
             playerDataFolder.mkdirs();
             claimDataFolder.mkdirs();
-        }
-
-        //if there's no data yet, then anything written will use the schema implemented by this code
-        if (newDataStore)
-        {
-            this.setSchemaVersion(DataStore.latestSchemaVersion);
         }
 
         //load next claim number from file
