@@ -282,54 +282,30 @@ public class GriefPrevention extends JavaPlugin
 
         AddLogEntry("Finished loading configuration.");
 
-        //when datastore initializes, it loads player and claim data, and posts some stats to the log
-        if (!this.databaseUrl.isEmpty())
+        File oldclaimdata = new File(getDataFolder(), "ClaimData");
+        if (oldclaimdata.exists())
         {
-            try
+            if (!FlatFileDataStore.hasData())
             {
-                DatabaseDataStore databaseStore = new DatabaseDataStore(this.databaseUrl, this.databaseUserName, this.databasePassword);
-
-                this.dataStore = databaseStore;
-            }
-            catch (Exception e)
-            {
-                GriefPrevention.AddLogEntry("Because there was a problem with the database, GriefPrevention will not function properly.  Either update the database config settings resolve the issue, or delete those lines from your config.yml so that GriefPrevention can use the file system to store data.");
-                e.printStackTrace();
-                this.getServer().getPluginManager().disablePlugin(this);
-                return;
+                File claimdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "ClaimData");
+                oldclaimdata.renameTo(claimdata);
+                File oldplayerdata = new File(getDataFolder(), "PlayerData");
+                File playerdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "PlayerData");
+                oldplayerdata.renameTo(playerdata);
             }
         }
-
-        //if not using the database because it's not configured or because there was a problem, use the file system to store data
-        //this is the preferred method, as it's simpler than the database scenario
-        if (this.dataStore == null)
+        try
         {
-            File oldclaimdata = new File(getDataFolder(), "ClaimData");
-            if (oldclaimdata.exists())
-            {
-                if (!FlatFileDataStore.hasData())
-                {
-                    File claimdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "ClaimData");
-                    oldclaimdata.renameTo(claimdata);
-                    File oldplayerdata = new File(getDataFolder(), "PlayerData");
-                    File playerdata = new File("plugins" + File.separator + "GriefPreventionData" + File.separator + "PlayerData");
-                    oldplayerdata.renameTo(playerdata);
-                }
-            }
-            try
-            {
-                this.dataStore = new FlatFileDataStore();
-            }
-            catch (Exception e)
-            {
-                GriefPrevention.AddLogEntry("Unable to initialize the file system data store.  Details:");
-                GriefPrevention.AddLogEntry(e.getMessage());
-                e.printStackTrace();
-            }
+            this.dataStore = new FlatFileDataStore();
+        }
+        catch (Exception e)
+        {
+            GriefPrevention.AddLogEntry("Unable to initialize the file system data store.  Details:");
+            GriefPrevention.AddLogEntry(e.getMessage());
+            e.printStackTrace();
         }
 
-        String dataMode = (this.dataStore instanceof FlatFileDataStore) ? "(File Mode)" : "(Database Mode)";
-        AddLogEntry("Finished loading data " + dataMode + ".");
+        AddLogEntry("Finished loading data.");
 
         //unless claim block accrual is disabled, start the recurring per 10 minute event to give claim blocks to online players
         //20L ~ 1 second
