@@ -156,31 +156,6 @@ public abstract class DataStore
         this.loadMessages();
         GriefPrevention.AddLogEntry("Customizable messages loaded.");
 
-        //if converting up from an earlier schema version, write all claims back to storage using the latest format
-        if (this.getSchemaVersion() < latestSchemaVersion)
-        {
-            GriefPrevention.AddLogEntry("Please wait.  Updating data format.");
-
-            for (Claim claim : this.claims)
-            {
-                this.saveClaim(claim);
-
-                for (Claim subClaim : claim.children)
-                {
-                    this.saveClaim(subClaim);
-                }
-            }
-
-            //clean up any UUID conversion work
-            if (UUIDFetcher.lookupCache != null)
-            {
-                UUIDFetcher.lookupCache.clear();
-                UUIDFetcher.correctedNames.clear();
-            }
-
-            GriefPrevention.AddLogEntry("Update finished.");
-        }
-
         //load list of soft mutes
         this.loadSoftMutes();
 
@@ -1358,43 +1333,6 @@ public abstract class DataStore
         }
 
         return message;
-    }
-
-    //used in updating the data schema from 0 to 1.
-    //converts player names in a list to uuids
-    protected List<String> convertNameListToUUIDList(List<String> names)
-    {
-        //doesn't apply after schema has been updated to version 1
-        if (this.getSchemaVersion() >= 1) return names;
-
-        //list to build results
-        List<String> resultNames = new ArrayList<>();
-
-        for (String name : names)
-        {
-            //skip "public", leave them as-is
-            if (name.equals("public"))
-            {
-                resultNames.add(name);
-                continue;
-            }
-
-            //otherwise try to convert to a UUID
-            UUID playerID = null;
-            try
-            {
-                playerID = UUIDFetcher.getUUIDOf(name);
-            }
-            catch (Exception ex) { }
-
-            //if successful, replace player name with corresponding UUID
-            if (playerID != null)
-            {
-                resultNames.add(playerID.toString());
-            }
-        }
-
-        return resultNames;
     }
 
     abstract void close();

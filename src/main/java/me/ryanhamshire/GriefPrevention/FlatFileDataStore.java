@@ -50,13 +50,6 @@ public class FlatFileDataStore extends DataStore
     private final static String nextClaimIdFilePath = claimDataFolderPath + File.separator + "_nextClaimID";
     private final static String schemaVersionFilePath = dataLayerFolderPath + File.separator + "_schemaVersion";
 
-    static boolean hasData()
-    {
-        File claimsDataFolder = new File(claimDataFolderPath);
-
-        return claimsDataFolder.exists();
-    }
-
     //initialization!
     FlatFileDataStore() throws Exception
     {
