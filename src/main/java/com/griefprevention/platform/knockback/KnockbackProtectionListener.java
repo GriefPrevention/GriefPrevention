@@ -36,7 +36,7 @@ public class KnockbackProtectionListener implements PlatformListener
         // which may not exist on all servers.
         return switch (PlatformDetection.getPlatform())
         {
-            case PAPER -> PlatformDetection.classExists("com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent");
+            case PAPER -> PlatformDetection.classExists("io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent");
             case SPIGOT -> PlatformDetection.classExists("org.bukkit.event.entity.EntityKnockbackByEntityEvent");
         };
     }
