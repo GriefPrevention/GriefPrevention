@@ -1,6 +1,5 @@
 package com.griefprevention.platform.knockback;
 
-import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
 import me.ryanhamshire.GriefPrevention.DataStore;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
