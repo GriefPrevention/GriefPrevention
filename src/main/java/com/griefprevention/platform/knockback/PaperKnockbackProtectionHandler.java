@@ -17,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
  * Handles all player-caused knockback including melee attacks (spears),
  * projectiles (wind charges), mace smash AoE, and other mechanisms (shield blocks).
  * <p>
- * For explosion knockback (e.g. wind charges), {@code getPushedBy()} returns the projectile's owner.
- * For direct projectile hits (e.g. arrows), {@code getPushedBy()} returns the projectile itself.
+ * For explosion knockback (e.g. wind charge burst), {@code getPushedBy()} returns the projectile's owner.
+ * For direct projectile hits (e.g. arrows, wind charge impact), {@code getPushedBy()} returns the projectile itself.
  * <p>
  * This event is preferred over Bukkit's version on Paper servers because it fires
  * first and is not deprecated on Paper.
