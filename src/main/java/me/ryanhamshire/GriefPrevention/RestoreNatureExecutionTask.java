@@ -27,6 +27,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.Cushion;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
@@ -102,8 +103,8 @@ class RestoreNatureExecutionTask implements Runnable
         {
             if (!(entity instanceof Player || entity instanceof Animals))
             {
-                //hanging entities (paintings, item frames) are protected when they're in land claims
-                if (!(entity instanceof Hanging) || GriefPrevention.instance.dataStore.getClaimAt(entity.getLocation(), false, null) == null)
+                //hanging entities (paintings, item frames) and cushions are protected when they're in land claims
+                if (!(entity instanceof Hanging || entity instanceof Cushion) || GriefPrevention.instance.dataStore.getClaimAt(entity.getLocation(), false, null) == null)
                 {
                     //everything else is removed
                     entity.remove();

@@ -41,6 +41,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -730,43 +731,53 @@ public class EntityEventHandler implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onHangingBreak(HangingBreakEvent event)
     {
+        Entity remover = null;
+        if (event instanceof HangingBreakByEntityEvent entityEvent)
+        {
+            remover = entityEvent.getRemover();
+        }
+        protectBreak(event, event.getEntity(), event.getCause(), remover);
+    }
+
+    /**
+     * Protect a block-attached entity (painting, item frame, cushion) from breakage.
+     * Shared by the hanging event and Paper's entity break event for cushions.
+     *
+     * @param event the cancellable break event
+     * @param entity the entity being broken
+     * @param cause why it is breaking
+     * @param remover the entity breaking it, if any
+     */
+    public static void protectBreak(
+            @NotNull Cancellable event,
+            @NotNull Entity entity,
+            @NotNull RemoveCause cause,
+            @Nullable Entity remover)
+    {
         //don't track in worlds where claims are not enabled
-        if (!GriefPrevention.instance.claimsEnabledForWorld(event.getEntity().getWorld())) return;
+        if (!GriefPrevention.instance.claimsEnabledForWorld(entity.getWorld())) return;
 
         //Ignore cases where itemframes should break due to no supporting blocks
-        if (event.getCause() == RemoveCause.PHYSICS) return;
+        if (cause == RemoveCause.PHYSICS) return;
 
         //FEATURE: claimed paintings are protected from breakage
 
         //explosions don't destroy hangings
-        if (event.getCause() == RemoveCause.EXPLOSION)
+        if (cause == RemoveCause.EXPLOSION)
         {
             event.setCancelled(true);
             return;
         }
 
         //only allow players to break paintings, not anything else (like water and explosions)
-        if (!(event instanceof HangingBreakByEntityEvent))
-        {
-            event.setCancelled(true);
-            return;
-        }
-
-        HangingBreakByEntityEvent entityEvent = (HangingBreakByEntityEvent) event;
-
-        //who is removing it?
-        Entity remover = entityEvent.getRemover();
-
-        //again, making sure the breaker is a player
-        if (remover.getType() != EntityType.PLAYER)
+        if (!(remover instanceof Player playerRemover))
         {
             event.setCancelled(true);
             return;
         }
 
         //if the player doesn't have build permission, don't allow the breakage
-        Player playerRemover = (Player) entityEvent.getRemover();
-        String noBuildReason = GriefPrevention.instance.allowBuild(playerRemover, event.getEntity().getLocation(), Material.AIR);
+        String noBuildReason = GriefPrevention.instance.allowBuild(playerRemover, entity.getLocation(), Material.AIR);
         if (noBuildReason != null)
         {
             event.setCancelled(true);

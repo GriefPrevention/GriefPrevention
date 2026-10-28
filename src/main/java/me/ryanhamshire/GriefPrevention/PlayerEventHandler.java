@@ -43,6 +43,7 @@ import org.bukkit.entity.AbstractHorse;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.CopperGolem;
 import org.bukkit.entity.Creature;
+import org.bukkit.entity.Cushion;
 import org.bukkit.entity.Donkey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -1254,7 +1255,8 @@ class PlayerEventHandler implements Listener
         }
 
         //don't allow interaction with item frames, armor stands, or sulfur cubes in claimed areas without build permission
-        if (entity.getType() == EntityType.ARMOR_STAND || entity instanceof Hanging || entity instanceof SulfurCube)
+        //allow sitting on cushions in spigot (in spigot, they are a subtype of Hanging)
+        if (entity.getType() == EntityType.ARMOR_STAND || (entity instanceof Hanging && !(entity instanceof Cushion)) || entity instanceof SulfurCube)
         {
             Claim claim = this.dataStore.getClaimAt(entity.getLocation(), false, playerData.lastClaim);
             if (claim == null) return;
@@ -1920,7 +1922,8 @@ class PlayerEventHandler implements Listener
                     || materialInHand == Material.INK_SAC
                     || materialInHand == Material.GLOW_INK_SAC
                     || materialInHand == Material.HONEYCOMB
-                    || dyes.contains(materialInHand)))
+                    || dyes.contains(materialInHand)
+                    || Tag.ITEMS_CUSHIONS.isTagged(materialInHand)))
             {
                 String noBuildReason = instance
                         .allowBuild(player, clickedBlock
