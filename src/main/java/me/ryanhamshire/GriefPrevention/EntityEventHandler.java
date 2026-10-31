@@ -69,6 +69,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
@@ -244,6 +245,41 @@ public class EntityEventHandler implements Listener
                 }
             }
         }
+    }
+
+    /**
+     * Check whether the cobwebs a dying mob with weaving leaves behind may form.
+     * Cobwebs land at random within one block of the mob, so every column around it must be buildable by the killer.
+     * Without a player killer, the columns must be unclaimed and the world must allow unattributed changes.
+     *
+     * @param entity the dying mob
+     * @return true if the cobwebs may form
+     */
+    private boolean allowWeavingCobwebs(@NotNull LivingEntity entity)
+    {
+        Player killer = entity.getKiller();
+        Location location = entity.getLocation();
+        if (killer == null && (GriefPrevention.instance.creativeRulesApply(location)
+                || GriefPrevention.instance.config_claims_worldModes.get(location.getWorld()) == ClaimsMode.SurvivalRequiringClaims))
+        {
+            return false;
+        }
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            for (int dz = -1; dz <= 1; dz++)
+            {
+                Location column = location.clone().add(dx, 0, dz);
+                if (killer != null)
+                {
+                    if (GriefPrevention.instance.allowBuild(killer, column, Material.COBWEB) != null) return false;
+                }
+                else if (this.dataStore.getClaimAt(column, false, null) != null)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -652,6 +688,12 @@ public class EntityEventHandler implements Listener
         {
             event.setDroppedExp(0);
             event.getDrops().clear();
+        }
+
+        //FEATURE: weaving (MC 1.21+) cobwebs left by a dying mob follow the killer's build rules
+        if (entity.getType() != EntityType.PLAYER && entity.hasPotionEffect(PotionEffectType.WEAVING) && !allowWeavingCobwebs(entity))
+        {
+            entity.removePotionEffect(PotionEffectType.WEAVING);
         }
 
         //FEATURE: when a player is involved in a siege (attacker or defender role)
