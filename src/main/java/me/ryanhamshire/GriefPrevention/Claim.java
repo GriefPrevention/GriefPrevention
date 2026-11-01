@@ -27,7 +27,6 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -236,18 +235,6 @@ public class Claim
         return claim.contains(location, false, true);
     }
 
-    /**
-     * @deprecated Check {@link ClaimPermission#Edit} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    public @Nullable String allowEdit(@NotNull Player player)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Edit, null);
-        return supplier != null ? supplier.get() : null;
-    }
-
     private static final Set<Material> PLACEABLE_FARMING_BLOCKS = Set.of(
             Material.PUMPKIN_STEM,
             Material.WHEAT,
@@ -264,48 +251,6 @@ public class Claim
     private static boolean placeableForFarming(Material material)
     {
         return PLACEABLE_FARMING_BLOCKS.contains(material);
-    }
-
-    /**
-     * @deprecated Check {@link ClaimPermission#Build} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    //build permission check
-    public @Nullable String allowBuild(@NotNull Player player, @NotNull Material material)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Build, new CompatBuildBreakEvent(material, false));
-        return supplier != null ? supplier.get() : null;
-    }
-
-    public static class CompatBuildBreakEvent extends Event
-    {
-        private final Material material;
-        private final boolean isBreak;
-
-        private CompatBuildBreakEvent(Material material, boolean isBreak)
-        {
-            this.material = material;
-            this.isBreak = isBreak;
-        }
-
-        public Material getMaterial()
-        {
-            return material;
-        }
-
-        public boolean isBreak()
-        {
-            return isBreak;
-        }
-
-        @Override
-        public @NotNull HandlerList getHandlers()
-        {
-            return new HandlerList();
-        }
-
     }
 
     public boolean hasExplicitPermission(@NotNull UUID uuid, @NotNull ClaimPermission level)
@@ -493,54 +438,6 @@ public class Claim
         return player.hasPermission("griefprevention.ignoreclaims");
     }
 
-    /**
-     * @deprecated Check {@link ClaimPermission#Build} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    public @Nullable String allowBreak(@NotNull Player player, @NotNull Material material)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Build, new CompatBuildBreakEvent(material, true));
-        return supplier != null ? supplier.get() : null;
-    }
-
-    /**
-     * @deprecated Check {@link ClaimPermission#Access} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    public @Nullable String allowAccess(@NotNull Player player)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Access, null);
-        return supplier != null ? supplier.get() : null;
-    }
-
-    /**
-     * @deprecated Check {@link ClaimPermission#Container} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    public @Nullable String allowContainers(@NotNull Player player)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Container, null);
-        return supplier != null ? supplier.get() : null;
-    }
-
-    /**
-     * @deprecated Check {@link ClaimPermission#Manage} with {@link #checkPermission(Player, ClaimPermission, Event)}.
-     * @param player the Player
-     * @return the denial message, or null if the action is allowed
-     */
-    @Deprecated
-    public @Nullable String allowGrantPermission(@NotNull Player player)
-    {
-        Supplier<String> supplier = checkPermission(player, ClaimPermission.Manage, null);
-        return supplier != null ? supplier.get() : null;
-    }
-
     @Contract("null -> null")
     public @Nullable ClaimPermission getPermission(@Nullable String playerID)
     {
@@ -597,7 +494,7 @@ public class Claim
             {
                 builders.add(entry.getKey());
             }
-            else if (entry.getValue() == ClaimPermission.Container || entry.getValue() == ClaimPermission.Inventory)
+            else if (entry.getValue() == ClaimPermission.Container)
             {
                 containers.add(entry.getKey());
             }
@@ -703,20 +600,6 @@ public class Claim
         if (!Objects.equals(this.lesserBoundaryCorner.getWorld(), otherClaim.getLesserBoundaryCorner().getWorld())) return false;
 
         return new BoundingBox(this).intersects(new BoundingBox(otherClaim));
-    }
-
-    @Deprecated(since = "17.0.0", forRemoval = true)
-    @Contract("_ -> null")
-    public @Nullable String allowMoreEntities(boolean remove)
-    {
-        return null;
-    }
-
-    @Deprecated(since = "17.0.0", forRemoval = true)
-    @Contract("-> null")
-    public @Nullable String allowMoreActiveBlocks()
-    {
-        return null;
     }
 
     //implements a strict ordering of claims, used to keep the claims collection sorted for faster searching

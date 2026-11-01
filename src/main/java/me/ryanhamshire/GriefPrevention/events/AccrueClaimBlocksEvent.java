@@ -26,26 +26,6 @@ public class AccrueClaimBlocksEvent extends PlayerEvent implements Cancellable
      * 6 times per hour.
      * <br>To achieve a specific number of blocks to accrue, either multiply in advance or set
      * using {@link #setBlocksToAccrue(int)} after construction.
-     *
-     * @param player the {@link Player} receiving accruals
-     * @param blocksToAccruePerHour the number of claim blocks to accrue multiplied by 6
-     * @see #setBlocksToAccruePerHour(int)
-     * @deprecated Use {@link #AccrueClaimBlocksEvent(Player, int, boolean)} instead
-     */
-    @Deprecated
-    public AccrueClaimBlocksEvent(@NotNull Player player, int blocksToAccruePerHour)
-    {
-        this(player, blocksToAccruePerHour, false);
-    }
-
-    /**
-     * Construct a new {@code AccrueClaimBlocksEvent}.
-     *
-     * <p>Note that this event was designed for simple internal usage. Because of that,
-     * it is assumed GriefPrevention is handling block delivery at its standard rate of
-     * 6 times per hour.
-     * <br>To achieve a specific number of blocks to accrue, either multiply in advance or set
-     * using {@link #setBlocksToAccrue(int)} after construction.
      * <br>This event is initialized as canceled if @param isIdle is set to true.
      *
      * @param player the {@link Player} receiving accruals
