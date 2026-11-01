@@ -22,6 +22,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.griefprevention.commands.ClaimCommand;
 import com.griefprevention.metrics.MetricsHandler;
+import com.griefprevention.platform.entitybreak.EntityBreakProtectionListener;
 import com.griefprevention.platform.knockback.KnockbackProtectionListener;
 import com.griefprevention.protection.InteractionProtectionHandler;
 import com.griefprevention.protection.ProtectionHelper;
@@ -319,6 +320,7 @@ public class GriefPrevention extends JavaPlugin
 
         //knockback protection - handles melee, projectile, and other player-caused knockback in claims
         new KnockbackProtectionListener(this.dataStore, this).register(this);
+        new EntityBreakProtectionListener().register(this);
 
         //special interaction-related events
         pluginManager.registerEvents(new InteractionProtectionHandler(), this);
