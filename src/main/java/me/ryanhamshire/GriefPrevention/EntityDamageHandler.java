@@ -25,6 +25,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Rabbit;
 import org.bukkit.entity.Raider;
 import org.bukkit.entity.Slime;
+import org.bukkit.entity.SulfurCube;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.Vex;
@@ -287,7 +288,13 @@ public class EntityDamageHandler implements Listener
      */
     private boolean handleEntityDamageByBlockExplosion(@NotNull EntityDamageInstance event)
     {
-        if (event.cause() != EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) return false;
+        // Sulfur cube TNT explosions use ENTITY_EXPLOSION with the cube as damager (vanilla
+        // level.explode(cube, getDefaultDamageSource(cube)) -> CraftEventFactory ENTITY_EXPLOSION).
+        // Keep creature handling consistent with creeper/TNT: entities in claims are protected.
+        boolean isBlockExplosion = event.cause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION;
+        boolean isSulfurCubeExplosion =
+                event.cause() == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION && event.damager() instanceof SulfurCube;
+        if (!isBlockExplosion && !isSulfurCubeExplosion) return false;
 
         Entity entity = event.damaged();
 
