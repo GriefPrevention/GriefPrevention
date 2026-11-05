@@ -33,7 +33,7 @@ public record Boundary(
      */
     public Boundary(@NotNull Claim claim, @NotNull VisualizationType type)
     {
-        this(new BoundingBox(claim), type, claim);
+        this(claim.getVisualizationBounds(), type, claim);
     }
 
     /**
