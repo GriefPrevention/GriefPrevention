@@ -25,7 +25,6 @@ import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.events.ClaimCreatedEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimDeletedEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimExtendEvent;
-import me.ryanhamshire.GriefPrevention.events.ClaimModifiedEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimResizeEvent;
 import me.ryanhamshire.GriefPrevention.events.ClaimTransferEvent;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
@@ -551,15 +550,6 @@ public abstract class DataStore
 
     //deletes a claim or subdivision
     synchronized public void deleteClaim(Claim claim)
-    {
-        this.deleteClaim(claim, true, false);
-    }
-
-    /**
-     * @deprecated Releasing pets is no longer a core feature. Use {@link #deleteClaim(Claim)}.
-     */
-    @Deprecated(forRemoval = true, since = "17.0.0")
-    synchronized public void deleteClaim(Claim claim, boolean releasePets)
     {
         this.deleteClaim(claim, true, false);
     }
@@ -1160,7 +1150,7 @@ public abstract class DataStore
         newClaim.greaterBoundaryCorner = new Location(world, newx2, newy2, newz2);
 
         //call event here to check if it has been cancelled
-        ClaimResizeEvent event = new ClaimModifiedEvent(oldClaim, newClaim, player); // Swap to ClaimResizeEvent when ClaimModifiedEvent is removed
+        ClaimResizeEvent event = new ClaimResizeEvent(oldClaim, newClaim, player);
         Bukkit.getPluginManager().callEvent(event);
 
         //return here if event is cancelled

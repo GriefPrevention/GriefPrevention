@@ -46,13 +46,7 @@ public enum ClaimPermission
      * ClaimPermission used for basic access.
      * Command: /accesstrust
      */
-    Access(Messages.NoAccessPermission),
-
-    /**
-     * @deprecated Use {@link #Container} instead. This alias exists for backward compatibility only.
-     */
-    @Deprecated(forRemoval = true)
-    Inventory(Messages.NoContainersPermission);
+    Access(Messages.NoAccessPermission);
 
     private final Messages denialMessage;
 
@@ -77,15 +71,8 @@ public enum ClaimPermission
      */
     public boolean isGrantedBy(ClaimPermission other)
     {
-        if (other == null) return false;
         // This uses declaration order to compare! If trust levels are reordered this method must be rewritten.
-        // return other != null && other.ordinal() <= this.ordinal();
-        // DEPRECATED start
-        // Normalize deprecated Inventory alias to Container for comparison.
-        int thisOrdinal = this == Inventory ? Container.ordinal() : this.ordinal();
-        int otherOrdinal = other == Inventory ? Container.ordinal() : other.ordinal();
-        return otherOrdinal <= thisOrdinal;
-        // DEPRECATED end
+        return other != null && other.ordinal() <= this.ordinal();
     }
 
 }
