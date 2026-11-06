@@ -62,6 +62,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -75,8 +76,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -94,6 +93,7 @@ import org.bukkit.util.BlockIterator;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -113,7 +113,7 @@ class PlayerEventHandler implements Listener
     private final GriefPrevention instance;
 
     //list of temporarily banned ip's
-    private final ArrayList<IpBanInfo> tempBannedIps = new ArrayList<>();
+    final ArrayList<IpBanInfo> tempBannedIps = new ArrayList<>();
 
     //number of milliseconds in a day
     private final long MILLISECONDS_IN_DAY = 1000 * 60 * 60 * 24;
@@ -567,14 +567,12 @@ class PlayerEventHandler implements Listener
         GriefPrevention.AddLogEntry(entryBuilder.toString(), CustomLogEntryTypes.SocialActivity, true);
     }
 
-    private final ConcurrentHashMap<UUID, Date> lastLoginThisServerSessionMap = new ConcurrentHashMap<>();
+    final ConcurrentHashMap<UUID, Date> lastLoginThisServerSessionMap = new ConcurrentHashMap<>();
 
     //when a player attempts to join the server...
     @EventHandler(priority = EventPriority.HIGHEST)
-    void onPlayerLogin(PlayerLoginEvent event)
+    void onPlayerPreLogin(AsyncPlayerPreLoginEvent event)
     {
-        Player player = event.getPlayer();
-
         //all this is anti-spam code
         if (instance.config_spam_enabled)
         {
@@ -582,10 +580,10 @@ class PlayerEventHandler implements Listener
             long now = Calendar.getInstance().getTimeInMillis();
 
             //if allowed to join and login cooldown enabled
-            if (instance.config_spam_loginCooldownSeconds > 0 && event.getResult() == Result.ALLOWED && !player.hasPermission("griefprevention.spam"))
+            if (instance.config_spam_loginCooldownSeconds > 0 && event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED)
             {
                 //determine how long since last login and cooldown remaining
-                Date lastLoginThisSession = lastLoginThisServerSessionMap.get(player.getUniqueId());
+                Date lastLoginThisSession = lastLoginThisServerSessionMap.get(event.getUniqueId());
                 if (lastLoginThisSession != null)
                 {
                     long millisecondsSinceLastLogin = now - lastLoginThisSession.getTime();
@@ -595,25 +593,29 @@ class PlayerEventHandler implements Listener
                     //if cooldown remaining
                     if (cooldownRemaining > 0)
                     {
-                        //DAS BOOT!
-                        event.setResult(Result.KICK_OTHER);
-                        event.setKickMessage("You must wait " + cooldownRemaining + " seconds before logging-in again.");
-                        event.disallow(event.getResult(), event.getKickMessage());
-                        return;
+                        //DAS BOOT! No early return: the ban check below runs on the main thread and must still see banned accounts relogging inside the cooldown
+                        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "You must wait " + cooldownRemaining + " seconds before logging-in again.");
                     }
                 }
             }
 
             //if logging-in account is banned, remember IP address for later
-            if (instance.config_smartBan && event.getResult() == Result.KICK_BANNED)
+            if (instance.config_smartBan)
             {
-                this.tempBannedIps.add(new IpBanInfo(event.getAddress(), now + this.MILLISECONDS_IN_DAY, player.getName()));
+                boolean kickedAsBanned = event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.KICK_BANNED;
+                PlayerProfile profile = instance.getServer().createPlayerProfile(event.getUniqueId(), event.getName());
+                IpBanInfo info = new IpBanInfo(event.getAddress(), now + this.MILLISECONDS_IN_DAY, event.getName());
+                //this event is asynchronous: the ban list is not thread safe and tempBannedIps is only touched on the main thread
+                instance.getServer().getScheduler().runTask(instance, () ->
+                {
+                    BanList<PlayerProfile> banList = instance.getServer().getBanList(BanList.Type.PROFILE);
+                    if (kickedAsBanned || banList.isBanned(profile))
+                    {
+                        this.tempBannedIps.add(info);
+                    }
+                });
             }
         }
-
-        //remember the player's ip address
-        PlayerData playerData = this.dataStore.getPlayerData(player.getUniqueId());
-        playerData.ipAddress = event.getAddress();
     }
 
     //when a player successfully joins the server...
@@ -629,7 +631,26 @@ class PlayerEventHandler implements Listener
         long now = nowDate.getTime();
         PlayerData playerData = this.dataStore.getPlayerData(playerID);
         playerData.lastSpawn = now;
-        this.lastLoginThisServerSessionMap.put(playerID, nowDate);
+        //players allowed to spam are exempt from the login cooldown
+        if (player.hasPermission("griefprevention.spam"))
+        {
+            this.lastLoginThisServerSessionMap.remove(playerID);
+        }
+        else
+        {
+            this.lastLoginThisServerSessionMap.put(playerID, nowDate);
+        }
+
+        //remember the player's ip address
+        InetSocketAddress socketAddress = player.getAddress();
+        if (socketAddress != null)
+        {
+            playerData.ipAddress = socketAddress.getAddress();
+        }
+        else
+        {
+            playerData.ipAddress = null;
+        }
 
         //if newish, prevent chat until he's moved a bit to prove he's not a bot
         if (GriefPrevention.isNewToServer(player) && !player.hasPermission("griefprevention.premovementchat"))
@@ -673,7 +694,7 @@ class PlayerEventHandler implements Listener
                 }
 
                 //if we find a match
-                else if (address.equals(playerData.ipAddress.toString()))
+                else if (playerData.ipAddress != null && address.equals(playerData.ipAddress.toString()))
                 {
                     //if the account associated with the IP ban has been pardoned, remove all ip bans for that ip and we're done
                     OfflinePlayer bannedPlayer = instance.getServer().getOfflinePlayer(info.bannedAccountName);
