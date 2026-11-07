@@ -76,10 +76,6 @@ public class PlayerData
     //visualization
     private transient @Nullable BoundaryVisualization visibleBoundaries = null;
 
-    /** @deprecated Use {@link #getVisibleBoundaries} and {@link #setVisibleBoundaries(BoundaryVisualization)} */
-    @Deprecated(forRemoval = true, since = "16.18")
-    public Visualization currentVisualization = null;
-
     //anti-camping pvp protection
     public boolean pvpImmune = false;
     public long lastSpawn = 0;

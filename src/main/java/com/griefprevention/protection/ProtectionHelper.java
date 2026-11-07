@@ -7,14 +7,11 @@ import me.ryanhamshire.GriefPrevention.DataStore;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.Messages;
 import me.ryanhamshire.GriefPrevention.PlayerData;
-import me.ryanhamshire.GriefPrevention.events.PreventBlockBreakEvent;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,20 +86,7 @@ public final class ProtectionHelper
         playerData.lastClaim = claim;
 
         // Apply claim rules.
-        Supplier<String> cancel = claim.checkPermission(player, permission, trigger);
-
-        // Apply additional specific rules.
-        if (cancel != null && trigger instanceof BlockBreakEvent breakEvent)
-        {
-            PreventBlockBreakEvent preventionEvent = new PreventBlockBreakEvent(breakEvent);
-            Bukkit.getPluginManager().callEvent(preventionEvent);
-            if (preventionEvent.isCancelled())
-            {
-                cancel = null;
-            }
-        }
-
-        return cancel;
+        return claim.checkPermission(player, permission, trigger);
     }
 
 }
