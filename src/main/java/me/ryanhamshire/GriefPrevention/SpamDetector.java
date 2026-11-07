@@ -98,23 +98,7 @@ class SpamDetector
         //if the message was mostly non-alpha-numerics or doesn't include much whitespace, consider it a spam (probably ansi art or random text gibberish) 
         if (result.muteReason == null && message.length() > 5)
         {
-            int symbolsCount = 0;
-            int whitespaceCount = 0;
-            for (int i = 0; i < message.length(); i++)
-            {
-                char character = message.charAt(i);
-                if (!(Character.isLetterOrDigit(character)))
-                {
-                    symbolsCount++;
-                }
-
-                if (Character.isWhitespace(character))
-                {
-                    whitespaceCount++;
-                }
-            }
-
-            if (symbolsCount > message.length() / 2 || (message.length() > 15 && whitespaceCount < message.length() / 10))
+            if (isGibberish(message))
             {
                 spam = true;
                 if (chatterData.spamLevel > 0) result.muteReason = "gibberish";
@@ -162,6 +146,27 @@ class SpamDetector
         chatterData.AddMessage(message, timestamp);
 
         return result;
+    }
+
+    private boolean isGibberish(String message)
+    {
+        int symbolsCount = 0;
+        int whitespaceCount = 0;
+        for (int i = 0; i < message.length(); i++)
+        {
+            char character = message.charAt(i);
+            if (!(Character.isLetterOrDigit(character)))
+            {
+                symbolsCount++;
+            }
+
+            if (Character.isWhitespace(character))
+            {
+                whitespaceCount++;
+            }
+        }
+
+        return symbolsCount > message.length() / 2 || (message.length() > 15 && whitespaceCount < message.length() / 10);
     }
 
     //if two strings are 75% identical, they're too close to follow each other in the chat
