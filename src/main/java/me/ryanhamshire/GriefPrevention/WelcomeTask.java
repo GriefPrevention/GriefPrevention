@@ -7,24 +7,40 @@ import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 
+import java.util.UUID;
+
 public class WelcomeTask implements Runnable
 {
-    private final Player player;
+    private final UUID playerId;
 
     public WelcomeTask(Player player)
     {
-        this.player = player;
+        this.playerId = player.getUniqueId();
     }
 
     @Override
     public void run()
     {
-        //abort if player has logged out since this task was scheduled
-        if (!this.player.isOnline()) return;
+
+        Player player = Bukkit.getPlayer(this.playerId);
+
+        if (player == null || !player.isOnline())
+        {
+            return;
+        }
 
         //offer advice and a helpful link
-        GriefPrevention.sendMessage(player, TextMode.Instr, Messages.AvoidGriefClaimLand);
-        GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, DataStore.SURVIVAL_VIDEO_URL);
+        GriefPrevention.sendMessage(
+                player,
+                TextMode.Instr,
+                Messages.AvoidGriefClaimLand
+        );
+        GriefPrevention.sendMessage(
+                player,
+                TextMode.Instr,
+                Messages.SurvivalBasicsVideo2,
+                DataStore.SURVIVAL_VIDEO_URL
+        );
 
         //give the player a reference book for later
         if (GriefPrevention.instance.config_claims_supplyPlayerManual)
