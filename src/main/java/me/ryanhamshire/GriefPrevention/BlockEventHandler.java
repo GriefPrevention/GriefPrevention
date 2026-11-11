@@ -18,10 +18,11 @@
 
 package me.ryanhamshire.GriefPrevention;
 
+import com.griefprevention.protection.ChestProtectionHandler;
+import com.griefprevention.protection.ProtectionHelper;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.util.BoundingBox;
-import com.griefprevention.protection.ProtectionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -36,7 +37,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Lightable;
-import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.data.type.Dispenser;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Fireball;
@@ -481,53 +481,9 @@ public class BlockEventHandler implements Listener
         }
     }
 
-    private static final BlockFace[] HORIZONTAL_DIRECTIONS = new BlockFace[] {
-            BlockFace.NORTH,
-            BlockFace.EAST,
-            BlockFace.SOUTH,
-            BlockFace.WEST
-    };
     private void denyConnectingDoubleChestsAcrossClaimBoundary(Claim claim, Block block, Player player)
     {
-
-        // Check for double chests placed just outside the claim boundary
-        if (block.getBlockData() instanceof Chest chest)
-        {
-            for (BlockFace face : HORIZONTAL_DIRECTIONS)
-            {
-                Block relative = block.getRelative(face);
-                if (!(relative.getBlockData() instanceof Chest relativeChest)) continue;
-
-                Claim relativeClaim = this.dataStore.getClaimAt(relative.getLocation(), true, claim);
-
-                // Chests outside claims should connect, and chests in claims owned by the same owner should connect.
-                if (sameClaimOwner(claim, relativeClaim)) break;
-
-                // Ignore existing double chests; only adjacent single chests are handled here.
-                if (relativeChest.getType() != Chest.Type.SINGLE) continue;
-
-                // Change both chests to singular chests
-                chest.setType(Chest.Type.SINGLE);
-                block.setBlockData(chest);
-
-                relativeChest.setType(Chest.Type.SINGLE);
-                relative.setBlockData(relativeChest);
-
-                // Resend relative chest block to prevent visual bug
-                player.sendBlockChange(relative.getLocation(), relativeChest);
-                break;
-            }
-        }
-    }
-
-    private boolean sameClaimOwner(Claim first, Claim second)
-    {
-        // Important: wilderness and admin claims must not be treated as the same
-        // just because both may have a null owner ID.
-        if (first == null || second == null)
-            return first == second;
-
-        return Objects.equals(first.getOwnerID(), second.getOwnerID());
+        ChestProtectionHandler.denyConnectingDoubleChestsAcrossClaimBoundary(this.dataStore, claim, block, player);
     }
 
     // Prevent pistons pushing blocks into or out of claims.
