@@ -19,7 +19,7 @@ Thank you for your contribution!
 ## AI
 
 - [Meat proxies](https://nomeatproxy.com/) are disallowed. Please type your own comments.
-- AI must follow all instructions in [AGENTS.md](AGENTS.md). Instructing your AI agent to follow the [AGENTS.md](AGENTS.md) (along with you verifying that it does) helps us record the original intent for changing code.
+- AI must follow all instructions in [AGENTS.md](AGENTS.md). Instructing your AI agent to follow the [AGENTS.md](AGENTS.md) (along with you verifying that it does) helps your agent write better, simpler, readable, and more maintainable code; but most importantly, it **records the original intent** for changing code for future understanding and debugging.
 
 From https://gruhn.me/blog/2026-08-03/
 
