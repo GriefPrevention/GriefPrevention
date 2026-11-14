@@ -3,6 +3,7 @@ package com.griefprevention.commands;
 import com.griefprevention.visualization.BoundaryVisualization;
 import com.griefprevention.visualization.VisualizationType;
 import me.ryanhamshire.GriefPrevention.AutoExtendClaimTask;
+import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.CreateClaimResult;
 import me.ryanhamshire.GriefPrevention.DataStore;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
@@ -189,24 +190,28 @@ public class ClaimCommand extends CommandHandler
         }
         else
         {
-            GriefPrevention.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
-
-            //link to a video demo of land claiming, based on world type
-            if (plugin.creativeRulesApply(player.getLocation()))
-            {
-                GriefPrevention.sendMessage(player, TextMode.Instr, Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
-            }
-            else if (plugin.claimsEnabledForWorld(world))
-            {
-                GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, DataStore.SURVIVAL_VIDEO_URL);
-            }
-            BoundaryVisualization.visualizeClaim(player, result.claim, VisualizationType.CLAIM);
-            playerData.claimResizing = null;
-            playerData.lastShovelLocation = null;
-
-            AutoExtendClaimTask.scheduleAsync(result.claim);
-
+            handleCreatedClaim(player, playerData, world, result.claim);
         }
+    }
+
+    private void handleCreatedClaim(@NotNull Player player, @NotNull PlayerData playerData, @NotNull World world, @NotNull Claim claim)
+    {
+        GriefPrevention.sendMessage(player, TextMode.Success, Messages.CreateClaimSuccess);
+
+        //link to a video demo of land claiming, based on world type
+        if (plugin.creativeRulesApply(player.getLocation()))
+        {
+            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.CreativeBasicsVideo2, DataStore.CREATIVE_VIDEO_URL);
+        }
+        else if (plugin.claimsEnabledForWorld(world))
+        {
+            GriefPrevention.sendMessage(player, TextMode.Instr, Messages.SurvivalBasicsVideo2, DataStore.SURVIVAL_VIDEO_URL);
+        }
+        BoundaryVisualization.visualizeClaim(player, claim, VisualizationType.CLAIM);
+        playerData.claimResizing = null;
+        playerData.lastShovelLocation = null;
+
+        AutoExtendClaimTask.scheduleAsync(claim);
     }
 
     private boolean needsShovel(@NotNull PlayerData playerData, @NotNull Player player)
